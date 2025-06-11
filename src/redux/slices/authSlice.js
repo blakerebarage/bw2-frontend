@@ -8,6 +8,7 @@ const initialState = {
   isAuthenticated: !!localStorage.getItem("token"),
   loading: false,
   error: null,
+  deviceId: localStorage.getItem("deviceId") || null,
 };
 
 const authSlice = createSlice({
@@ -19,9 +20,13 @@ const authSlice = createSlice({
       state.user = payload.user;
       state.session = payload.session;
       state.isAuthenticated = true;
+      state.deviceId = payload.deviceId || state.deviceId;
       
-      // Only store token in localStorage
+      // Store token and deviceId in localStorage
       localStorage.setItem("token", payload.token);
+      if (payload.deviceId) {
+        localStorage.setItem("deviceId", payload.deviceId);
+      }
     },
     logout: (state) => {
       state.token = null;
@@ -29,8 +34,9 @@ const authSlice = createSlice({
       state.session = null;
       state.isAuthenticated = false;
       
-      // Only remove token from localStorage
+      // Clear localStorage
       localStorage.removeItem("token");
+      localStorage.removeItem("deviceId");
     },
     updateUserData: (state, { payload }) => {
       state.user = payload;
@@ -44,6 +50,10 @@ const authSlice = createSlice({
     setError: (state, { payload }) => {
       state.error = payload;
     },
+    setDeviceId: (state, { payload }) => {
+      state.deviceId = payload;
+      localStorage.setItem("deviceId", payload);
+    },
   },
 });
 
@@ -53,7 +63,8 @@ export const {
   updateUserData, 
   updateSession,
   setLoading, 
-  setError 
+  setError,
+  setDeviceId
 } = authSlice.actions;
 
 // Thunk for fetching user data
@@ -65,7 +76,6 @@ export const fetchUserData = () => async (dispatch) => {
     dispatch(updateUserData(response.data.data));
     dispatch(setError(null));
   } catch (error) {
-    
     dispatch(setError(error.message));
   } finally {
     dispatch(setLoading(false));
