@@ -1,6 +1,7 @@
 import SpinLoader from "@/components/loaders/SpinLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useDeviceManager from "@/Hook/useDeviceManager";
 import {
   useLazyGetAuthenticatedUserQuery,
   useLoginUserMutation,
@@ -31,6 +32,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { addToast } = useToasts();
   const { triggerWelcome } = useWelcome();
+  const { deviceId } = useDeviceManager();
 
   // React Hook Form setup
   const {
@@ -57,12 +59,21 @@ const Login = () => {
   const onSubmit = async (data) => {
     const { phoneOrUserName, password } = data;
     try {
-      const { data: loginData } = await loginUser({ phoneOrUserName, password });
+      const { data: loginData } = await loginUser({ 
+        phoneOrUserName, 
+        password,
+        deviceId // Include device ID in login request
+      });
+      
       if (loginData.token) {
         const { data: userData } = await getUser(loginData.token);
-        dispatch(setCredentials({ token: loginData.token, user: userData?.data,
-          session: loginData.session
-           }));
+        dispatch(setCredentials({ 
+          token: loginData.token, 
+          user: userData?.data,
+          session: loginData.session,
+          deviceId // Include device ID in credentials
+        }));
+        
         addToast("Login successful", {
           appearance: "success",
           autoDismiss: true,
@@ -77,10 +88,18 @@ const Login = () => {
         }
       }
     } catch (error) {
-      addToast("Provide valid Phone Or UserName and password", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      if (error.response?.status === 401 && 
+          error.response?.data?.message === "Session expired. Please log in again.") {
+        addToast("Your session has expired. Please log in again.", {
+          appearance: "error",
+          autoDismiss: true,
+        });
+      } else {
+        addToast("Provide valid Phone Or UserName and password", {
+          appearance: "error",
+          autoDismiss: true,
+        });
+      }
     }
   };
 
