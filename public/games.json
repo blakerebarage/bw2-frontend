@@ -1,0 +1,248 @@
+[
+  {
+    "id": 1,
+    "name": "Live Game #1",
+    "image": "aviator",
+    "category": "live"
+  },
+  {
+    "id": 2,
+    "name": "Sports Game ",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-205.png",
+    "category": "sports"
+  },
+  {
+    "id": 3,
+    "name": "Live Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-175.png",
+    "category": "live"
+  },
+  {
+    "id": 4,
+    "name": "Table Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-183.png",
+    "category": "table"
+  },
+  {
+    "id": 5,
+    "name": "Slot Game ",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-176.png",
+    "category": "slot"
+  },
+  {
+    "id": 6,
+    "name": "Slot Game ",
+    "image": "https://www.wickspin24.live/gameIcon/DRAGOONSOFT/DRAGOONSOFT-SLOT-075.webp",
+    "category": "slot"
+  },
+  {
+    "id": 7,
+    "name": "Slot Game ",
+    "image": "https://www.wickspin24.live/gameIcon/DRAGOONSOFT/DRAGOONSOFT-SLOT-017.png",
+    "category": "slot"
+  },
+  {
+    "id": 8,
+    "name": "Slot Game ",
+    "image": "https://www.wickspin24.live/gameIcon/DRAGOONSOFT/DRAGOONSOFT-SLOT-014.png",
+    "category": "slot"
+  },
+  {
+    "id": 9,
+    "name": "Slot Game ",
+    "image": "https://www.wickspin24.live/gameIcon/DRAGOONSOFT/DRAGOONSOFT-SLOT-076.webp",
+    "category": "slot"
+  },
+  {
+    "id": 10,
+    "name": "Slot Game ",
+    "image": "https://www.wickspin24.live/gameIcon/DRAGOONSOFT/DRAGOONSOFT-SLOT-010.png",
+    "category": "slot"
+  },
+  {
+    "id": 11,
+    "name": "Slot Game ",
+    "image": "https://www.wickspin24.live/gameIcon/DRAGOONSOFT/DRAGOONSOFT-SLOT-075.webp",
+    "category": "slot"
+  },
+  {
+    "id": 12,
+    "name": "Slot Game ",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-176.png",
+    "category": "slot"
+  },
+  {
+    "id": 13,
+    "name": "Fishing Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-006.png",
+    "category": "fishing"
+  },
+  {
+    "id": 14,
+    "name": "Fishing Game ",
+    "image": "https://www.wickspin24.live/gameIcon/JDB/JDB-FISH-010.webp",
+    "category": "fishing"
+  },
+  {
+    "id": 15,
+    "name": "Fishing Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-006.png",
+    "category": "fishing"
+  },
+  {
+    "id": 16,
+    "name": "Fishing Game",
+    "image": "https://www.wickspin24.live/gameIcon/JDB/JDB-FISH-013.webp",
+    "category": "fishing"
+  },
+  {
+    "id": 17,
+    "name": "Fishing Game",
+    "image": "https://www.wickspin24.live/gameIcon/JDB/JDB-FISH-011.webp",
+    "category": "fishing"
+  },
+  {
+    "id": 18,
+    "name": "Fishing Game",
+    "image": "https://www.wickspin24.live/gameIcon/JDB/JDB-FISH-010.webp",
+    "category": "fishing"
+  },
+  {
+    "id": 19,
+    "name": "Fishing Game ",
+    "image": "https://www.wickspin24.live/gameIcon/JDB/JDB-FISH-011.webp",
+    "category": "fishing"
+  },
+  {
+    "id": 20,
+    "name": "Fishing Game",
+    "image": "https://www.wickspin24.live/gameIcon/JDB/JDB-FISH-010.webp",
+    "category": "fishing"
+  },
+  {
+    "id": 21,
+    "name": "Egame Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-011.png",
+    "category": "egame"
+  },
+  {
+    "id": 22,
+    "name": "Sports Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-040.png",
+    "category": "sports"
+  },
+  {
+    "id": 23,
+    "name": "Live Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-176.png",
+    "category": "live"
+  },
+  {
+    "id": 24,
+    "name": "Table Game ",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-007.png",
+    "category": "table"
+  },
+  {
+    "id": 25,
+    "name": "Table Game ",
+    "image": "https://www.wickspin24.live/gameIcon/KINGMAKER/KM-TABLE-041.webp",
+    "category": "table"
+  },
+  {
+    "id": 26,
+    "name": "Table Game",
+    "image": "https://www.wickspin24.live/gameIcon/KINGMAKER/KM-TABLE-066.webp",
+    "category": "table"
+  },
+  {
+    "id": 27,
+    "name": "Table Game",
+    "image": "https://www.wickspin24.live/gameIcon/KINGMAKER/KM-TABLE-060.webp",
+    "category": "table"
+  },
+  {
+    "id": 28,
+    "name": "Table Game ",
+    "image": "https://www.wickspin24.live/gameIcon/KINGMAKER/KM-TABLE-028.webp",
+    "category": "table"
+  },
+  {
+    "id": 29,
+    "name": "Table Game",
+    "image": "https://www.wickspin24.live/gameIcon/KINGMAKER/KM-TABLE-015.webp",
+    "category": "table"
+  },
+  {
+    "id": 30,
+    "name": "Table Game",
+    "image": "https://www.wickspin24.live/gameIcon/KINGMAKER/KM-TABLE-021.webp",
+    "category": "table"
+  },
+  {
+    "id": 31,
+    "name": "Table Game",
+    "image": "https://www.wickspin24.live/gameIcon/KINGMAKER/KM-TABLE-032.webp",
+    "category": "table"
+  },
+  {
+    "id": 32,
+    "name": "Table Game",
+    "image": "https://www.wickspin24.live/gameIcon/KINGMAKER/KM-TABLE-043.webp",
+    "category": "table"
+  },
+  {
+    "id": 33,
+    "name": "Slot Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-018.png",
+    "category": "slot"
+  },
+  {
+    "id": 34,
+    "name": "Fishing Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-025.png",
+    "category": "fishing"
+  },
+  {
+    "id": 35,
+    "name": "Live Game ",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-133.png",
+    "category": "live"
+  },
+  {
+    "id": 36,
+    "name": "Live Game ",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-168.jpg",
+    "category": "live"
+  },
+  {
+    "id": 37,
+    "name": "Live Game ",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-169.jpg",
+    "category": "live"
+  },
+  {
+    "id": 38,
+    "name": "Live Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-018.png",
+    "category": "live"
+  },
+  {
+    "id": 39,
+    "name": "Live Game",
+    "image": "https://www.wickspin24.live/gameIcon/EVOLUTION/EVOLUTION-LIVE-010.png",
+    "category": "live"
+  },
+  {
+    "id": 40,
+    "name": "Live Game",
+    "image": "https://www.wickspin24.live/gameIcon/PP/PP-LIVE-075.webp",
+    "category": "live"
+  },
+  {
+    "id": 41,
+    "name": "Live Game",
+    "image": "https://www.wickspin24.live/gameIcon/PT/PT-LIVE-011.png",
+    "category": "live"
+  }
+]

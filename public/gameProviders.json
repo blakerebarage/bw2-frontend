@@ -1,0 +1,228 @@
+{
+  "data": [
+    {
+      "provider": "AG",
+      "game_types": ["CasinoLive & Slot", "Slot Game", "Slot Lobby"]
+    },
+    {
+      "provider": "Aog",
+      "game_types": ["??"]
+    },
+    {
+      "provider": "AstarGaming",
+      "game_types": ["CasinoLive"]
+    },
+    {
+      "provider": "Bflottobit",
+      "game_types": ["Lottery Game", "Sports Game"]
+    },
+    {
+      "provider": "Bgaming",
+      "game_types": [
+        "Card game",
+        "Casual",
+        "Crash",
+        "Dice",
+        "Lottery",
+        "Roulette",
+        "Scratch cards",
+        "Video Slot"
+      ]
+    },
+    {
+      "provider": "BtiGaming",
+      "game_types": ["Sports Game"]
+    },
+    {
+      "provider": "CQ9",
+      "game_types": [
+        "????",
+        "Fish Game",
+        "Lottery Game",
+        "Marbles",
+        "Slot Game",
+        "Table Game"
+      ]
+    },
+    {
+      "provider": "DreamGaming",
+      "game_types": ["CasinoLive"]
+    },
+    {
+      "provider": "EazyGaming",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "Evolution",
+      "game_types": ["CasinoLive"]
+    },
+    {
+      "provider": "Evolution Live",
+      "game_types": ["CasinoLive"]
+    },
+    {
+      "provider": "Evolution Live BigTimeGaming",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "Evoplay",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "Ezugi",
+      "game_types": ["CasinoLive", "Lobby"]
+    },
+    {
+      "provider": "FaChaiGaming",
+      "game_types": ["????", "Fish Game", "Slot Game", "Table Game"]
+    },
+    {
+      "provider": "GameArt",
+      "game_types": ["Poker", "Slot Game"]
+    },
+    {
+      "provider": "Habanero",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "iDeal",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "JDBGaming",
+      "game_types": ["????", "arcade", "Fish Game", "Lottery Game", "Slot Game"]
+    },
+    {
+      "provider": "JiliGaming",
+      "game_types": [
+        "Card Game",
+        "Crash Game",
+        "Fish Game",
+        "India Poker Game",
+        "Slot Game",
+        "Table Game"
+      ]
+    },
+    {
+      "provider": "KM",
+      "game_types": ["Slot Game", "Table Game"]
+    },
+    {
+      "provider": "LuckSportGaming",
+      "game_types": ["Sports Game"]
+    },
+    {
+      "provider": "Mancala",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "MicroGaming",
+      "game_types": [
+        "Arcade",
+        "Fishing",
+        "Live Casino",
+        "Live Grand",
+        "Slots",
+        "Video Bingo"
+      ]
+    },
+    {
+      "provider": "NextSpin",
+      "game_types": ["arcade", "Fish Game", "Slot Game"]
+    },
+    {
+      "provider": "OnGaming",
+      "game_types": ["casino"]
+    },
+    {
+      "provider": "PgsGaming",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "PGSoft",
+      "game_types": ["Gamble Game", "Slot Game"]
+    },
+    {
+      "provider": "PlaynGo",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "Playson",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "PlayTech",
+      "game_types": ["CasinoLive", "Slot Game"]
+    },
+    {
+      "provider": "PragmaticPlay",
+      "game_types": [
+        "Classic Games",
+        "Crash Game",
+        "Crash Games",
+        "Slot Game",
+        "Table Games"
+      ]
+    },
+    {
+      "provider": "PragmaticPlay Live",
+      "game_types": ["CasinoLive"]
+    },
+    {
+      "provider": "RelexGaming",
+      "game_types": ["Aracde", "Slot Game", "Table Game"]
+    },
+    {
+      "provider": "Rich88",
+      "game_types": ["Arcade game", "Bingo game", "Slot game"]
+    },
+    {
+      "provider": "SABA Sports",
+      "game_types": ["Sports Game"]
+    },
+    {
+      "provider": "SaGaming",
+      "game_types": ["CasinoLive"]
+    },
+    {
+      "provider": "Sexy",
+      "game_types": ["CasinoLive"]
+    },
+    {
+      "provider": "SkyWind",
+      "game_types": ["Slot Game"]
+    },
+    {
+      "provider": "Spribe",
+      "game_types": ["CasinoTable"]
+    },
+    {
+      "provider": "T1",
+      "game_types": ["Classic Games", "Monster Games", "Scratch Games"]
+    },
+    {
+      "provider": "TADAGaming",
+      "game_types": [
+        "arcade",
+        "Bingo",
+        "card",
+        "casino",
+        "Crash Game",
+        "Fish Game",
+        "Slot Game"
+      ]
+    },
+    {
+      "provider": "TFGaming",
+      "game_types": ["Esports"]
+    },
+    {
+      "provider": "V8",
+      "game_types": ["????", "Crash Game"]
+    },
+    {
+      "provider": "YeeBet",
+      "game_types": ["????"]
+    }
+  ]
+}

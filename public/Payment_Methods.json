@@ -1,0 +1,58 @@
+[
+    {
+      "name": "Bkash",
+      "type": "Mobile Banking",
+      "available": true,
+      "logo": "https://downloadr2.apkmirror.com/wp-content/uploads/2022/08/84/62f92578037f0.png",
+      "path": "/payment/bkash"
+    },
+    {
+      "name": "Nagad",
+      "type": "Mobile Banking",
+      "available": true,
+      "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS00Jfs6Q4fuERQoZMj4k3zVNxac1p_SDxWWA&s",
+      "path": "/payment/nagad"
+    },
+    {
+      "name": "Rocket",
+      "type": "Mobile Banking",
+      "available": true,
+      "logo": "https://powernet.com.bd/wp-content/uploads/2021/11/3-1.jpg",
+      "path": "/payment/rocket"
+    },
+    {
+      "name": "Upay",
+      "type": "Mobile Banking",
+      "available": true,
+      "logo": "https://www.tbsnews.net/sites/default/files/styles/amp_metadata_content_image_min_696px_wide/public/images/2021/04/21/upay.jpg",
+      "path": "/payment/upay"
+    },
+    {
+      "name": "Tap",
+      "type": "Payment Gateway",
+      "available": true,
+      "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjZJ6vCGlD28_DVPlsJwQXGdbYD89S0SXhCN79YiTGSx4Jk1DhXf47ZrK6Fwr_UP0PHAQ&usqp=CAU",
+      "path": "/payment/tap"
+    },
+    {
+      "name": "okWallet",
+      "type": "Digital Wallet",
+      "available": true,
+      "logo": "https://futurestartup.com/wp-content/uploads/2018/11/OK-Wallet.jpg",
+      "path": "/payment/okwallet"
+    },
+    {
+      "name": "Crypto",
+      "type": "Cryptocurrency",
+      "available": true,
+      "logo": "https://zengo.com/wp-content/uploads/USDT-with-Bank.png",
+      "path": "/payment/crypto"
+    },
+    {
+      "name": "Bank",
+      "type": "Bank Transfer",
+      "available": true,
+      "logo": "https://png.pngtree.com/element_our/png/20181114/bank-icon-png_239804.jpg",
+      "path": "/payment/bank"
+    }
+]
