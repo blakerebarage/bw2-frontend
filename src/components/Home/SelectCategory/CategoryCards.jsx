@@ -7,15 +7,15 @@ import { RiGalleryView2 } from "react-icons/ri";
 
 const categories = [
   
-  { title: "Favourite", image: <FaHeart size={40} className="group-hover:text-[#ffc800] transition-all duration-300 text-gray-300" />, value: "favourite" },
-  { title: "Sports", image: <MdOutlineSportsCricket size={40} className="group-hover:text-[#ffc800] transition-all duration-300 text-gray-300" />, value: "sports" },
-  { title: "Live", image: <FaUserTie size={40} className="group-hover:text-[#ffc800] transition-all duration-300 text-gray-300" />, value: "live" },
-  { title: "Table", image: <GiCardQueenSpades size={40} className="group-hover:text-[#ffc800] transition-all duration-300 text-gray-300" />, value: "table" },
-  { title: "Slot", image: <IoDiamondOutline size={40} className="group-hover:text-[#ffc800] transition-all duration-300 text-gray-300" />, value: "slot" },
-  { title: "Crash", image: <GiGroundbreaker size={40} className="group-hover:text-[#ffc800] transition-all duration-300 text-gray-300" />, value: "crash" },
-  { title: "Fishing", image: <GiFishing  size={40} className="group-hover:text-[#ffc800] transition-all duration-300 text-gray-300" />, value: "fishing" },
-  { title: "Lottery", image: <GiLuckyFisherman size={40} className="group-hover:text-[#ffc800] transition-all duration-300 text-gray-300" />, value: "Lottery" },
-  { title: "All", image: <RiGalleryView2 size={40} className="group-hover:text-[#ffc800] transition-all duration-300 text-gray-300" />, value: "allgames" }
+  { title: "Favourite", image: <FaHeart size={40} className="group-hover:text-red-500 transition-all duration-300 text-gray-300" />, value: "favourite" },
+  { title: "Sports", image: <MdOutlineSportsCricket size={40} className="group-hover:text-red-500 transition-all duration-300 text-gray-300" />, value: "sports" },
+  { title: "Live", image: <FaUserTie size={40} className="group-hover:text-red-500 transition-all duration-300 text-gray-300" />, value: "live" },
+  { title: "Table", image: <GiCardQueenSpades size={40} className="group-hover:text-red-500 transition-all duration-300 text-gray-300" />, value: "table" },
+  { title: "Slot", image: <IoDiamondOutline size={40} className="group-hover:text-red-500 transition-all duration-300 text-gray-300" />, value: "slot" },
+  { title: "Crash", image: <GiGroundbreaker size={40} className="group-hover:text-red-500 transition-all duration-300 text-gray-300" />, value: "crash" },
+  { title: "Fishing", image: <GiFishing  size={40} className="group-hover:text-red-500 transition-all duration-300 text-gray-300" />, value: "fishing" },
+  { title: "Lottery", image: <GiLuckyFisherman size={40} className="group-hover:text-red-500 transition-all duration-300 text-gray-300" />, value: "Lottery" },
+    { title: "All", image: <RiGalleryView2 size={40} className="group-hover:text-red-500 transition-all duration-300 text-gray-300" />, value: "allgames" }
 ];
 
 export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
@@ -80,7 +80,7 @@ export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
     <div className="relative">
       <div
         ref={categoryContainerRef}
-        className="flex px-2 pt-6 pb-8 gap-4 w-full overflow-x-auto h-auto bg-[#1b1f23] backdrop-blur-xl scroll-smooth shadow-inner items-center"
+        className="flex px-2 pt-6 pb-8 gap-4 w-full overflow-x-auto h-auto bg-gray-800 backdrop-blur-xl scroll-smooth shadow-inner items-center"
       >
         <div
           ref={highlightRef}
@@ -95,7 +95,7 @@ export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
             ref={el => cardRefs.current[index] = el}
             className={`relative w-20 h-20 flex flex-col items-center justify-center p-2 rounded-[8px] group z-10 transition-all active:scale-95`}
           >
-            <span className={`relative text-sm font-semibold text-center tracking-wide group-hover:text-[#ffc800] text-white`}>
+            <span className={`relative text-sm font-semibold text-center tracking-wide group-hover:text-red-500 text-white`}>
               {category.title}
             </span>
             <div className="relative w-14 h-14 flex items-center justify-center shadow-inner mt-[5px]">
@@ -105,7 +105,7 @@ export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
         ))}
       </div>
 
-      <div className="flex justify-center p-2 absolute w-full bottom-0 bg-slate-300">
+      <div className="flex justify-center p-2 absolute w-full bottom-0 bg-gray-800">
         {Array.from({
           length: Math.ceil(
             (categoryContainerRef.current?.scrollWidth || 0) / 

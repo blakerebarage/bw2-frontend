@@ -14,7 +14,7 @@ export const MostPlayedGames = ({ games, onGameLaunch, onFavoriteToggle, favorit
             game={game}
             onGameLaunch={onGameLaunch}
             onFavoriteToggle={onFavoriteToggle}
-            isFavorite={favoriteGames.some(fav => fav.game_code === game.game_code)}
+            isFavorite={favoriteGames.some(fav => fav.gameId === game.gameId)}
             user={user}
           />
         ))}

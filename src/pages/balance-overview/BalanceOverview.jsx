@@ -2,7 +2,6 @@ import { useCurrency } from "@/Hook/useCurrency";
 import { useEffect, useState } from "react";
 import { FaExchangeAlt, FaWallet } from "react-icons/fa";
 import { useSelector } from "react-redux";
-import PageHeader from "../../components/shared/PageHeader";
 
 import useAxiosSecure from "../../Hook/useAxiosSecure";
 
@@ -61,21 +60,21 @@ const BalanceOverview = () => {
   }, [axiosSecure]);
 
   return (
-    <div className="mt-16">
-      <PageHeader title="Balance Overview" />
+    <div className="mt-20">
+      {/* <PageHeader title="Balance Overview" /> */}
       <div className="m-4 space-y-6">
         {/* Main Balance Card */}
-        <div className="bg-gradient-to-r from-[#262c32] to-[#1a1f24] p-6 rounded-2xl shadow-lg">
+        <div className="bg-gradient-to-r from-[#ffffff] to-[#ffffff] p-6 rounded-2xl shadow-lg">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-white">Your Balances</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Your Balances</h1>
           </div>
           <div className="flex flex-row items-center gap-4">
-            <div className="bg-yellow-500/20 backdrop-blur-sm py-2 px-4 rounded-xl">
-              <p className="text-sm font-bold text-yellow-500">
-                <FaWallet className="text-3xl text-yellow-500" />
+            <div className="bg-red-400 backdrop-blur-sm py-2 px-4 rounded-xl">
+              <p className="text-sm font-bold text-[#ffffff]">
+                <FaWallet className="text-3xl text-[#ffffff]" />
               </p>
             </div>
-            <p className="text-4xl font-bold text-white">
+            <p className="text-4xl font-bold text-gray-800">
               { formatCurrency(user?.balance) || '0.00'}
             </p>
           </div>
@@ -87,10 +86,10 @@ const BalanceOverview = () => {
         {
           user?.role === "super-admin" || user?.role === "admin" && <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+          <div className="bg-gradient-to-r from-gray-800 to-gray-800 px-6 py-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Transaction Details</h2>
-              <span className="text-sm text-blue-100">
+              <h2 className="text-lg font-semibold text-gray-800">Transaction Details</h2>
+              <span className="text-sm text-gray-800">
                 {stats.lastTransaction ? new Date(stats.lastTransaction.createdAt).toLocaleString() : 'No transactions'}
               </span>
             </div>
