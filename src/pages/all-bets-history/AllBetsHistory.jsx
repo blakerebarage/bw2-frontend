@@ -23,14 +23,14 @@ const AllBetsHistory = () => {
     try {
       setLoading(true);
       const response = await axiosSecure.get(
-        `/api/v1/playwin/bet-history?page=${currentPage}&limit=${limit}&search=${search}`
+        `/api/v1/game/bet-history?page=${currentPage}&limit=${limit}&search=${search}`
       );
       if (response.data.success) {
         setBets(response.data.data.results);
         setTotalPages(response.data.data.pageCount);
       }
     } catch (error) {
-      
+      console.error('Error fetching bets:', error);
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ const AllBetsHistory = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto">
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
           <div className="bg-gradient-to-r from-[#1f2937] to-gray-800 px-6 py-6">
             <h1 className="text-2xl font-bold text-white text-center">
               All Bets History
@@ -58,22 +58,21 @@ const AllBetsHistory = () => {
           </div>
         </div>
 
-       
-
         {/* Main Content */}
         <div className="space-y-4 bg-white rounded-xl shadow-lg overflow-hidden mb-8 p-4">
-           {/* Search Bar */}
-        <div className="mb-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by username, game name, or currency..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search by username, game round, or serial number..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
           </div>
-        </div>
+
           {loading ? (
             <div className="flex justify-center py-12">
               <Loading />
@@ -91,13 +90,7 @@ const AllBetsHistory = () => {
                       <FaUser className="inline" /> {bet.username}
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-semibold">
-                      <FaGamepad className="inline" /> {bet.data.game_name}
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-semibold">
-                      {bet.data.game_provider}
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-semibold">
-                      {bet.data.game_type}
+                      <FaGamepad className="inline" /> {bet.data.game_uid}
                     </span>
                   </div>
 
@@ -124,7 +117,7 @@ const AllBetsHistory = () => {
                     <div className="flex items-center gap-1">
                       <FaCalendarAlt className="text-gray-500" />
                       <span className="font-medium">Time:</span>
-                      {moment(bet.data.timestamp).format("MMM D, YYYY h:mm A")}
+                      {moment(bet.createdAt).format("MMM D, YYYY h:mm A")}
                     </div>
                   </div>
 
@@ -133,6 +126,8 @@ const AllBetsHistory = () => {
                     <span className="font-medium">Game Round:</span> {bet.data.game_round}
                     <span className="mx-2">•</span>
                     <span className="font-medium">Serial Number:</span> {bet.data.serial_number}
+                    <span className="mx-2">•</span>
+                    <span className="font-medium">Member Account:</span> {bet.data.member_account}
                   </div>
                 </div>
               </div>
