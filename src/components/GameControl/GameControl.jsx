@@ -190,11 +190,25 @@ const GameControl = () => {
 
     setLoading(true);
     try {
+      // First get the game details to get the provider
+      const gameDetails = allGames.find(game => game.gameId === gameId);
+      if (!gameDetails) {
+        throw new Error('Game not found');
+      }
+
+      // Get provider details to get the currency
+      const providerResponse = await axiosSecure.get(`/api/v1/game/providers/${gameDetails.provider}`);
+      if (!providerResponse?.data?.data) {
+        throw new Error('Provider not found');
+      }
+
+      const providerCurrency = providerResponse.data.data.currencyCode || 'NGN';
+
       const { data } = await axiosSecure.post(
         `/api/v1/game/game-launch`,
         {
           username: user?.username,
-          currency: 'NGN',
+          currency: providerCurrency || 'NGN',
           gameId,
           lang: 'en',
         }
@@ -202,9 +216,11 @@ const GameControl = () => {
       
       if (data?.url) {
         window.open(data.url, "_blank");
+      } else {
+        throw new Error('Game launch URL not found');
       }
     } catch (error) {
-      addToast("Failed to launch game", {
+      addToast(error.message || "Failed to launch game", {
         appearance: "error",
         autoDismiss: true,
       });

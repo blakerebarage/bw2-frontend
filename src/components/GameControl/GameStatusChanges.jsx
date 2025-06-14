@@ -4,7 +4,6 @@ import { FaGamepad } from "react-icons/fa";
 import { FiRefreshCw } from "react-icons/fi";
 import { useToasts } from "react-toast-notifications";
 
-
 const GameStatusChanges = () => {
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +14,17 @@ const GameStatusChanges = () => {
   const [updatingProvider, setUpdatingProvider] = useState(null);
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
-
+  
+  // Common currency options
+  const currencyOptions = [
+    { code: "BDT", name: "Bangladeshi Taka" },
+    { code: "USD", name: "US Dollar" },
+    { code: "EUR", name: "Euro" },
+    { code: "GBP", name: "British Pound" },
+    { code: "INR", name: "Indian Rupee" },
+    { code: "NGN", name: "Nigerian Naira" }
+  ];
+  
   const fetchProviders = async () => {
     setLoading(true);
     setError(null);
@@ -47,28 +56,60 @@ const GameStatusChanges = () => {
     fetchProviders();
   }, [page, searchQuery]);
 
-  const handleStatusChange = async (providerName, currentStatus) => {
+  const handleStatusChange = async (providerName, currentStatus, currencyCode) => {
     setUpdatingProvider(providerName);
     try {
-      await axiosSecure.patch(`/api/v1/game/providers/${providerName}/status`, {
-        isActive: !currentStatus
+      await axiosSecure.patch(`/api/v1/game/providers/${providerName}`, {
+        isActive: !currentStatus,
+        currencyCode: currencyCode
       });
 
       // Update local state
       setProviders(prevProviders =>
         prevProviders.map(provider =>
           provider.name === providerName
-            ? { ...provider, isActive: !currentStatus }
+            ? { ...provider, isActive: !currentStatus, currencyCode }
             : provider
         )
       );
 
-      addToast(`Provider ${providerName} ${!currentStatus ? 'activated' : 'deactivated'} successfully`, {
+      addToast(`Provider ${providerName} status updated successfully`, {
         appearance: "success",
         autoDismiss: true,
       });
     } catch (error) {
       addToast(`Failed to update ${providerName} status`, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    } finally {
+      setUpdatingProvider(null);
+    }
+  };
+
+  const handleCurrencyChange = async (providerName, currentStatus, newCurrency) => {
+    setUpdatingProvider(providerName);
+    try {
+      await axiosSecure.patch(`/api/v1/game/providers/${providerName}`, {
+        isActive: currentStatus,
+        currencyCode: newCurrency
+      });
+
+      // Update local state
+      setProviders(prevProviders =>
+        prevProviders.map(provider =>
+          provider.name === providerName
+            ? { ...provider, currencyCode: newCurrency }
+            : provider
+        )
+      );
+
+      addToast(`Provider ${providerName} currency updated successfully`, {
+        appearance: "success",
+        autoDismiss: true,
+      });
+    } catch (error) {
+      addToast(`Failed to update ${providerName} currency`, {
         appearance: "error",
         autoDismiss: true,
       });
@@ -119,31 +160,50 @@ const GameStatusChanges = () => {
               key={provider._id}
               className="bg-gray-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-800 capitalize">
-                    {provider.name}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Last updated: {new Date(provider.updatedAt).toLocaleDateString()}
-                  </p>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 capitalize">
+                      {provider.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Last updated: {new Date(provider.updatedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={provider.isActive}
+                      onChange={() => handleStatusChange(provider.name, provider.isActive, provider.currencyCode || 'BDT')}
+                      disabled={updatingProvider === provider.name}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                  </label>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={provider.isActive}
-                    onChange={() => handleStatusChange(provider.name, provider.isActive)}
+                
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Currency:</label>
+                  <select
+                    value={provider.currencyCode || 'BDT'}
+                    onChange={(e) => handleCurrencyChange(provider.name, provider.isActive, e.target.value)}
                     disabled={updatingProvider === provider.name}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
-                </label>
-              </div>
-              {updatingProvider === provider.name && (
-                <div className="mt-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                    className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    {currencyOptions.map((currency) => (
+                      <option key={currency.code} value={currency.code}>
+                        {currency.code} - {currency.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
+
+                {updatingProvider === provider.name && (
+                  <div className="mt-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
