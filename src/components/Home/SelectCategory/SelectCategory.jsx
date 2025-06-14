@@ -1,12 +1,13 @@
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 
 import Loading from "@/components/shared/Loading";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
+import { fetchProviders } from "@/redux/features/providers/providersSlice";
 import { CategoryCards } from "./CategoryCards";
 import { GameCard } from "./GameCard";
 import { MostPlayedGames } from "./MostPlayedGames";
@@ -17,6 +18,7 @@ export function SelectCategory() {
   const [displayGames, setDisplayGames] = useState([]);
   const [mostPlayedGames, setMostPlayedGames] = useState([]);
   const { user } = useSelector((state) => state.auth);
+  const { providers } = useSelector((state) => state.providers);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [gameLoading, setGameLoading] = useState(false);
@@ -27,6 +29,7 @@ export function SelectCategory() {
   const [popularPage, setPopularPage] = useState(1);
   const [popularTotalPages, setPopularTotalPages] = useState(1);
 
+  const dispatch = useDispatch();
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
   const navigate = useNavigate();
@@ -34,6 +37,11 @@ export function SelectCategory() {
   useEffect(() => {
     AOS.init({ duration: 800 });
   }, []);
+
+  // Fetch providers data
+  useEffect(() => {
+    dispatch(fetchProviders());
+  }, [dispatch]);
 
   // Fetch all games data
   useEffect(() => {
@@ -227,6 +235,7 @@ export function SelectCategory() {
   };
 
   const initGameLaunch = async (gameId) => {
+    console.log(gameId);
     if (!user?.username) {
       addToast("Please login to play games", {
         appearance: "error",
@@ -244,17 +253,17 @@ export function SelectCategory() {
         throw new Error('Game not found');
       }
 
-      // Get provider details to get the currency
-      const providerResponse = await axiosSecure.get(`/api/v1/game/providers/${gameDetails.provider}`);
-      if (!providerResponse?.data?.data) {
+      // Get provider details from Redux store
+      const providerDetails = providers.find(p => p.name.toLowerCase() === gameDetails.provider.toLowerCase());
+      if (!providerDetails) {
         throw new Error('Provider not found');
       }
 
-      const providerCurrency = providerResponse.data.data.currencyCode || 'NGN';
-
+      const providerCurrency = providerDetails.currencyCode || 'NGN';
+      
       // Increment play count
       await axiosSecure.patch(`/api/v1/game/increment-game-play-count/${gameId}`);
-
+      
       // Launch game with provider's currency
       const { data } = await axiosSecure.post(
         `/api/v1/game/game-launch`,
@@ -265,11 +274,14 @@ export function SelectCategory() {
           lang: 'en',
         }
       );
-
       if (data?.result?.payload?.game_launch_url) {
         window.open(data.result.payload.game_launch_url, '_blank');
-      } else {
-        throw new Error('Game launch URL not found');
+      } 
+      else {
+        addToast(data?.result?.message || "Something went wrong", {
+          appearance: "error",
+          autoDismiss: true,
+        });
       }
     } catch (error) {
       addToast(error.message || "Failed to launch game", {
