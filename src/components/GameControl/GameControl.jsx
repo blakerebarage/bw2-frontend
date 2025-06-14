@@ -57,6 +57,7 @@ const GameControl = () => {
     debounce((value) => setSearchQuery(value), 300),
     []
   );
+// Fetch providers data
 
   /**
    * Fetch all games from the API
@@ -196,14 +197,18 @@ const GameControl = () => {
         throw new Error('Game not found');
       }
 
-      // Get provider details to get the currency
-      const providerResponse = await axiosSecure.get(`/api/v1/game/providers/${gameDetails.provider}`);
-      if (!providerResponse?.data?.data) {
+      const provider = await axiosSecure.get(`/api/v1/game/providers?page=1&limit=300`);
+      const providerDetails = provider?.data?.data?.results?.find(p => p.name.toLowerCase() === gameDetails.provider.toLowerCase());
+      if (!providerDetails) {
         throw new Error('Provider not found');
       }
 
-      const providerCurrency = providerResponse.data.data.currencyCode || 'NGN';
-
+      const providerCurrency = providerDetails.currencyCode || 'NGN';
+      
+      // Increment play count
+      await axiosSecure.patch(`/api/v1/game/increment-game-play-count/${gameId}`);
+      
+      // Launch game with provider's currency
       const { data } = await axiosSecure.post(
         `/api/v1/game/game-launch`,
         {
@@ -213,11 +218,14 @@ const GameControl = () => {
           lang: 'en',
         }
       );
-      
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      } else {
-        throw new Error('Game launch URL not found');
+      if (data?.result?.payload?.game_launch_url) {
+        window.open(data.result.payload.game_launch_url, '_blank');
+      } 
+      else {
+        addToast(data?.result?.message || "Something went wrong", {
+          appearance: "error",
+          autoDismiss: true,
+        });
       }
     } catch (error) {
       addToast(error.message || "Failed to launch game", {
