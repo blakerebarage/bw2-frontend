@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="w-full bg-[#ffffff] mt-auto drop-shadow-lg">
+    <footer className="w-full bg-[#1f2937] mt-auto drop-shadow-lg">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
         <div className="py-4">
@@ -27,7 +27,7 @@ const Footer = () => {
               target="_blank"
               rel="noreferrer noopenner"
               to="https://www.youtube.com/@play9"
-              className="text-gray-800 hover:text-red-700 transition-colors duration-200"
+              className="text-gray-300 hover:text-red-700 transition-colors duration-200"
             >
               <FaYoutube className="text-3xl sm:text-4xl" />
             </Link>
@@ -35,7 +35,7 @@ const Footer = () => {
               target="_blank"
               rel="noreferrer noopenner"
               to="https://www.facebook.com/oracletechnologyindia"
-              className="text-gray-800 hover:text-blue-500 transition-colors duration-200"
+              className="text-gray-300 hover:text-blue-500 transition-colors duration-200"
             >
               <FaFacebook className="text-3xl sm:text-4xl" />
             </Link>
@@ -43,7 +43,7 @@ const Footer = () => {
               target="_blank"
               rel="noreferrer noopenner"
               to="https://wa.me/+33756757364"
-              className="text-gray-800 hover:text-green-400 transition-colors duration-200"
+              className="text-gray-300 hover:text-green-400 transition-colors duration-200"
             >
               <FaWhatsappSquare className="text-3xl sm:text-4xl" />
             </Link>
@@ -51,7 +51,7 @@ const Footer = () => {
               target="_blank"
               rel="noreferrer noopenner"
               to="https://t.me/+fHC2LQO4BAg2MmRk"
-              className="text-gray-800 hover:text-blue-400 transition-colors duration-200"
+              className="text-gray-300 hover:text-blue-400 transition-colors duration-200"
             >
               <FaTelegram className="text-3xl sm:text-4xl" />
             </Link>
@@ -63,21 +63,21 @@ const Footer = () => {
           <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
             <Link 
               to="/privacy-policy" 
-              className="text-gray-800 hover:text-gray-900 px-3 py-1 transition-colors duration-200"
+              className="text-gray-300 hover:text-white px-3 py-1 transition-colors duration-200"
             >
               Privacy Policy
             </Link>
-              <span className="text-gray-800">•</span>
+            <span className="text-gray-500">•</span>
             <Link 
               to="/terms-conditions" 
-              className="text-gray-800 hover:text-gray-900 px-3 py-1 transition-colors duration-200"
+              className="text-gray-300 hover:text-white px-3 py-1 transition-colors duration-200"
             >
               Terms & Conditions
             </Link>
-            <span className="text-gray-800">•</span>
+            <span className="text-gray-500">•</span>
             <Link 
               to="/responsible-gaming" 
-              className="text-gray-800 hover:text-gray-900 px-3 py-1 transition-colors duration-200"
+              className="text-gray-300 hover:text-white px-3 py-1 transition-colors duration-200"
             >
               Responsible Gaming
             </Link>
@@ -91,8 +91,8 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="py-4 border-t border-gray-800">
-          <p className="text-center text-gray-800 text-sm">
+        <div className="py-4 border-t border-gray-700">
+          <p className="text-center text-gray-400 text-sm">
             © {new Date().getFullYear()} Ourbet. All rights reserved.
           </p>
         </div>

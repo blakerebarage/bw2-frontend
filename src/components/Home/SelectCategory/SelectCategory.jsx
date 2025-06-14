@@ -297,7 +297,7 @@ export function SelectCategory() {
         <div className="space-y-4 px-3">
           {user?.username && (
             <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-bold text-red-500 drop-shadow">
+              <h3 className="text-2xl font-bold text-[#ffffff] drop-shadow">
                 Favourite Games
               </h3>
               <SearchBar
@@ -324,9 +324,9 @@ export function SelectCategory() {
               ))}
             </div>
           ) : (
-            <div className="text-center text-gray-700 py-8">
+            <div className="text-center text-[#ffffff] py-8">
               <p className="text-lg">No favorite games found</p>
-              <p className="text-sm mt-2 text-gray-800">
+              <p className="text-sm mt-2 text-[#ffffff]">
                 {user?.username ? "Add some games to your favorites" : "Please login to view your favorite games"}
               </p>
             </div>
@@ -335,7 +335,7 @@ export function SelectCategory() {
           {/* Most Played Games Section - Only in Favourite view */}
           {mostPlayedGames.length > 0 && (
             <div className="mt-8">
-              <h3 className="text-2xl font-bold text-red-500 drop-shadow mb-4">
+              <h3 className="text-2xl font-bold text-[#ffffff] drop-shadow mb-4">
                 Popular Games
               </h3>
               <MostPlayedGames
@@ -384,7 +384,7 @@ export function SelectCategory() {
       {selectedCategory.value !== "favourite" && (
         <div className="space-y-4 px-3">
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold text-red-500 drop-shadow">
+            <h3 className="text-2xl font-bold text-[#ffffff] drop-shadow">
               {selectedCategory.title} Games
             </h3>
             <SearchBar
@@ -452,9 +452,9 @@ export function SelectCategory() {
               )}
             </>
           ) : (
-            <div className="text-center text-gray-700 py-8">
+            <div className="text-center text-[#ffffff] py-8">
               <p className="text-lg">No games found</p>
-              <p className="text-sm mt-2 text-gray-800">
+              <p className="text-sm mt-2 text-[#ffffff]">
                 Try a different search or category
               </p>
             </div>

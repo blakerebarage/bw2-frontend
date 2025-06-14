@@ -6,7 +6,7 @@ export const SearchBar = ({ searchQuery, onSearchChange, onClearSearch }) => {
         placeholder="Search by game name or provider..."
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-60 px-4 py-2 rounded-full bg-white/10 border border-gray-700 text-gray-800 placeholder-white/50 focus:outline-none focus:border-red-500 transition-all duration-300"
+        className="w-60 px-4 py-2 rounded-full bg-white/10 border border-gray-700 text-[#ffffff] placeholder-white/50 focus:outline-none focus:border-gray-100 transition-all duration-300"
       />
       {searchQuery && (
         <button

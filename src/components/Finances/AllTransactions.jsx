@@ -46,7 +46,7 @@ const AllTransactions = () => {
       }
 
       const response = await axiosSecure.get(url);
-      
+      console.log(response.data);
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to fetch transactions");
       }
