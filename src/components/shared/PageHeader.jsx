@@ -7,12 +7,12 @@ const PageHeader = ({ title }) => {
     navigate("/");
   };
   return (
-    <div className="bg-[#1f2937] relative flex items-center w-full px-4 py-2 drop-shadow-lg">
-      <h1 className="text-white text-lg absolute left-1/2 transform -translate-x-1/2">
+    <div className="bg-gray-100 relative flex items-center w-full px-4 py-2 drop-shadow-lg">
+      <h1 className="text-gray-800 text-lg absolute left-1/2 transform -translate-x-1/2">
         {title}
       </h1>
       <IoCloseSharp
-        className="text-4xl text-white ml-auto cursor-pointer"
+        className="text-4xl text-gray-800 ml-auto cursor-pointer"
         onClick={handleClose}
       />
     </div>

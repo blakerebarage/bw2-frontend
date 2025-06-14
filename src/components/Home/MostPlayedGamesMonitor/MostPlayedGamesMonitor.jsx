@@ -1,7 +1,7 @@
 import Loading from '@/components/shared/Loading';
 import useAxiosSecure from '@/Hook/useAxiosSecure';
 import { useEffect, useState } from 'react';
-import { FaGamepad, FaPlay, FaSearch } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaGamepad, FaPlay, FaSearch } from 'react-icons/fa';
 import { useToasts } from 'react-toast-notifications';
 import Swal from 'sweetalert2';
 
@@ -10,39 +10,23 @@ const MostPlayedGamesMonitor = () => {
   const [allGames, setAllGames] = useState([]); // Store all games for frontend filtering
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
 
   // Fetch all games once
-  const fetchGames = async () => {
+  const fetchGames = async (page = 1) => {
     setLoading(true);
     try {
-      const [response, imagesResponse] = await Promise.all([
-        axiosSecure.get(`/api/v1/playwin/most-played-games`), // Remove search param
-        axiosSecure.get('/api/v1/content/all-game-images')
-      ]);
-      let imagesMap = {};
-      if (imagesResponse?.data?.data) {
-        imagesResponse.data.data.forEach(game => {
-          if (game.url) {
-            imagesMap[game.game_code] = game.url;
-          }
-        });
-      }
-
+      const response = await axiosSecure.get(`/api/v1/game/most-played-games?page=${page}&limit=50`);
+      
       if (response?.data?.data) {
-        const updatedGames = (response.data.data.popularGames || []).map(game => ({
-          ...game,
-          game_image: imagesMap[game.game_code] 
-            ? imagesMap[game.game_code]
-            : game.game_image?.startsWith('http') 
-              ? game.game_image 
-              : `${import.meta.env.VITE_BASE_API_URL}${game.game_image}`,
-          isUpdatedImage: !!imagesMap[game.game_code]
-        }));
-
-        setGames(updatedGames);
-        setAllGames(updatedGames); // Store all games for filtering
+        setGames(response.data.data.popularGames);
+        setAllGames(response.data.data.popularGames);
+        setTotalPages(response.data.data.pageCount);
+        setTotalItems(response.data.data.totalItems);
       }
     } catch (error) {
       console.log(error);
@@ -56,7 +40,7 @@ const MostPlayedGamesMonitor = () => {
   };
 
   // Update play count for a game
-  const updatePlayCount = async (gameId,playCountData) => {
+  const updatePlayCount = async (gameId, playCountData) => {
     const { value: playCount } = await Swal.fire({
       title: 'Update Play Count',
       input: 'number',
@@ -75,15 +59,17 @@ const MostPlayedGamesMonitor = () => {
 
     if (playCount) {
       try {
-        await axiosSecure.patch(`/api/v1/playwin/update-play-count/${gameId}`, {
+        console.log(gameId, playCount);
+        const response = await axiosSecure.patch(`/api/v1/game/update-play-count/${gameId}`, {
           playCount: parseInt(playCount)
         });
+        console.log(response);
         addToast('Play count updated successfully', {
           appearance: 'success',
           autoDismiss: true,
         });
         // Refresh the games list
-        fetchGames();
+        fetchGames(currentPage);
       } catch (error) {
         console.log(error);
         addToast('Failed to update play count', {
@@ -101,15 +87,23 @@ const MostPlayedGamesMonitor = () => {
       setGames(allGames);
     } else {
       const filtered = allGames.filter(game =>
-        game.game_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        game.game_code?.toLowerCase().includes(searchQuery.toLowerCase())
+        game.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        game.gameId?.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setGames(filtered);
     }
   };
 
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchGames(newPage);
+    }
+  };
+
   useEffect(() => {
-    fetchGames();   
+    fetchGames(currentPage);   
   }, []); // Only fetch once on mount
 
   // Optionally, filter as user types (live search)
@@ -118,12 +112,29 @@ const MostPlayedGamesMonitor = () => {
       setGames(allGames);
     } else {
       const filtered = allGames.filter(game =>
-        game.game_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        game.game_code?.toLowerCase().includes(searchQuery.toLowerCase())
+        game.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        game.gameId?.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setGames(filtered);
     }
   }, [searchQuery, allGames]);
+
+  // Generate page numbers for pagination
+  const generatePageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -172,48 +183,100 @@ const MostPlayedGamesMonitor = () => {
                 <p className="text-sm">There are no games found</p>
               </div>
             ) : (
-              <div className="p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {games.map((game) => (
-                    <div
-                      key={game._id}
-                      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200"
-                    >
-                      {/* Game Image */}
-                      <div className="relative aspect-video">
-                        <img
-                          src={game.isUpdatedImage ? `${import.meta.env.VITE_BASE_API_URL}${game.game_image}` : game.game_image}
-                          alt={game.game_name}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-100 transition-all duration-300"></div>
-                      </div>
+              <>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {games.map((game) => (
+                      <div
+                        key={game._id}
+                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200"
+                      >
+                        {/* Game Image */}
+                        <div className="relative aspect-video">
+                          <img
+                            src={game.img}
+                            alt={game.name}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-100 transition-all duration-300"></div>
+                        </div>
 
-                      {/* Game Info */}
-                      <div className="p-4">
-                        <h3 className="font-semibold text-gray-900 truncate">
-                          {game.game_name}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Code: {game.game_code}
-                        </p>
-                        <div className="flex items-center justify-between mt-3">
-                          <span className="text-sm font-medium text-gray-700">
-                            Play Count: {game.play_count || 0}
-                          </span>
-                          <button
-                            onClick={() => updatePlayCount(game.game_code,game.play_count)}
-                            className="inline-flex items-center px-3 py-1.5 bg-[#1f2937] text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md"
-                          >
-                            <FaPlay className="w-3 h-3 mr-1" />
-                            Update Count
-                          </button>
+                        {/* Game Info */}
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-900 truncate">
+                            {game.name}
+                          </h3>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Provider: {game.provider}
+                          </p>
+                          <div className="flex items-center justify-between mt-3">
+                            <span className="text-sm font-medium text-gray-700">
+                              Play Count: {game.playCount || 0}
+                            </span>
+                            <button
+                              onClick={() => updatePlayCount(game.gameId, game.playCount)}
+                              className="inline-flex items-center px-3 py-1.5 bg-[#1f2937] text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            >
+                              <FaPlay className="w-3 h-3 mr-1" />
+                              Update Count
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+
+                {/* Pagination */}
+                <div className="px-6 py-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{(currentPage - 1) * 50 + 1}</span> to{' '}
+                      <span className="font-medium">{Math.min(currentPage * 50, totalItems)}</span> of{' '}
+                      <span className="font-medium">{totalItems}</span> results
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium ${
+                          currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <FaChevronLeft className="w-4 h-4" />
+                      </button>
+                      
+                      {generatePageNumbers().map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`inline-flex items-center px-3 py-1.5 border rounded-md text-sm font-medium ${
+                            currentPage === pageNum
+                              ? 'bg-[#1f2937] text-white border-[#1f2937]'
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium ${
+                          currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <FaChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
             )
           )}
         </div>

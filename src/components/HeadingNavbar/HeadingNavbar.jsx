@@ -219,6 +219,11 @@ const HeadingNavbar = () => {
           path: "/admindashboard/mostplayedgamescontrol",
           roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
         },
+        {
+          label: "Game Status Changes",
+          path: "/admindashboard/gamestatuschanges",
+          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
+        }
       ],
     },
   ];

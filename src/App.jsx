@@ -24,7 +24,7 @@ function App() {
 
   return (
     <WelcomeProvider>
-      <div className="min-h-screen bg-gray-900">
+      <div className="bg-gray-900">
         <WelcomeMessage />
         <Outlet />
       </div>

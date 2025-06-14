@@ -30,7 +30,7 @@ const GameControl = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [existingCategoryGames, setExistingCategoryGames] = useState([]);
   const [filterType, setFilterType] = useState('');
-  
+  const [totalGames, setTotalGames] = useState(0);
   // Pagination states
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
@@ -65,34 +65,21 @@ const GameControl = () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch both APIs in parallel
-      const [gamesResponse, imagesResponse] = await Promise.all([
-        axiosSecure.get(`/api/v1/playwin/all-games?page=${page}&limit=${limit}&search=${searchQuery}`),
-        axiosSecure.get('/api/v1/content/all-game-images')
-      ]);
-
-      if (gamesResponse?.data?.data) {
-        // Create a map of updated images
-        const updatedImagesMap = {};
-        if (imagesResponse?.data?.data) {
-          
-          imagesResponse.data.data.forEach(game => {
-            if (game.url) {
-              updatedImagesMap[game.game_code] = game.url;
-            }
-          });
+      const response = await axiosSecure.get('/api/v1/game/all-games', {
+        params: {
+          page: page,
+          limit: limit,
+          isActive: true,
+          category: selectedCategory === 'All' ? undefined : selectedCategory
         }
-
-        // Update games with their images, prioritizing updated images
-        const updatedGames = gamesResponse.data.data.results.map(game => ({
-          ...game,
-          game_image: updatedImagesMap[game.game_code] || game.game_image
-        }));
-        setAllGames(updatedGames);
-        setTotalPages(gamesResponse.data.data.pageCount);
+      });
+      console.log(response);
+      if (response?.data?.data) {
+        setAllGames(response.data.data.results);
+        setTotalPages(response.data.data.pageCount);
+        setTotalGames(response.data.data.totalItems);
       }
     } catch (error) {
-      
       setError('Failed to fetch games. Please try again later.');
     } finally {
       setLoading(false);
@@ -103,7 +90,7 @@ const GameControl = () => {
    * Fetch games for selected category
    */
   const fetchCategoryGames = async (category) => {
-    if (!category) {
+    if (!category || category === 'All') {
       setSelectedGames([]);
       setExistingCategoryGames([]);
       return;
@@ -111,32 +98,18 @@ const GameControl = () => {
 
     setLoading(true);
     try {
-      // Fetch both category games and images
-      const [categoryResponse, imagesResponse] = await Promise.all([
-        axiosSecure.get(`/api/v1/playwin/games/${category}`),
-        axiosSecure.get('/api/v1/content/all-game-images')
-      ]);
-      
-      const categoryGames = categoryResponse?.data?.data || [];
-      
-      // Create a map of updated images
-      const updatedImagesMap = {};
-      if (imagesResponse?.data?.data) {
-        imagesResponse.data.data.forEach(game => {
-          if (game.url) {
-            updatedImagesMap[game.game_code] = game.url;
-          }
-        });
+      const response = await axiosSecure.get('/api/v1/game/all-games', {
+        params: {
+          isActive: true,
+          category: category
+        }
+      });
+      console.log(response);
+      if (response?.data?.data) {
+        const categoryGames = response.data.data.results;
+        setExistingCategoryGames(categoryGames);
+        setSelectedGames(categoryGames.map(game => game.gameId));
       }
-
-      // Update category games with their images
-      const updatedCategoryGames = categoryGames.map(game => ({
-        ...game,
-        game_image: updatedImagesMap[game.game_code] || game.game_image
-      }));
-
-      setExistingCategoryGames(updatedCategoryGames);
-      setSelectedGames(updatedCategoryGames.map(game => game.game_code));
     } catch (error) {
       addToast("Failed to fetch category games.", {
         appearance: "error",
@@ -159,12 +132,12 @@ const GameControl = () => {
   /**
    * Toggle game selection
    */
-  const handleGameSelect = (gameCode) => {
+  const handleGameSelect = (gameId) => {
     setSelectedGames(prev => {
-      if (prev.includes(gameCode)) {
-        return prev.filter(code => code !== gameCode);
+      if (prev.includes(gameId)) {
+        return prev.filter(id => id !== gameId);
       } else {
-        return [...prev, gameCode];
+        return [...prev, gameId];
       }
     });
   };
@@ -173,7 +146,7 @@ const GameControl = () => {
    * Save category games
    */
   const handleSaveCategory = async () => {
-    if (!selectedCategory) {
+    if (!selectedCategory || selectedCategory === 'All') {
       addToast("Please select a category.", {
         appearance: "error",
         autoDismiss: true,
@@ -183,7 +156,7 @@ const GameControl = () => {
     setLoading(true);
 
     try {
-      await axiosSecure.post('/api/v1/playwin/create-game-category', {
+      await axiosSecure.patch('/api/v1/game/update-games-with-category', {
         category: selectedCategory,
         gameIds: selectedGames
       });
@@ -217,16 +190,37 @@ const GameControl = () => {
 
     setLoading(true);
     try {
-      await axiosSecure.post(`/api/v1/playwin/increment-game-play-count/${gameId}`);
-      const { data } = await axiosSecure.get(
-        `/api/v1/playwin/game-launch?user_id=${user?.username}&wallet_amount=${user?.balance}&game_uid=${gameId}`
-      );
+      // First get the game details to get the provider
+      const gameDetails = allGames.find(game => game.gameId === gameId);
+      if (!gameDetails) {
+        throw new Error('Game not found');
+      }
 
+      // Get provider details to get the currency
+      const providerResponse = await axiosSecure.get(`/api/v1/game/providers/${gameDetails.provider}`);
+      if (!providerResponse?.data?.data) {
+        throw new Error('Provider not found');
+      }
+
+      const providerCurrency = providerResponse.data.data.currencyCode || 'NGN';
+
+      const { data } = await axiosSecure.post(
+        `/api/v1/game/game-launch`,
+        {
+          username: user?.username,
+          currency: providerCurrency || 'NGN',
+          gameId,
+          lang: 'en',
+        }
+      );
+      
       if (data?.url) {
         window.open(data.url, "_blank");
+      } else {
+        throw new Error('Game launch URL not found');
       }
     } catch (error) {
-      addToast("Failed to launch game", {
+      addToast(error.message || "Failed to launch game", {
         appearance: "error",
         autoDismiss: true,
       });
@@ -249,42 +243,32 @@ const GameControl = () => {
   const getFilteredGames = () => {
     // First apply search filter to all games
     const searchFilteredGames = allGames.filter(game => 
-      game.game_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.game_provider.toLowerCase().includes(searchQuery.toLowerCase())
+      game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      game.provider.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
-   
 
     // For specific categories
     const categoryGames = existingCategoryGames.filter(game => 
-      game.game_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.game_provider.toLowerCase().includes(searchQuery.toLowerCase())
+      game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      game.provider.toLowerCase().includes(searchQuery.toLowerCase())
     );
     
     const otherGames = searchFilteredGames.filter(game => 
-      !existingCategoryGames.some(catGame => catGame.game_code === game.game_code)
+      !existingCategoryGames.some(catGame => catGame.gameId === game.gameId)
     );
 
     const allGamesList = [...categoryGames, ...otherGames];
 
     if (filterType === 'selected') {
-      return allGamesList.filter(game => selectedGames.includes(game.game_code));
+      return allGamesList.filter(game => selectedGames.includes(game.gameId));
     } else if (filterType === 'unselected') {
-      return allGamesList.filter(game => !selectedGames.includes(game.game_code));
+      return allGamesList.filter(game => !selectedGames.includes(game.gameId));
     }
-    console.log(allGamesList);
     return allGamesList;
   };
 
-  // Add this function to get total games count
-  const getTotalGamesCount = () => {
-    const allGamesList = [
-      ...existingCategoryGames,
-      ...allGames.filter(game => !existingCategoryGames.some(catGame => catGame.game_code === game.game_code))
-    ];
-    return allGamesList.length;
-  };
-  console.log(getFilteredGames());
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto">
@@ -301,7 +285,7 @@ const GameControl = () => {
             {selectedCategory === 'All' && (
               <div className="mt-2 text-center">
                 <span className="inline-block bg-[#f4c004] text-black px-4 py-1 rounded-full text-sm font-medium">
-                  Total Games: {getTotalGamesCount()}
+                  Total Games: {totalGames}
                 </span>
               </div>
             )}
@@ -398,36 +382,29 @@ const GameControl = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {getFilteredGames().length ? getFilteredGames().map(game => (
                   <div
-                    key={game.game_code}
+                    key={game.gameId}
                     className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg ${
-                      selectedGames.includes(game.game_code) ? 'ring-2 ring-[#1f2937]' : ''
+                      selectedGames.includes(game.gameId) ? 'ring-2 ring-[#1f2937]' : ''
                     }`}
                   >
                     {/* Card Content */}
                     <div className="relative h-full flex flex-col bg-white text-gray-700">
                       {/* Image Container */}
                       <div className="relative w-full h-40 overflow-hidden cursor-pointer"
-                       onClick={() => handleGameSelect(game.game_code)}
+                       onClick={() => handleGameSelect(game.gameId)}
                       >
                         <img 
-                          src={
-                            game.game_image
-                              ? game.game_image.startsWith('http')
-                                ? game.game_image
-                                : `${import.meta.env.VITE_BASE_API_URL}${game.game_image}`
-                              : 'https://via.placeholder.com/300x200?text=No+Image'
-                          }
-                          alt={game.game_name}
+                          src={game.img}
+                          alt={game.name}
                           className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
-                          
                         />
                         {/* Selection Overlay */}
                         <div className={`absolute inset-0 transition-all duration-300 ${
-                          selectedGames.includes(game.game_code)
+                          selectedGames.includes(game.gameId)
                             ? 'bg-[#1f2937]/70 flex items-center justify-center'
                             : 'bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100'
                         }`}>
-                          {selectedGames.includes(game.game_code) && (
+                          {selectedGames.includes(game.gameId) && (
                             <div className="text-white text-center">
                               <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-2 mx-auto">
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -443,27 +420,27 @@ const GameControl = () => {
                       {/* Game Info */}
                       <div className="p-4 flex-1 flex flex-col">
                         <h3 className="font-semibold text-lg mb-1 truncate">
-                          {game.game_name}
+                          {game.name}
                         </h3>
                         <p className="text-sm text-gray-500 truncate">
-                          {game.game_provider}
+                          {game.provider}
                         </p>
                       </div>
 
                       {/* Action Buttons */}
                       <div className="p-4 flex items-center justify-between gap-2">
                         <button
-                          onClick={() => handleGameSelect(game.game_code)}
+                          onClick={() => handleGameSelect(game.gameId)}
                           className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                            selectedGames.includes(game.game_code)
+                            selectedGames.includes(game.gameId)
                               ? 'bg-[#1f2937] text-white hover:bg-gray-800'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          {selectedGames.includes(game.game_code) ? 'Selected' : 'Select'}
+                          {selectedGames.includes(game.gameId) ? 'Selected' : 'Select'}
                         </button>
                         <button
-                          onClick={() => initGameLaunch(game.game_code)}
+                          onClick={() => initGameLaunch(game.gameId)}
                           className="flex-1 px-3 py-2 bg-[#f4c004] text-white rounded-lg text-sm font-medium hover:bg-[#e0b000] transition-all duration-200"
                         >
                           Play

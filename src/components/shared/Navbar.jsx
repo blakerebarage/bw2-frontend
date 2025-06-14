@@ -64,7 +64,7 @@ const Navbar = () => {
             }}
             /> */}
               <img
-                className=" h-[32px]  select-none pointer-events-none"
+                className=" h-[36px]  select-none pointer-events-none mt-[-10px]"
                 src={`${import.meta.env.VITE_BASE_API_URL}${logo?.url}`}
                 alt=""
                 draggable="false"

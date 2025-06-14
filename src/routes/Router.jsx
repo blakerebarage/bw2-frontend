@@ -63,6 +63,7 @@ import MyProfile from "@/pages/my-profile/MyProfile";
 import AdminTurnOver from "@/components/AdminTurnOver";
 import BankDetails from "@/components/Banking/BankDetails";
 import DepositByChat from "@/components/DepositByChat";
+import GameStatusChanges from "@/components/GameControl/GameStatusChanges";
 import MostPlayedGamesMonitor from "@/components/Home/MostPlayedGamesMonitor/MostPlayedGamesMonitor";
 import TurnOver from "@/components/TurnOver";
 import WithdrawByChat from "@/components/WithdrawByChat";
@@ -157,6 +158,7 @@ const router = createBrowserRouter([
           { path: "homecontrol", element: <HomeControl /> },
           { path: "gamecontrol", element: <GameControl /> },
           { path: "gameimagecontrol", element: <ImageControl /> },
+          { path: "gamestatuschanges", element: <GameStatusChanges   /> },
           { path: "mostplayedgamescontrol", element: <MostPlayedGamesMonitor /> },
           {
             path: "myaccount",

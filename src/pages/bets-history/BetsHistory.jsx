@@ -18,21 +18,23 @@ const BetsHistory = () => {
   const { formatCurrency } = useCurrency();
 
   useEffect(() => {
-    fetchBets(); 
-  }, [currentPage, search]);
+    if (user?.username) {
+      fetchBets();
+    }
+  }, [currentPage, search, user?.username]);
 
   const fetchBets = async () => {
     try {
       setLoading(true);
       const response = await axiosSecure.get(
-        `/api/v1/playwin/bet-history/${user?.username}?page=${currentPage}&limit=${limit}&search=${search}`
+        `/api/v1/game/bet-history/${user?.username}?page=${currentPage}&limit=${limit}&search=${search}`
       );
       if (response.data.success) {
         setBets(response.data.data.results);
         setTotalPages(response.data.data.pageCount);
       }
     } catch (error) {
-      
+      console.error('Error fetching bets:', error);
     } finally {
       setLoading(false);
     }
@@ -49,6 +51,19 @@ const BetsHistory = () => {
   return (
     <div className="min-h-screen bg-[#1f2937]">
       <div className="mx-auto px-4 py-8 mt-12">
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by game round or serial number..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full px-4 py-2 bg-[#111827] border border-gray-700 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
         {/* Main Content */}
         <div className="space-y-4">
           {loading ? (
@@ -65,13 +80,7 @@ const BetsHistory = () => {
                   {/* Game Details */}
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-900 text-blue-300 text-xs font-semibold">
-                      <FaGamepad className="inline" /> {bet.data.game_name}
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-800 text-gray-300 text-xs font-semibold">
-                      {bet.data.game_provider}
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-800 text-gray-300 text-xs font-semibold">
-                      {bet.data.game_type}
+                      <FaGamepad className="inline" /> {bet.data.game_uid}
                     </span>
                   </div>
 
@@ -98,8 +107,17 @@ const BetsHistory = () => {
                     <div className="flex items-center gap-1">
                       <FaCalendarAlt className="text-gray-400" />
                       <span className="font-medium">Time:</span>
-                      {moment(bet.data.timestamp).format("MMM D, YYYY h:mm A")}
+                      {moment(bet.createdAt).format("MMM D, YYYY h:mm A")}
                     </div>
+                  </div>
+
+                  {/* Additional Details */}
+                  <div className="mt-2 text-xs text-gray-400">
+                    <span className="font-medium">Game Round:</span> {bet.data.game_round}
+                    <span className="mx-2">•</span>
+                    <span className="font-medium">Serial Number:</span> {bet.data.serial_number}
+                    <span className="mx-2">•</span>
+                    <span className="font-medium">Member Account:</span> {bet.data.member_account}
                   </div>
                 </div>
               </div>

@@ -261,7 +261,7 @@ const TransactionHistory = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 mt-10">
+    <div className="container mx-auto p-4 mt-16">
       <Card className="w-full bg-[#1a1f24] rounded-lg shadow-xl border border-[#facc15]/20">
         <CardHeader className="border-b border-[#facc15]/20">
           <CardTitle className="text-2xl font-bold text-[#facc15] text-center">
