@@ -252,9 +252,8 @@ export function SelectCategory() {
       if (!gameDetails) {
         throw new Error('Game not found');
       }
-
-      // Get provider details from Redux store
-      const providerDetails = providers.find(p => p.name.toLowerCase() === gameDetails.provider.toLowerCase());
+      const provider = await axiosSecure.get(`/api/v1/game/providers?page=1&limit=300`);
+      const providerDetails = provider?.data?.data?.results?.find(p => p.name.toLowerCase() === gameDetails.provider.toLowerCase());
       if (!providerDetails) {
         throw new Error('Provider not found');
       }
