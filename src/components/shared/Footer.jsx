@@ -93,7 +93,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="py-4 border-t border-gray-700">
           <p className="text-center text-gray-400 text-sm">
-            © {new Date().getFullYear()} Ourbet. All rights reserved.
+            © {new Date().getFullYear()} Play9. All rights reserved.
           </p>
         </div>
       </div>

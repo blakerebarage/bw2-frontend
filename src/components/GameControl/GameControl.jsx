@@ -39,7 +39,7 @@ const GameControl = () => {
   // Search filter state
   const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-
+  console.log(allGames);
   // Available categories
   const categories = [
     "All",
@@ -57,7 +57,6 @@ const GameControl = () => {
     debounce((value) => setSearchQuery(value), 300),
     []
   );
-// Fetch providers data
 
   /**
    * Fetch all games from the API
@@ -71,10 +70,10 @@ const GameControl = () => {
           page: page,
           limit: limit,
           isActive: true,
-          category: selectedCategory === 'All' ? undefined : selectedCategory
+          search: searchQuery || undefined
         }
       });
-      console.log(response);
+      
       if (response?.data?.data) {
         setAllGames(response.data.data.results);
         setTotalPages(response.data.data.pageCount);
@@ -135,11 +134,21 @@ const GameControl = () => {
    */
   const handleGameSelect = (gameId) => {
     setSelectedGames(prev => {
-      if (prev.includes(gameId)) {
-        return prev.filter(id => id !== gameId);
-      } else {
-        return [...prev, gameId];
+      const newSelectedGames = prev.includes(gameId)
+        ? prev.filter(id => id !== gameId)
+        : [...prev, gameId];
+      
+      // If we're in a specific category, update the existingCategoryGames
+      if (selectedCategory && selectedCategory !== 'All') {
+        setExistingCategoryGames(prevGames => 
+          prevGames.map(game => ({
+            ...game,
+            isSelected: newSelectedGames.includes(game.gameId)
+          }))
+        );
       }
+      
+      return newSelectedGames;
     });
   };
 
@@ -237,45 +246,54 @@ const GameControl = () => {
     }
   };
 
-  // Fetch games when page, limit, or search changes
+  // Fetch games when page, limit, search, or filter changes
   useEffect(() => {
     fetchGames();
-  }, [page, limit, searchQuery]);
+  }, [page, limit, searchQuery, filterType, selectedCategory, selectedGames]);
 
   useEffect(() => {
     debouncedSetSearchQuery(inputValue);
     return () => debouncedSetSearchQuery.cancel();
   }, [inputValue, debouncedSetSearchQuery]);
 
-  // Update the getFilteredGames function
+  // Update the getFilteredGames function to handle category games and remaining games
   const getFilteredGames = () => {
-    // First apply search filter to all games
-    const searchFilteredGames = allGames.filter(game => 
-      game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.provider.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    let filteredGames = [];
 
-    // For specific categories
-    const categoryGames = existingCategoryGames.filter(game => 
-      game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.provider.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    
-    const otherGames = searchFilteredGames.filter(game => 
-      !existingCategoryGames.some(catGame => catGame.gameId === game.gameId)
-    );
+    if (selectedCategory && selectedCategory !== 'All') {
+      // Get games for the selected category
+      const categoryGames = existingCategoryGames;
+       console.log(allGames);
+      // Get remaining games from all games that aren't in the category
+      const remainingGames = allGames.filter(game => 
+        !existingCategoryGames.some(catGame => catGame.gameId === game.gameId)
+      );
 
-    const allGamesList = [...categoryGames, ...otherGames];
-
-    if (filterType === 'selected') {
-      return allGamesList.filter(game => selectedGames.includes(game.gameId));
-    } else if (filterType === 'unselected') {
-      return allGamesList.filter(game => !selectedGames.includes(game.gameId));
+      // Combine category games and remaining games
+      filteredGames = [...categoryGames, ...remainingGames];
+      
+    } else {
+      // If no category selected, show all games
+      filteredGames = allGames;
     }
-    return allGamesList;
-  };
 
-  
+    // Apply search filter if there's a search query
+    if (searchQuery) {
+      filteredGames = filteredGames.filter(game => 
+        game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        game.provider.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    console.log(selectedGames);
+    // Apply selection filter
+    if (filterType === 'selected') {
+      filteredGames = filteredGames.filter(game => selectedGames.includes(game.gameId));
+    } else if (filterType === 'unselected') {
+      filteredGames = filteredGames.filter(game => !selectedGames.includes(game.gameId));
+    }
+
+    return filteredGames;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
