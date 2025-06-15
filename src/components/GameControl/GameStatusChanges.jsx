@@ -22,7 +22,12 @@ const GameStatusChanges = () => {
     { code: "EUR", name: "Euro" },
     { code: "GBP", name: "British Pound" },
     { code: "INR", name: "Indian Rupee" },
-    { code: "NGN", name: "Nigerian Naira" }
+    { code: "NGN", name: "Nigerian Naira" },
+    { code: "PKR", name: "Pakistani Rupee" },
+    {code:"VND", name:"Vietnamese Dong"},
+    {code:"JPY", name:"Japanese Yen"},
+    {code:"ARS", name:"Argentine Peso"},
+    {code:"USDT", name:"Tether"},
   ];
   
   const fetchProviders = async () => {
