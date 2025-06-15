@@ -11,6 +11,7 @@ const GameStatusChanges = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // all, active, inactive
   const [updatingProvider, setUpdatingProvider] = useState(null);
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
@@ -38,9 +39,12 @@ const GameStatusChanges = () => {
         params: {
           page,
           limit: 50,
-          search: searchQuery
+          search: searchQuery,
+          isActive: statusFilter === 'all' ? undefined : statusFilter === 'active'
         }
       });
+
+     
 
       if (response?.data?.data) {
         setProviders(response.data.data.results);
@@ -59,7 +63,7 @@ const GameStatusChanges = () => {
 
   useEffect(() => {
     fetchProviders();
-  }, [page, searchQuery]);
+  }, [page, searchQuery, statusFilter]);
 
   const handleStatusChange = async (providerName, currentStatus, currencyCode) => {
     setUpdatingProvider(providerName);
@@ -131,11 +135,27 @@ const GameStatusChanges = () => {
           Game Providers Status
         </h2>
         <div className="flex items-center gap-4">
+          {/* Status Filter Dropdown */}
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1); // Reset to first page when filter changes
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            <option value="all">All Providers</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
           <input
             type="text"
             placeholder="Search providers..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1); // Reset to first page when search changes
+            }}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
           />
           <button
