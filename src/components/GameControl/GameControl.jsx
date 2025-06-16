@@ -1,4 +1,4 @@
-import Loading from '@/components/shared/Loading';
+import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import useAxiosSecure from '@/Hook/useAxiosSecure';
 import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useState } from 'react';
@@ -401,8 +401,10 @@ const GameControl = () => {
             </h2>
             {/* Only the cards grid shows loading */}
             {loading ? (
-              <div className="flex justify-center items-center py-8">
-                <Loading />
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {[...Array(10)].map((_, idx) => (
+                  <SkeletonCard key={idx} />
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">

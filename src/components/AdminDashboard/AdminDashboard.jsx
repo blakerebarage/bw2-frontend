@@ -370,6 +370,23 @@ const AdminDashboard = () => {
     }
   };
 
+  // Add TableSkeleton component for loading state
+  function TableSkeleton({ rows = 8 }) {
+    return (
+      <>
+        {[...Array(rows)].map((_, idx) => (
+          <tr key={idx}>
+            {[...Array(13)].map((_, colIdx) => (
+              <td key={colIdx} className="px-4 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-full" />
+              </td>
+            ))}
+          </tr>
+        ))}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50"> 
       {/* Stats Cards Section */}
@@ -568,14 +585,7 @@ const AdminDashboard = () => {
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {loading ? (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-4 text-center">
-                      <div className="flex justify-center items-center space-x-2">
-                        <div className="w-5 h-5 border-2 border-[#1f2937] border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-[#1f2937]">Loading...</span>
-                      </div>
-                    </td>
-                  </tr>
+                  <TableSkeleton rows={8} />
                 ) : filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-4 text-center text-[#1f2937]">

@@ -1,3 +1,4 @@
+import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useEffect, useState } from "react";
 import { FaGamepad } from "react-icons/fa";
@@ -175,8 +176,10 @@ const GameStatusChanges = () => {
       )}
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+          {[...Array(8)].map((_, idx) => (
+            <SkeletonCard key={idx} />
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
