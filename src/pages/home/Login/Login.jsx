@@ -35,7 +35,6 @@ const Login = () => {
   const { triggerWelcome } = useWelcome();
   const { deviceId } = useDeviceManager();
   const deviceInfo = useDeviceInfo();
-
   const {
     register,
     handleSubmit,

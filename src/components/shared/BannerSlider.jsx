@@ -6,10 +6,10 @@ import {
 } from "@/components/ui/carousel";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import useMedia from "@/Hook/useMedia";
+import { BellIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import Marquee from "react-fast-marquee";
 import { GrNext, GrPrevious } from "react-icons/gr";
-import { HiOutlineMicrophone } from "react-icons/hi2";
 
 const BannerSlider = () => {
   const axiosSecure = useAxiosSecure();
@@ -107,9 +107,11 @@ const BannerSlider = () => {
         </Button>
       </div>
 
-      <div className="px-3 opacity-90 text-black bg-white w-full py-1">
+      {
+        notices?.length > 0 && (
+        <div className="px-3 opacity-90 text-black bg-white w-full py-1">
         <div className="flex items-center gap-4">
-          <HiOutlineMicrophone className="text-xl md:text-2xl" />
+          <BellIcon className="text-xl md:text-2xl" />
           <Marquee className="text-xs md:text-sm">
             <ul className="flex items-center justify-between gap-20 font-bold">
                {/* todo bannerImages image api not working  after given api then comment out that */}
@@ -122,7 +124,9 @@ const BannerSlider = () => {
             </ul>
           </Marquee>
         </div>
-      </div>
+      </div> 
+        )
+      }
     </Carousel>
   );
 };
