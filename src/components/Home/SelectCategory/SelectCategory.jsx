@@ -273,6 +273,7 @@ export function SelectCategory() {
           currency: providerCurrency || 'NGN',
           gameId,
           lang: 'en',
+          platform: 2,
         }
       );
       if (data?.result?.payload?.game_launch_url) {
