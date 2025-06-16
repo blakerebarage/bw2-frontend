@@ -1,4 +1,4 @@
-import Loading from '@/components/shared/Loading';
+import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import useAxiosSecure from '@/Hook/useAxiosSecure';
 import { useEffect, useState } from 'react';
 import { FaChevronLeft, FaChevronRight, FaGamepad, FaPlay, FaSearch } from 'react-icons/fa';
@@ -170,8 +170,10 @@ const MostPlayedGamesMonitor = () => {
 
           {/* Games Grid */}
           {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loading />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+              {[...Array(8)].map((_, idx) => (
+                <SkeletonCard key={idx} />
+              ))}
             </div>
           ) : (
             games.length === 0 ? (

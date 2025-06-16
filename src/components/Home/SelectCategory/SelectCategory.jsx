@@ -1,24 +1,24 @@
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 
 import Loading from "@/components/shared/Loading";
+import { SkeletonCard } from "@/components/shared/SkeletonCard";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
-import { fetchProviders } from "@/redux/features/providers/providersSlice";
 import { CategoryCards } from "./CategoryCards";
 import { GameCard } from "./GameCard";
 import { MostPlayedGames } from "./MostPlayedGames";
 import { SearchBar } from "./SearchBar";
 
 export function SelectCategory() {
-  const [allGames, setAllGames] = useState([]);
+  
   const [displayGames, setDisplayGames] = useState([]);
   const [mostPlayedGames, setMostPlayedGames] = useState([]);
   const { user } = useSelector((state) => state.auth);
-  const { providers } = useSelector((state) => state.providers);
+ 
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [gameLoading, setGameLoading] = useState(false);
@@ -28,8 +28,9 @@ export function SelectCategory() {
   const [totalGames, setTotalGames] = useState(0);
   const [popularPage, setPopularPage] = useState(1);
   const [popularTotalPages, setPopularTotalPages] = useState(1);
+  const [categoryReloadKey, setCategoryReloadKey] = useState(0);
 
-  const dispatch = useDispatch();
+ 
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
   const navigate = useNavigate();
@@ -38,10 +39,7 @@ export function SelectCategory() {
     AOS.init({ duration: 800 });
   }, []);
 
-  // Fetch providers data
-  useEffect(() => {
-    dispatch(fetchProviders());
-  }, [dispatch]);
+ 
 
   // Fetch all games data
   useEffect(() => {
@@ -62,10 +60,10 @@ export function SelectCategory() {
         if (response?.data?.data) {
           setTotalGames(response.data.data.totalItems || 0);
           if (currentPage === 1) {
-            setAllGames(response.data.data.results);
+            
             setDisplayGames(response.data.data.results);
           } else {
-            setAllGames(prev => [...prev, ...response.data.data.results]);
+            
             setDisplayGames(prev => [...prev, ...response.data.data.results]);
           }
         }
@@ -80,33 +78,35 @@ export function SelectCategory() {
     };
 
     fetchAllGames();
-  }, [currentPage, selectedCategory.value]);
+  }, [currentPage, selectedCategory.value, categoryReloadKey]);
 
   // Fetch favorites
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!user?.username) return;
-      setLoading(true);
-      try {
-        const response = await axiosSecure.get(`/api/v1/content/all-favorite/${user.username}`);
-        if (response?.data?.data) {
-          setFavoriteGames(response.data.data || []);
-          if (selectedCategory.value === "favourite") {
-            setDisplayGames(response.data.data || []);
-          }
+  const fetchFavorites = async () => {
+    if (!user?.username) return;
+    setLoading(true);
+    try {
+      const response = await axiosSecure.get(`/api/v1/content/all-favorite/${user.username}`);
+      if (response?.data?.data) {
+        setFavoriteGames(response.data.data || []);
+        if (selectedCategory.value === "favourite") {
+          setDisplayGames(response.data.data || []);
         }
-      } catch (error) {
-        addToast("Failed to load favorites", {
-          appearance: "error",
-          autoDismiss: true,
-        });
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      addToast("Failed to load favorites", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchFavorites();
-  }, [user?.username, selectedCategory.value]);
+   
+   
+  }, [user?.username, selectedCategory.value, categoryReloadKey]);
 
   // Handle search for favorites
   useEffect(() => {
@@ -174,14 +174,17 @@ export function SelectCategory() {
 
       fetchGames();
     }
-  }, [searchQuery, selectedCategory, currentPage]);
+  }, [searchQuery, selectedCategory, currentPage, categoryReloadKey]);
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setCurrentPage(1);
-    setAllGames([]);
     setDisplayGames([]);
     setSearchQuery("");
+    setCategoryReloadKey(prev => prev + 1);
+    if (category.value === "favourite") {
+      fetchFavorites();
+    }
   };
 
   const handleFavoriteToggle = async (game) => {
@@ -320,7 +323,13 @@ export function SelectCategory() {
           )}
           
           {loading ? (
-            ""
+            <div className="text-center py-8">
+              <div className="grid gap-4 grid-cols-3">
+                {[...Array(6)].map((_, idx) => (
+                  <SkeletonCard key={idx} />
+                ))}
+              </div>
+            </div>
           ) : displayGames?.length > 0 ? (
             <div className="grid gap-4 grid-cols-3">
               {displayGames.map((game) => (
@@ -407,7 +416,11 @@ export function SelectCategory() {
 
           {loading ? (
             <div className="text-center py-8">
-              <Loading />
+              <div className="grid gap-4 grid-cols-3">
+                {[...Array(6)].map((_, idx) => (
+                  <SkeletonCard key={idx} />
+                ))}
+              </div>
             </div>
           ) : displayGames?.length > 0 ? (
             <>
