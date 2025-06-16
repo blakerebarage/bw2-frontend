@@ -33,7 +33,7 @@ export const GameCard = ({
           <FaHeart size={14} />
         </button>
       )}
-
+  
       <div className="absolute w-11/12 mx-auto text-center bottom-4 left-1/2 transform -translate-x-1/2">
         <div className="backdrop-blur-md bg-white/10 text-white px-2 py-1 rounded-full border border-white/20 shadow-sm text-xs font-semibold hover:scale-105 transition-all duration-300">
           {game.name === "LuckSportGaming" ? "Lucky Exchange" : game.name}
