@@ -25,6 +25,9 @@ const GameLunch = () => {
     }
 
     setGameUrl(decodeURIComponent(url));
+
+    // Hide the query string from the address bar
+    window.history.replaceState({}, '', '/game');
   }, [location.search, navigate, addToast]);
 
   const handleIframeLoad = () => setLoading(false);
