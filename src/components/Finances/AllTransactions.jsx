@@ -46,7 +46,7 @@ const AllTransactions = () => {
       }
 
       const response = await axiosSecure.get(url);
-      console.log(response.data);
+
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to fetch transactions");
       }
@@ -311,7 +311,7 @@ const AllTransactions = () => {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Transaction Ref
+                            Transaction ID
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Type
