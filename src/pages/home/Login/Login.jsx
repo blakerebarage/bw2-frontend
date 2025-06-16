@@ -1,6 +1,7 @@
 import SpinLoader from "@/components/loaders/SpinLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useDeviceInfo from "@/Hook/useDeviceInfo";
 import useDeviceManager from "@/Hook/useDeviceManager";
 import {
   useLazyGetAuthenticatedUserQuery,
@@ -33,7 +34,7 @@ const Login = () => {
   const { addToast } = useToasts();
   const { triggerWelcome } = useWelcome();
   const { deviceId } = useDeviceManager();
-
+  const deviceInfo = useDeviceInfo();
   const {
     register,
     handleSubmit,
@@ -62,7 +63,8 @@ const Login = () => {
       const { data: loginData } = await loginUser({ 
         phoneOrUserName, 
         password,
-        deviceId
+        deviceId,
+        deviceInfo
       });
       
       if (loginData.token) {
@@ -71,7 +73,8 @@ const Login = () => {
           token: loginData.token, 
           user: userData?.data,
           session: loginData.session,
-          deviceId
+          deviceId,
+          deviceInfo
         }));
 
         addToast("Login successful", {

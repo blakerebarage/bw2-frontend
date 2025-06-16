@@ -39,7 +39,7 @@ const GameControl = () => {
   // Search filter state
   const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  console.log(allGames);
+  
   // Available categories
   const categories = [
     "All",
@@ -228,7 +228,7 @@ const GameControl = () => {
         }
       );
       if (data?.result?.payload?.game_launch_url) {
-        window.open(data.result.payload.game_launch_url, '_blank');
+        navigate(`/game?url=${encodeURIComponent(data.result.payload.game_launch_url)}`);
       } 
       else {
         addToast(data?.result?.message || "Something went wrong", {
