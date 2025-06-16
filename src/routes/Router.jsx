@@ -67,6 +67,7 @@ import GameStatusChanges from "@/components/GameControl/GameStatusChanges";
 import MostPlayedGamesMonitor from "@/components/Home/MostPlayedGamesMonitor/MostPlayedGamesMonitor";
 import TurnOver from "@/components/TurnOver";
 import WithdrawByChat from "@/components/WithdrawByChat";
+import GameLunch from "@/pages/Game/GameLunch";
 import Settings from "@/pages/setting/Settings";
 import UsersData from "@/pages/UsersData/UsersData";
 import { createBrowserRouter } from "react-router-dom";
@@ -83,6 +84,7 @@ const router = createBrowserRouter([
         children: [
           { path: "", element: <Home /> },
           { path: "/login", element: <Login /> },
+          { path: "/game", element: <GameLunch /> },
           { path: "/signup", element: <Register /> },
           { path: "/terms-conditions", element: <TermsAndCondition /> },
           { path: "/privacy-policy", element: <PrivacyPolicy /> },

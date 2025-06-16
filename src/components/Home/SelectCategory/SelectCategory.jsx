@@ -126,7 +126,7 @@ export function SelectCategory() {
         const response = await axiosSecure.get('/api/v1/game/most-played-games', {
           params: {
             page: popularPage,
-            limit: 9,
+            limit: 15,
             isActive: true
           }
         });
@@ -238,7 +238,6 @@ export function SelectCategory() {
   };
 
   const initGameLaunch = async (gameId) => {
-    console.log(gameId);
     if (!user?.username) {
       addToast("Please login to play games", {
         appearance: "error",
@@ -277,7 +276,8 @@ export function SelectCategory() {
         }
       );
       if (data?.result?.payload?.game_launch_url) {
-        window.open(data.result.payload.game_launch_url, '_blank');
+        // Navigate to the game page with the game URL
+        navigate(`/game?url=${encodeURIComponent(data.result.payload.game_launch_url)}`);
       } 
       else {
         addToast(data?.result?.message || "Something went wrong", {
@@ -322,7 +322,7 @@ export function SelectCategory() {
             </div>
           )}
           
-          {loading ? (
+          {loading && user?.username ? (
             <div className="text-center py-8">
               <div className="grid gap-4 grid-cols-3">
                 {[...Array(6)].map((_, idx) => (
@@ -330,7 +330,7 @@ export function SelectCategory() {
                 ))}
               </div>
             </div>
-          ) : displayGames?.length > 0 ? (
+          ) : user?.username && displayGames?.length > 0 ? (
             <div className="grid gap-4 grid-cols-3">
               {displayGames.map((game) => (
                 <GameCard
@@ -344,7 +344,7 @@ export function SelectCategory() {
               ))}
             </div>
           ) : (
-            <div className="text-center text-[#ffffff] py-8">
+            user?.username && <div className="text-center text-[#ffffff] py-8">
               <p className="text-lg">No favorite games found</p>
               <p className="text-sm mt-2 text-[#ffffff]">
                 {user?.username ? "Add some games to your favorites" : "Please login to view your favorite games"}
@@ -365,36 +365,7 @@ export function SelectCategory() {
                 favoriteGames={favoriteGames}
                 user={user}
               />
-              {/* Pagination for Popular Games */}
-              {popularTotalPages > 1 && (
-                <div className="flex justify-center items-center gap-4 mt-4">
-                  <button
-                    onClick={() => setPopularPage(prev => Math.max(prev - 1, 1))}
-                    disabled={popularPage === 1}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
-                      popularPage === 1
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-red-500 text-white hover:bg-red-600'
-                    }`}
-                  >
-                    Previous
-                  </button>
-                  <span className="font-semibold text-red-500">
-                    Page {popularPage} of {popularTotalPages}
-                  </span>
-                  <button
-                    onClick={() => setPopularPage(prev => Math.min(prev + 1, popularTotalPages))}
-                    disabled={popularPage === popularTotalPages}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
-                      popularPage === popularTotalPages
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-red-500 text-white hover:bg-red-600'
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
+             
             </div>
           )}
         </div>

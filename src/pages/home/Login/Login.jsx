@@ -33,6 +33,7 @@ const Login = () => {
   const { addToast } = useToasts();
   const { triggerWelcome } = useWelcome();
   const { deviceId } = useDeviceManager();
+  const [deviceInfo, setDeviceInfo] = useState(null);
 
   const {
     register,
@@ -45,24 +46,126 @@ const Login = () => {
   });
 
   const watchInputCode = watch("inputCode", "");
-
   const generateVerificationCode = () => {
     const code = Math.floor(1000 + Math.random() * 9000).toString();
     setVerificationCode(code);
     reset({ inputCode: "" });
   };
-
   useEffect(() => {
     generateVerificationCode();
-  }, []);
+    // Get device information
+    const getDeviceInfo = async () => {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        
+        // Get browser information
+        const userAgent = navigator.userAgent;
+        let browser = 'Unknown';
+        if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
+          browser = 'Chrome';
+        } else if (userAgent.includes('Firefox')) {
+          browser = 'Firefox';
+        } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+          browser = 'Safari';
+        } else if (userAgent.includes('Edg')) {
+          browser = 'Edge';
+        } else if (userAgent.includes('MSIE') || userAgent.includes('Trident/')) {
+          browser = 'Internet Explorer';
+        }
 
+        // Get OS information
+        let os = 'Unknown';
+        if (userAgent.includes('Windows')) {
+          os = 'Windows';
+          if (userAgent.includes('Windows NT 10.0')) {
+            os = 'Windows 10';
+          } else if (userAgent.includes('Windows NT 6.3')) {
+            os = 'Windows 8.1';
+          } else if (userAgent.includes('Windows NT 6.2')) {
+            os = 'Windows 8';
+          } else if (userAgent.includes('Windows NT 6.1')) {
+            os = 'Windows 7';
+          }
+        } else if (userAgent.includes('Mac')) {
+          os = 'MacOS';
+        } else if (userAgent.includes('Linux')) {
+          os = 'Linux';
+        } else if (userAgent.includes('Android')) {
+          os = 'Android';
+        } else if (userAgent.includes('iOS')) {
+          os = 'iOS';
+        }
+
+        setDeviceInfo({
+          browser,
+          os,
+          ip: data.ip || 'Unknown',
+          location: {
+            city: data.city || 'Unknown',
+            country: data.country_code || 'Unknown'
+          }
+        });
+      } catch (error) {
+        // Fallback device info if API fails
+        const userAgent = navigator.userAgent;
+        let browser = 'Unknown';
+        if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
+          browser = 'Chrome';
+        } else if (userAgent.includes('Firefox')) {
+          browser = 'Firefox';
+        } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+          browser = 'Safari';
+        } else if (userAgent.includes('Edg')) {
+          browser = 'Edge';
+        } else if (userAgent.includes('MSIE') || userAgent.includes('Trident/')) {
+          browser = 'Internet Explorer';
+        }
+
+        let os = 'Unknown';
+        if (userAgent.includes('Windows')) {
+          os = 'Windows';
+          if (userAgent.includes('Windows NT 10.0')) {
+            os = 'Windows 10';
+          } else if (userAgent.includes('Windows NT 6.3')) {
+            os = 'Windows 8.1';
+          } else if (userAgent.includes('Windows NT 6.2')) {
+            os = 'Windows 8';
+          } else if (userAgent.includes('Windows NT 6.1')) {
+            os = 'Windows 7';
+          }
+        } else if (userAgent.includes('Mac')) {
+          os = 'MacOS';
+        } else if (userAgent.includes('Linux')) {
+          os = 'Linux';
+        } else if (userAgent.includes('Android')) {
+          os = 'Android';
+        } else if (userAgent.includes('iOS')) {
+          os = 'iOS';
+        }
+
+        setDeviceInfo({
+          browser,
+          os,
+          ip: 'Unknown',
+          location: {
+            city: 'Unknown',
+            country: 'Unknown'
+          }
+        });
+      }
+    };
+    getDeviceInfo();
+  }, []);
+  console.log(deviceInfo);
   const onSubmit = async (data) => {
     const { phoneOrUserName, password } = data;
     try {
       const { data: loginData } = await loginUser({ 
-        phoneOrUserName, 
+        phoneOrUserName,
         password,
-        deviceId
+        deviceId,
+        deviceInfo
       });
       
       if (loginData.token) {
@@ -102,8 +205,8 @@ const Login = () => {
     }
   };
 
-  const isLoginDisabled = !(watchInputCode === verificationCode) || !isValid || isLoading;
-
+  const isLoginDisabled = !(watchInputCode === verificationCode) || !isValid || isLoading || !deviceInfo;
+  
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-6">
       <div className="w-full max-w-4xl mx-auto pt-8 ">
