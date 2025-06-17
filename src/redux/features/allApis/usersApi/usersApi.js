@@ -35,7 +35,7 @@ const usersApi = baseApi.injectEndpoints({
 
     // get all users
     getUsers: builder.query({
-      query: () => "/api/v1/user/all",
+      query: () => "/api/v1/user/all?limit=100000",
       providesTags: ["users"],
     }),
 
