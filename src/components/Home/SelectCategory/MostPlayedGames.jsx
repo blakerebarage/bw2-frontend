@@ -4,7 +4,7 @@ export const MostPlayedGames = ({ games, onGameLaunch, onFavoriteToggle, favorit
   if (!games.length) return null;
 
   return (
-    <div className="space-y-4 px-3">
+    <div className="space-y-4 px-3 pb-8">
      
       
       <div className="grid gap-4 grid-cols-3">
