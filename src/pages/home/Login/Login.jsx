@@ -35,6 +35,7 @@ const Login = () => {
   const { triggerWelcome } = useWelcome();
   const { deviceId } = useDeviceManager();
   const deviceInfo = useDeviceInfo();
+
   const {
     register,
     handleSubmit,
@@ -211,18 +212,7 @@ const Login = () => {
             )}
           </div>
 
-          {/* Terms and Conditions */}
-          <div className="flex items-center group">
-            <input
-              type="checkbox"
-              {...register("rememberMe")}
-              className="h-4 w-4 text-[#1b1f23] focus:ring-[#1b1f23] border-gray-300 rounded transition-colors group-hover:border-[#1b1f23]/50"
-            />
-            <label className="ml-2 block text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
-              I agree to the{" "}
-              <a href="/terms-conditions" className="text-[#1b1f23] hover:underline transition-colors">Terms and Conditions</a>
-            </label>
-          </div>
+          
 
           {/* Login Button */}
           <Button

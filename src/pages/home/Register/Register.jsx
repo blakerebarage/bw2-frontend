@@ -17,14 +17,14 @@ import { FaShield } from "react-icons/fa6";
 import { IoIosUnlock } from "react-icons/io";
 import { MdEmail } from "react-icons/md";
 import { useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import { useWelcome } from '../../../UserContext/WelcomeContext';
 
 const Register = () => {
   const [addUser] = useAddUserMutation();
   const navigate = useNavigate();
-  const [referal, setReferal] = useState('SDFHSDJKFD');
+  
   const { triggerWelcome } = useWelcome();
 
   const {
@@ -43,7 +43,7 @@ const Register = () => {
       confirmPassword: "",
       referCode: "",
       validationCode: "",
-      terms: false,
+     
     },
   });
 
@@ -71,29 +71,21 @@ const Register = () => {
     setValue("validationCode", "");
   };
 
-  const generateReferralCode = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let code = "";
-    for (let i = 0; i < 8; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-  };
-
+  
   const onSubmit = async (data) => {
-    const referralCode = generateReferralCode();
-    const referredBy = data.referCode || referal;
-
+    
     const userInfo = {
       phone: data.phone,
       fullName: data.fullName,
-      email: data.email,
       password: data.password,
-      referralCode,
-      referredBy,
+      referredBy: data.referCode ? data.referCode : "",
       role: "user",
     };
-
+    // Only add email to userInfo if it has a value
+    if (data.email && data.email.trim() !== "") {
+      userInfo.email = data.email;
+    }
+ 
     if (data.validationCode === verificationCode) {
       try {
         setLoading(true);
@@ -318,32 +310,7 @@ const Register = () => {
             )}
           </div>
 
-          {/* Terms */}
-          <div className="flex items-center gap-2 group">
-            <input
-              type="checkbox"
-              className="h-4 w-4 text-[#1b1f23] focus:ring-[#1b1f23] border-gray-300 rounded transition-colors group-hover:border-[#1b1f23]/50"
-              {...register("terms", {
-                required: "You must agree to the terms.",
-              })}
-              aria-invalid={errors.terms ? "true" : "false"}
-            />
-            <label className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
-              I agree and understand the{" "}
-              <Link
-                to="/terms-and-conditions"
-                className="text-[#1b1f23] hover:underline transition-colors"
-              >
-                Terms & Conditions
-              </Link>
-            </label>
-          </div>
-          {errors.terms && (
-            <p className="text-sm text-red-500 flex items-center gap-1 animate-fade-in">
-              <FaInfoCircle className="text-sm" />
-              {errors.terms.message}
-            </p>
-          )}
+          
 
           <Button
             type="submit"
