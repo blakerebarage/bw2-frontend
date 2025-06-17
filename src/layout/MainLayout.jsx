@@ -14,6 +14,8 @@ const MainLayout = () => {
         backgroundPosition: "top",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
+        
+       
       }}
       className=" flex justify-center"
     >
@@ -25,7 +27,7 @@ const MainLayout = () => {
       {/* color2:  bg-gradient-to-b from-[#0c0c0c] via-[#1a1a1a] to-[#000000] */}
       {/* me:  bg-gradient-to-br from-green-200 via-blue-300 to-green-200 */}
       {/* bg-[url('https://i.ibb.co.com/BHFQ5w9r/8868.jpg')] */}
-      <div className="w-full md:w-[60%] lg:w-[40%] xl:w-[30%] bg-[#1B1F23] bg-cover bg-center bg-no-repeat flex flex-col overflow-y-auto overflow-x-hidden scrollbar-hide">
+      <div className="w-full md:w-[60%] lg:w-[40%] xl:w-[30%] bg-[#1B1F23] bg-cover bg-center bg-no-repeat flex flex-col h-[100vh] overflow-y-auto overflow-x-hidden scrollbar-hide">
         <Navbar />
         <ContactWidget />
         <div className="flex-grow">
