@@ -46,7 +46,7 @@ const ActivityLog = () => {
     return <div className="mt-16 text-center text-red-500">Error: {error}</div>;
   }
   return (
-    <div className="px-2 max-w-3xl mx-auto pb-4 drop-shadow-xl">
+    <div className="px-2 max-w-3xl mx-auto pb-4 drop-shadow-xl border border-[#facc15]/20 rounded-2xl">
       {loading && (
           <div className="flex justify-center items-center py-8">
             <Loading />
@@ -56,33 +56,33 @@ const ActivityLog = () => {
         {activityLog.map((log) => (
           <div
             key={log._id}
-            className=" rounded-xl shadow-md border drop-shadow-lg p-4 flex flex-col sm:flex-row sm:items-center gap-2 text-white"
+            className=" rounded-xl shadow-md border drop-shadow-lg p-4 flex flex-col sm:flex-row sm:items-center gap-2 text-[#facc15]"
           >
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-semibold">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#facc15] text-[#1a1f24] text-xs font-semibold">
                   <FaUser className="inline" /> {log.username}
                 </span>
                 {
                   user.role === "super-admin" && <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold
-                    ${log.method === "GET" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                    ${log.method === "GET" ? "bg-[#facc15] text-[#1a1f24]" : "bg-[#facc15] text-[#1a1f24]"}`}>
                     {log.method}
                   </span>
                 }
                 {
-                  user.role === "super-admin" && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-semibold"></span>
+                  user.role === "super-admin" && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#facc15] text-[#1a1f24] text-xs font-semibold"></span>
                 }
                 {log.isSuspicious ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#facc15] text-[#1a1f24] text-xs font-semibold">
                     <FaExclamationTriangle className="inline" /> Suspicious
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#facc15] text-[#1a1f24] text-xs font-semibold">
                     <FaCheckCircle className="inline" /> Safe
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-900">
+              <div className="flex flex-wrap gap-4 text-sm text-[#facc15]">
                 <div className="flex items-center gap-1">
                   <FaClock /> {moment(log.timestamp).format("YYYY-MM-DD HH:mm:ss")}
                 </div>
@@ -98,7 +98,7 @@ const ActivityLog = () => {
               </div>
               
                {
-                 user.role === "super-admin" && <div className="mt-2 text-xs text-gray-900 break-all">
+                 user.role === "super-admin" && <div className="mt-2 text-xs text-[#facc15] break-all">
                  <span className="font-semibold">Route:</span> {log.route}
                </div>
                }
@@ -110,15 +110,15 @@ const ActivityLog = () => {
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-1.5 px-4 rounded-md mr-2"
+          className="bg-[#facc15] hover:bg-[#facc15] text-[#1a1f24] font-bold py-1.5 px-4 rounded-md mr-2"
         >
           Previous
         </button>
-        <span className="py-1.5 px-4 text-gray-900">Page {currentPage} of {totalPages}</span>
+        <span className="py-1.5 px-4 text-[#facc15]">Page {currentPage} of {totalPages}</span>
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-1.5 px-4 rounded-md ml-2"
+            className="bg-[#facc15] hover:bg-[#facc15] text-[#1a1f24] font-bold py-1.5 px-4 rounded-md ml-2"
         >
           Next
         </button>

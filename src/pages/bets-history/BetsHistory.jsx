@@ -30,6 +30,7 @@ const BetsHistory = () => {
         `/api/v1/game/bet-history/${user?.username}?page=${currentPage}&limit=${limit}&search=${search}`
       );
       if (response.data.success) {
+        
         setBets(response.data.data.results);
         setTotalPages(response.data.data.pageCount);
       }
@@ -56,7 +57,7 @@ const BetsHistory = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search by game round or serial number..."
+              placeholder="Search by game name or game category"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full px-4 py-2 bg-[#111827] border border-gray-700 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -99,15 +100,15 @@ const BetsHistory = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <FaCoins className="text-gray-400" />
-                      <span className="font-medium">Currency:</span>
+                      <span className="font-medium">Game Name:</span>
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-300">
-                        {bet.data.currency_code}
+                        {bet?.gameName}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <FaCalendarAlt className="text-gray-400" />
                       <span className="font-medium">Time:</span>
-                      {moment(bet.createdAt).format("MMM D, YYYY h:mm A")}
+                      {moment(bet?.createdAt).format("MMM D, YYYY h:mm A")}
                     </div>
                   </div>
 
@@ -135,7 +136,7 @@ const BetsHistory = () => {
           )}
 
           {/* Pagination */}
-          {!loading && bets.length > 0 && (
+          {!loading && bets.length > 0 && totalPages > 1 && (
             <div className="flex justify-center mt-6">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

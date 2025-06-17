@@ -374,7 +374,7 @@ export function SelectCategory() {
 
       {/* Regular Games Section */}
       {selectedCategory.value !== "favourite" && (
-        <div className="space-y-4 px-3">
+        <div className="space-y-4 px-3 pb-8">
           <div className="flex justify-between items-center">
             <h3 className="text-2xl font-bold text-[#ffffff] drop-shadow">
               {selectedCategory.title} Games
@@ -410,7 +410,7 @@ export function SelectCategory() {
               </div>
               
               {/* Pagination Controls for All Categories */}
-              {totalGames > 0 && (
+              {totalGames > 45 && (
                 <div className="flex justify-center items-center gap-4 mt-8">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}

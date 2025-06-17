@@ -64,17 +64,17 @@ const BalanceOverview = () => {
       {/* <PageHeader title="Balance Overview" /> */}
       <div className="m-4 space-y-6">
         {/* Main Balance Card */}
-        <div className="bg-gradient-to-r from-[#ffffff] to-[#ffffff] p-6 rounded-2xl shadow-lg">
+        <div className="bg-[#1a1f24] p-6 rounded-2xl shadow-lg border border-[#facc15]/20">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-800">Your Balances</h1>
+            <h1 className="text-2xl font-bold text-[#facc15]">Your Balances</h1>
           </div>
           <div className="flex flex-row items-center gap-4">
-            <div className="bg-red-400 backdrop-blur-sm py-2 px-4 rounded-xl">
-              <p className="text-sm font-bold text-[#ffffff]">
-                <FaWallet className="text-3xl text-[#ffffff]" />
+            <div className="bg-[#facc15] backdrop-blur-sm py-2 px-4 rounded-xl">
+              <p className="text-sm font-bold text-[#1a1f24]">
+                <FaWallet className="text-3xl text-[#1a1f24]" />
               </p>
             </div>
-            <p className="text-4xl font-bold text-gray-800">
+            <p className="text-4xl font-bold text-[#facc15]">
               { formatCurrency(user?.balance) || '0.00'}
             </p>
           </div>

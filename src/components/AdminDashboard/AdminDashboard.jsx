@@ -2,8 +2,9 @@ import {
   useAddUserMutation,
   useGetUsersQuery,
 } from "@/redux/features/allApis/usersApi/usersApi";
+import debounce from 'lodash.debounce';
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -56,6 +57,20 @@ const AdminDashboard = () => {
 
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [isUserControlsExpanded, setIsUserControlsExpanded] = useState(false);
+
+  // Create a debounced search function
+  const debouncedSearch = useCallback(
+    debounce((searchValue) => {
+      setKeyword(searchValue);
+    }, 500),
+    []
+  );
+
+  // Update the search input handler
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    debouncedSearch(value);
+  };
 
   useEffect(() => {
     // Fetch stat data on mount
@@ -527,8 +542,7 @@ const AdminDashboard = () => {
                 <div className="flex-1 min-w-[180px] relative">
                   <input
                     type="text"
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
+                    onChange={handleSearchInputChange}
                     placeholder="Search users..."
                     className="w-full h-11 px-4 py-2 pl-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors"
                   />
