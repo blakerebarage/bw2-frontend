@@ -50,6 +50,7 @@ const GameControl = () => {
     "Crash",
     "Fishing",
     "Lottery",
+    "Uncategorized"
   ];
 
   // Debounce the search query update
@@ -134,21 +135,13 @@ const GameControl = () => {
    */
   const handleGameSelect = (gameId) => {
     setSelectedGames(prev => {
-      const newSelectedGames = prev.includes(gameId)
-        ? prev.filter(id => id !== gameId)
-        : [...prev, gameId];
-      
-      // If we're in a specific category, update the existingCategoryGames
-      if (selectedCategory && selectedCategory !== 'All') {
-        setExistingCategoryGames(prevGames => 
-          prevGames.map(game => ({
-            ...game,
-            isSelected: newSelectedGames.includes(game.gameId)
-          }))
-        );
+      if (prev.includes(gameId)) {
+        // Remove from selected
+        return prev.filter(id => id !== gameId);
+      } else {
+        // Add to selected
+        return [...prev, gameId];
       }
-      
-      return newSelectedGames;
     });
   };
 
@@ -166,11 +159,11 @@ const GameControl = () => {
     setLoading(true);
 
     try {
-      await axiosSecure.patch('/api/v1/game/update-games-with-category', {
+      const response = await axiosSecure.patch('/api/v1/game/update-games-with-category', {
         category: selectedCategory,
         gameIds: selectedGames
       });
-
+      console.log(selectedGames,response);
       addToast("Category updated successfully.", {
         appearance: "success",
         autoDismiss: true,
