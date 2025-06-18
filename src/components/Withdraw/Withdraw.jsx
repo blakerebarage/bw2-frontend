@@ -1,6 +1,7 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
+import { ArrowRight, Check, Copy, CreditCard, Send, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -8,56 +9,68 @@ import Swal from "sweetalert2";
 
 // Payment Method Selector Component
 const PaymentMethodSelector = ({ bankTypes, paymentMethods, selectedMethod, onSelect }) => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 rounded-lg shadow-md bg-gray-900/80">
-    {bankTypes.map((bankType) => {
-      const methodInfo = paymentMethods.find(m => m.name === bankType);
-      return (
-        <div
-          key={bankType}
-          onClick={() => onSelect(bankType)}
-          className={`relative group cursor-pointer transition-all duration-300 ease-in-out ${
-            selectedMethod === bankType
-              ? "ring-2 ring-yellow-400 bg-yellow-50/10"
-              : "hover:bg-gray-800/50"
-          }`}
-        >
-          <div className="relative w-16 h-16 mx-auto overflow-hidden rounded-lg p-2">
-            <img
-              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
-              src={methodInfo?.logo || ""}
-              alt={bankType}
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span className="text-white text-sm font-medium">
-                {bankType}
-              </span>
+  <div className="space-y-3">
+    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Select Payment Method</h3>
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {bankTypes.map((bankType) => {
+        const methodInfo = paymentMethods.find(m => m.name === bankType);
+        const isSelected = selectedMethod === bankType;
+        
+        return (
+          <button
+            key={bankType}
+            onClick={() => onSelect(bankType)}
+            className={`relative p-3 rounded-lg border transition-all duration-200 ${
+              isSelected
+                ? "bg-[#facc15]/10 border-[#facc15] text-[#facc15]"
+                : "bg-[#22282e] border-gray-600 text-gray-300 hover:border-gray-500"
+            }`}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[#22282e] flex items-center justify-center">
+                {methodInfo?.logo ? (
+                  <img
+                    className="w-6 h-6 object-contain"
+                    src={methodInfo.logo}
+                    alt={bankType}
+                  />
+                ) : (
+                  <CreditCard className="w-4 h-4 text-[#facc15]" />
+                )}
+              </div>
+              <span className="text-xs font-medium">{bankType}</span>
+              {isSelected && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#facc15] rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-[#1a1f24]" />
+                </div>
+              )}
             </div>
-          </div>
-          <div className="mt-1 text-center">
-            <span className="text-xs text-gray-300">{bankType}</span>
-          </div>
-        </div>
-      );
-    })}
+          </button>
+        );
+      })}
+    </div>
   </div>
 );
 
 // Channel Selector Component
 const ChannelSelector = ({ channels, selectedChannel, onSelect }) => (
-  <div className="flex flex-wrap gap-2">
-    {channels.map((channel) => (
-      <button
-        key={channel}
-        onClick={() => onSelect(channel)}
-        className={`px-4 py-2 rounded-md border transition-all duration-300 ease-in-out ${
-          selectedChannel === channel
-            ? "bg-yellow-500 text-black font-bold transform scale-105"
-            : "bg-gray-700 hover:bg-gray-600 text-gray-200"
-        }`}
-      >
-        {channel}
-      </button>
-    ))}
+  <div className="space-y-3">
+    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Select Channel</h3>
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      {channels.map((channel) => (
+        <button
+          key={channel}
+          onClick={() => onSelect(channel)}
+          className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            selectedChannel === channel
+              ? "bg-[#facc15] text-[#1a1f24]"
+              : "bg-[#22282e] text-gray-300 hover:bg-[#2a323a] border border-gray-600"
+          }`}
+        >
+          {channel}
+        </button>
+      ))}
+    </div>
   </div>
 );
 
@@ -71,35 +84,31 @@ const BankCard = ({ bankDetails, type }) => {
       setCopiedField(field);
       setTimeout(() => setCopiedField(null), 2000);
     } catch (err) {
-      
+      // Handle error silently
     }
   };
 
   const CopyableField = ({ label, value, field }) => (
-    <div className="relative group">
-      <div className="flex items-center justify-between">
-        <span className="text-xs opacity-80">{label}</span>
-        <button
-          onClick={() => copyToClipboard(value, field)}
-          className="text-xs text-yellow-500 hover:text-yellow-400 transition-colors"
-        >
-          {copiedField === field ? 'Copied!' : 'Copy'}
-        </button>
+    <div className="flex items-center justify-between p-3 bg-[#22282e] rounded-lg">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-400 uppercase tracking-wide">{label}</p>
+        <p className="text-sm font-medium text-white truncate mt-1">{value}</p>
       </div>
-      <div 
-        className="text-sm font-semibold cursor-pointer hover:text-yellow-400 transition-colors"
+      <button
         onClick={() => copyToClipboard(value, field)}
+        className="ml-3 p-2 text-[#facc15] hover:bg-[#facc15]/10 rounded-lg transition-colors"
       >
-        {value}
-      </div>
+        {copiedField === field ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+      </button>
     </div>
   );
 
   // Mobile banking: only show account number
   if (type !== "Bank") {
     return (
-      <div className="flex justify-center mb-6">
-        <div className="relative w-full max-w-xs rounded-xl shadow-lg bg-gradient-to-br from-gray-700 to-gray-800 p-4 text-white overflow-hidden transition-transform duration-300 hover:scale-[1.02]">
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Account Details</h3>
+        <div className="bg-[#1a1f24] rounded-lg border border-[#facc15]/20 p-4">
           <CopyableField
             label="Account Number"
             value={bankDetails.accountNumber}
@@ -112,35 +121,34 @@ const BankCard = ({ bankDetails, type }) => {
 
   // Direct bank: show all fields
   return (
-    <div className="flex justify-center mb-6">
-      <div className="relative w-full max-w-xs rounded-xl shadow-lg bg-gradient-to-br from-gray-700 to-gray-800 p-4 text-white overflow-hidden transition-transform duration-300 hover:scale-[1.02]">
-        <div className="flex flex-col gap-2">
-          <CopyableField
-            label="Bank Name"
-            value={bankDetails.bankName}
-            field="bankName"
-          />
-          <CopyableField 
-            label="Branch"
-            value={bankDetails.branchName}
-            field="branchName"
-          />
-          <CopyableField 
-            label="Account Number" 
-            value={bankDetails.accountNumber} 
-            field="accountNumber"
-          />
-          <CopyableField 
-            label="Account Holder" 
-            value={bankDetails.accountHolderName} 
-            field="accountHolder"
-          />
-          <CopyableField 
-            label="Routing Number" 
-            value={bankDetails.routingNumber} 
-            field="routing"
-          />
-        </div>
+    <div className="space-y-3">
+      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Bank Details</h3>
+      <div className="bg-[#1a1f24] rounded-lg border border-[#facc15]/20 p-4 space-y-3">
+        <CopyableField
+          label="Bank Name"
+          value={bankDetails.bankName}
+          field="bankName"
+        />
+        <CopyableField 
+          label="Branch"
+          value={bankDetails.branchName}
+          field="branchName"
+        />
+        <CopyableField 
+          label="Account Number" 
+          value={bankDetails.accountNumber} 
+          field="accountNumber"
+        />
+        <CopyableField 
+          label="Account Holder" 
+          value={bankDetails.accountHolderName} 
+          field="accountHolder"
+        />
+        <CopyableField 
+          label="Routing Number" 
+          value={bankDetails.routingNumber} 
+          field="routing"
+        />
       </div>
     </div>
   );
@@ -316,187 +324,199 @@ export default function Withdraw() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent backdrop-blur-md flex flex-col items-center px-6 pt-20">
-      {/* Wallet Balance */}
-      <div className="bg-gray-950/70 backdrop-blur-3xl shadow-2xl text-white w-full max-w-2xl p-6 rounded-md mb-8">
-        <div className="text-sm text-gray-400">Total Wallet Balance</div>
-        <div className="text-3xl font-bold text-yellow-400">{formatCurrency(user?.balance)}</div>
-        <div className="text-sm mt-2 text-gray-400">Main Wallet: {formatCurrency(user?.balance)}</div>
-        <Link to="/transaction-history" className="bg-gray-600 hover:bg-gray-700 text-xs px-3 py-1 rounded mt-4 float-right transition-colors duration-200">
-          See transaction history
-        </Link>
-      </div>
-
-      {/* Form */}
-      <div className="bg-gray-950/70 backdrop-blur-3xl shadow-2xl w-full max-w-2xl p-6 rounded-md mb-8">
-        <PaymentMethodSelector
-          bankTypes={bankTypes}
-          paymentMethods={paymentMethods}
-          selectedMethod={bank}
-          onSelect={setBank}
-        />
-
-        {bank && (
-          <div className="mt-4 text-center w-2/4 mx-auto">
-            <span className="inline-block px-4 py-2 bg-yellow-500 text-gray-900 rounded-full text-sm w-full font-bold">
-              Selected: {bank}
-            </span>
+    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f24] to-[#0f1419] pt-20">
+      <div className="px-4 py-6 max-w-lg mx-auto space-y-6">
+        {/* Header */}
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#facc15] flex items-center justify-center">
+            <Send className="w-8 h-8 text-[#1a1f24]" />
           </div>
-        )}
+          <h1 className="text-2xl font-bold text-[#facc15] mb-2">Withdraw</h1>
+          <p className="text-gray-300">Request a withdrawal from your account</p>
+        </div>
 
-        {/* Bank selection step for 'Bank' payment method */}
-        {bank === "Bank" && (
-          <div className="mt-6">
-            <h2 className="text-base text-white mb-3">Select Bank</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {allBanks.filter(b => b.bankType === "Bank").map((bankObj) => (
-                <button
-                  key={bankObj.bankName}
-                  onClick={() => setSelectedBank(bankObj)}
-                  className={`px-1 py-1 rounded-lg border text-sm transition-all duration-300 ease-in-out ${
-                    selectedBank?.bankName === bankObj.bankName
-                      ? "bg-yellow-500 text-black  transform scale-105"
-                      : "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                  }`}
-                >
-                  {bankObj.bankName}
-                </button>
-              ))}
+        {/* Wallet Balance Card */}
+        <div className="bg-[#1a1f24] rounded-lg border border-[#facc15]/20 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-[#facc15] flex items-center justify-center">
+              <Wallet className="w-6 h-6 text-[#1a1f24]" />
             </div>
-          </div>
-        )}
-
-        {/* Only show channel selector and bank card after a bank is selected */}
-        {bank === "Bank" && selectedBank && (
-          <div className="mt-6 mb-6">
-            <h2 className="text-base font-semibold text-white mb-3">Select Channel</h2>
-            <ChannelSelector
-              channels={channels}
-              selectedChannel={chanel}
-              onSelect={setChanel}
-            />
-          </div>
-        )}
-
-        {/* {bank === "Bank" && selectedBank && chanel && selectedBankDetails && (
-          <BankCard bankDetails={selectedBankDetails} type={bank} />
-        )} */}
-
-        {/* For non-bank methods, keep the old flow */}
-        {bank !== "Bank" && bank && (
-          <div className="mt-6 mb-6">
-            <h2 className="text-base font-semibold text-white mb-3">Select Channel</h2>
-            <ChannelSelector
-              channels={channels}
-              selectedChannel={chanel}
-              onSelect={setChanel}
-            />
-          </div>
-        )}
-        {/* {bank !== "Bank" && chanel && selectedBankDetails && (
-          <BankCard bankDetails={selectedBankDetails} type={bank} />
-        )} */}
-
-        {/* User's own bank info fields for direct bank */}
-        {bank === "Bank" && selectedBank && (
-          <div className="mt-6 mb-6 bg-gray-800/40 rounded-lg p-4 flex flex-col gap-4 border border-yellow-500/20">
-            <h3 className="text-yellow-400 font-bold mb-2 text-base">Your Bank Information</h3>
-            <div>
-              <label className="text-white block mb-1 text-sm">Bank Name<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                value={userBankName}
-                onChange={e => setUserBankName(e.target.value)}
-                className="w-full p-3 rounded-md bg-gray-900/40 text-yellow-400 border border-gray-700 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition-colors duration-200"
-                placeholder="Enter your bank name"
-                required
-              />
+            <div className="flex-1">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Available Balance</p>
+              <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(user?.balance)}</p>
             </div>
-            <div>
-              <label className="text-white block mb-1 text-sm">Branch Name<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                value={userBranchName}
-                onChange={e => setUserBranchName(e.target.value)}
-                className="w-full p-3 rounded-md bg-gray-900/40 text-yellow-400 border border-gray-700 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition-colors duration-200"
-                placeholder="Enter your branch name"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-white block mb-1 text-sm">Account Holder Name<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                value={userAccountHolderName}
-                onChange={e => setUserAccountHolderName(e.target.value)}
-                className="w-full p-3 rounded-md bg-gray-900/40 text-yellow-400 border border-gray-700 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition-colors duration-200"
-                placeholder="Enter your account holder name"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-white block mb-1 text-sm">Routing Number<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                value={userRoutingNumber}
-                onChange={e => setUserRoutingNumber(e.target.value)}
-                className="w-full p-3 rounded-md bg-gray-900/40 text-yellow-400 border border-gray-700 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition-colors duration-200"
-                placeholder="Enter your routing number"
-                required
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="mt-6 space-y-4">
-          {/* Amount */}
-          <div>
-            <label className="text-white block mb-2 text-sm">Amount<span className="text-red-500">*</span></label>
-            <div className="relative">
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full p-3 rounded-md bg-gray-800/20 text-blue-500 border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors duration-200"
-                placeholder="0.00"
-              />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
-                Available: {formatCurrency(user?.balance)}
-              </div>
-            </div>
-          </div>
-
-          {/* Account/Mobile Number */}
-          <div>
-            <label className="text-white block mb-2 text-sm">
-              {bank === "Bank" ? "Account Number" : "Mobile Number"}<span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={mobileNumber}
-              onChange={(e) => setMobileNumber(e.target.value)}
-              className="w-full p-3 rounded-md bg-gray-800/20 text-blue-500 border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors duration-200"
-              placeholder={bank === "Bank" ? "Enter account number" : "Enter mobile number"}
-            />
+            <Link 
+              to="/transaction-history" 
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#facc15] transition-colors"
+            >
+              History <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
         </div>
 
-        {/* Withdraw Button */}
-        <button
-          onClick={handleWithdraw}
-          className={`
-            mt-6 w-full px-6 py-3 font-bold rounded-md transition-all duration-300
-            ${!amount || amount <= 0 || amount > user?.balance
-              ? "bg-gray-600 cursor-not-allowed"
-              : "bg-yellow-500 text-black hover:bg-yellow-400 transform hover:scale-[1.02]"
-            }
-          `}
-          disabled={!amount || amount <= 0 || amount > user?.balance}
-        >
-          {!amount || amount <= 0 || amount > user?.balance 
-            ? "INSUFFICIENT BALANCE" 
-            : "WITHDRAW"}
-        </button>
+        {/* Form Card */}
+        <div className="bg-[#1a1f24] rounded-lg border border-[#facc15]/20 p-6 space-y-6">
+          {/* Payment Method Selection */}
+          <PaymentMethodSelector
+            bankTypes={bankTypes}
+            paymentMethods={paymentMethods}
+            selectedMethod={bank}
+            onSelect={setBank}
+          />
+
+          {/* Selected Method Indicator */}
+          {bank && (
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-full text-sm font-medium">
+                <Check className="w-4 h-4" />
+                {bank}
+              </span>
+            </div>
+          )}
+
+          {/* Bank Selection for Bank Method */}
+          {bank === "Bank" && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Select Bank</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {allBanks.filter(b => b.bankType === "Bank").map((bankObj) => (
+                  <button
+                    key={bankObj.bankName}
+                    onClick={() => setSelectedBank(bankObj)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      selectedBank?.bankName === bankObj.bankName
+                        ? "bg-[#facc15] text-[#1a1f24]"
+                        : "bg-[#22282e] text-gray-300 hover:bg-[#2a323a] border border-gray-600"
+                    }`}
+                  >
+                    {bankObj.bankName}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Channel Selection */}
+          {bank === "Bank" && selectedBank && (
+            <ChannelSelector
+              channels={channels}
+              selectedChannel={chanel}
+              onSelect={setChanel}
+            />
+          )}
+
+          {bank !== "Bank" && bank && (
+            <ChannelSelector
+              channels={channels}
+              selectedChannel={chanel}
+              onSelect={setChanel}
+            />
+          )}
+
+          {/* User's Bank Information for Direct Bank */}
+          {bank === "Bank" && selectedBank && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-[#facc15] uppercase tracking-wide">Your Bank Information</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Bank Name *</label>
+                  <input
+                    type="text"
+                    value={userBankName}
+                    onChange={e => setUserBankName(e.target.value)}
+                    className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
+                    placeholder="Enter your bank name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Branch Name *</label>
+                  <input
+                    type="text"
+                    value={userBranchName}
+                    onChange={e => setUserBranchName(e.target.value)}
+                    className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
+                    placeholder="Enter your branch name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Account Holder Name *</label>
+                  <input
+                    type="text"
+                    value={userAccountHolderName}
+                    onChange={e => setUserAccountHolderName(e.target.value)}
+                    className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
+                    placeholder="Enter your account holder name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Routing Number *</label>
+                  <input
+                    type="text"
+                    value={userRoutingNumber}
+                    onChange={e => setUserRoutingNumber(e.target.value)}
+                    className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
+                    placeholder="Enter your routing number"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Amount and Account Number Fields */}
+          {bank && chanel && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Amount *</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
+                    placeholder="0.00"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
+                    Max: {formatCurrency(user?.balance)}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  {bank === "Bank" ? "Account Number" : "Mobile Number"} *
+                </label>
+                <input
+                  type="text"
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value)}
+                  className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
+                  placeholder={bank === "Bank" ? "Enter account number" : "Enter mobile number"}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Withdraw Button */}
+          {bank && chanel && (
+            <button
+              onClick={handleWithdraw}
+              className={`w-full py-3 rounded-lg font-medium transition-all duration-200 ${
+                !amount || amount <= 0 || amount > user?.balance
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800] active:scale-95"
+              }`}
+              disabled={!amount || amount <= 0 || amount > user?.balance}
+            >
+              {!amount || amount <= 0 || amount > user?.balance 
+                ? "Enter Valid Amount" 
+                : `Withdraw ${formatCurrency(amount)}`}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
