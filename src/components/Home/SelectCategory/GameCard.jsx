@@ -27,8 +27,8 @@ export const GameCard = ({
           }}
           className={`absolute top-3 right-3 p-2 rounded-full shadow-md transition-all duration-200 z-10 ${
             isFavorite
-              ? "bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800]"
-              : "bg-[#22282e] text-gray-300 hover:bg-[#facc15] hover:text-[#1a1f24] border border-[#facc15]/30"
+              ? "bg-[#ef4444] text-[#ffffff] hover:bg-[#ef4444]/80"
+              : "bg-white text-[#ef4444] hover:bg-[#ef4444]/80 hover:text-[#ffffff] border border-[#facc15]/30"
           }`}
         >  
           <FaHeart size={12} />
@@ -40,11 +40,7 @@ export const GameCard = ({
           <p className="text-sm font-medium text-[#facc15] truncate">
             {game.name === "LuckSportGaming" ? "Lucky Exchange" : game.name}
           </p>
-          {game.provider && (
-            <p className="text-xs text-gray-400 truncate mt-0.5">
-              {game.provider}
-            </p>
-          )}
+          
         </div>
       </div>
 
