@@ -1,9 +1,9 @@
-import Loading from "@/components/shared/Loading";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
+import { Clock, TrendingDown, TrendingUp } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import { FaCalendarAlt, FaCoins, FaGamepad, FaMoneyBillWave, FaTrophy } from "react-icons/fa";
+import { FaGamepad, FaMoneyBillWave, FaSearch } from "react-icons/fa";
 import { useSelector } from "react-redux";
 
 const BetsHistory = () => {
@@ -30,7 +30,6 @@ const BetsHistory = () => {
         `/api/v1/game/bet-history/${user?.username}?page=${currentPage}&limit=${limit}&search=${search}`
       );
       if (response.data.success) {
-        
         setBets(response.data.data.results);
         setTotalPages(response.data.data.pageCount);
       }
@@ -49,122 +48,182 @@ const BetsHistory = () => {
     return "text-gray-400";
   };
 
+  const getWinLossIcon = (winAmount, betAmount) => {
+    const win = parseFloat(winAmount);
+    const bet = parseFloat(betAmount);
+    if (win > bet) return <TrendingUp className="w-4 h-4" />;
+    if (win < bet) return <TrendingDown className="w-4 h-4" />;
+    return <Clock className="w-4 h-4" />;
+  };
+
   return (
-    <div className="min-h-screen bg-[#1f2937]">
-      <div className="mx-auto px-4 py-8 mt-12">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f24] to-[#0f1419] mt-20">
+      <div className="px-4 py-6 max-w-lg mx-auto space-y-4">
+        {/* Header */}
+        <div className="bg-[#1a1f24] rounded-lg shadow-sm border border-[#facc15]/20 p-6">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#facc15] flex items-center justify-center">
+              <FaGamepad className="text-2xl text-[#1a1f24]" />
+            </div>
+            <h1 className="text-lg font-medium text-gray-300 mb-2">Bets History</h1>
+            <p className="text-sm text-gray-400">Track your betting activity and results</p>
+          </div>
+        </div>
+
         {/* Search Bar */}
-        <div className="mb-6">
+        <div className="bg-[#1a1f24] rounded-lg shadow-sm border border-[#facc15]/20 p-4">
           <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="w-4 h-4 text-gray-400" />
+            </div>
             <input
               type="text"
-              placeholder="Search by game name or game category"
+              placeholder="Search by game name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-4 py-2 bg-[#111827] border border-gray-700 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 bg-[#22282e] border border-[#facc15]/20 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#facc15]/50 focus:border-[#facc15]/50"
             />
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="space-y-4">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loading />
+        {/* Bets List */}
+        {loading ? (
+          <div className="bg-[#1a1f24] rounded-lg shadow-sm border border-[#facc15]/20 p-8">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#facc15]"></div>
+              <p className="text-gray-400 mt-2">Loading bets...</p>
             </div>
-          ) : bets.length > 0 ? (
-            bets.map((bet) => (
+          </div>
+        ) : bets.length > 0 ? (
+          <div className="space-y-3">
+            {bets.map((bet) => (
               <div
                 key={bet._id}
-                className="bg-[#111827] rounded-xl shadow-md border border-gray-700 p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+                className="bg-[#1a1f24] rounded-lg shadow-sm border border-[#facc15]/20 p-4"
               >
-                <div className="flex-1">
-                  {/* Game Details */}
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-900 text-blue-300 text-xs font-semibold">
-                      <FaGamepad className="inline" /> {bet.data.game_uid}
-                    </span>
+                {/* Game Info */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#facc15]/20 flex items-center justify-center">
+                      <FaGamepad className="w-4 h-4 text-[#facc15]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-white truncate">
+                        {bet?.gameName || bet.data.game_uid}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {moment(bet?.createdAt).format("MMM D, h:mm A")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400">Round</p>
+                    <p className="text-sm font-medium text-gray-300">
+                      {bet.data.game_round}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bet Details */}
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center">
+                      <FaMoneyBillWave className="w-3 h-3 text-blue-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-gray-400">Bet Amount</p>
+                      <p className="text-sm font-semibold text-white truncate">
+                        {formatCurrency(bet.data.bet_amount)}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Bet Details */}
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-300">
-                    <div className="flex items-center gap-1">
-                      <FaMoneyBillWave className="text-gray-400" />
-                      <span className="font-medium">Bet:</span> {formatCurrency(bet.data.bet_amount)}
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded flex items-center justify-center ${
+                      parseFloat(bet.data.win_amount) > parseFloat(bet.data.bet_amount)
+                        ? "bg-green-500/20"
+                        : parseFloat(bet.data.win_amount) < parseFloat(bet.data.bet_amount)
+                        ? "bg-red-500/20"
+                        : "bg-gray-500/20"
+                    }`}>
+                      <div className={getWinLossColor(bet.data.win_amount, bet.data.bet_amount)}>
+                        {getWinLossIcon(bet.data.win_amount, bet.data.bet_amount)}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <FaTrophy className="text-gray-400" />
-                      <span className="font-medium">Win:</span>
-                      <span className={getWinLossColor(bet.data.win_amount, bet.data.bet_amount)}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-gray-400">Win Amount</p>
+                      <p className={`text-sm font-semibold truncate ${getWinLossColor(bet.data.win_amount, bet.data.bet_amount)}`}>
                         {formatCurrency(bet.data.win_amount)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FaCoins className="text-gray-400" />
-                      <span className="font-medium">Game Name:</span>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-300">
-                        {bet?.gameName}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FaCalendarAlt className="text-gray-400" />
-                      <span className="font-medium">Time:</span>
-                      {moment(bet?.createdAt).format("MMM D, YYYY h:mm A")}
+                      </p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Additional Details */}
-                  <div className="mt-2 text-xs text-gray-400">
-                    <span className="font-medium">Game Round:</span> {bet.data.game_round}
-                    <span className="mx-2">•</span>
-                    <span className="font-medium">Serial Number:</span> {bet.data.serial_number}
-                    <span className="mx-2">•</span>
-                    <span className="font-medium">Member Account:</span> {bet.data.member_account}
+                {/* Additional Info */}
+                <div className="border-t border-[#facc15]/10 pt-3">
+                  <div className="flex items-center justify-between text-xs text-gray-400">
+                    <span>Serial: {bet.data.serial_number}</span>
+                    <span>Account: {bet.data.member_account}</span>
                   </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="bg-[#111827] rounded-xl shadow-md border border-gray-700 p-8">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 mb-4">
-                  <FaGamepad className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-200 mb-1">No bets found</h3>
-                <p className="text-gray-400">Your betting history will appear here</p>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-[#1a1f24] rounded-lg shadow-sm border border-[#facc15]/20 p-8">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-500/20 flex items-center justify-center">
+                <FaGamepad className="text-2xl text-gray-400" />
               </div>
+              <h3 className="text-lg font-medium text-gray-300 mb-2">No bets found</h3>
+              <p className="text-gray-400">Your betting history will appear here</p>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Pagination */}
-          {!loading && bets.length > 0 && totalPages > 1 && (
-            <div className="flex justify-center mt-6">
+        {/* Pagination */}
+        {!loading && bets.length > 0 && totalPages > 1 && (
+          <div className="bg-[#1a1f24] rounded-lg shadow-sm border border-[#facc15]/20 p-4">
+            <div className="flex items-center justify-between">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-1.5 px-4 rounded-md mr-2 disabled:opacity-50"
+                className="px-4 py-2 bg-[#22282e] text-gray-300 rounded-lg border border-[#facc15]/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a3138] transition-colors text-sm"
               >
                 Previous
               </button>
-              <span className="py-1.5 px-4 text-gray-300">Page {currentPage} of {totalPages}</span>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-400">
+                  Page {currentPage} of {totalPages}
+                </span>
+              </div>
+              
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-1.5 px-4 rounded-md ml-2 disabled:opacity-50"
+                className="px-4 py-2 bg-[#22282e] text-gray-300 rounded-lg border border-[#facc15]/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a3138] transition-colors text-sm"
               >
                 Next
               </button>
-              <button
-                onClick={() => setCurrentPage(1)}
-                className="bg-blue-600 text-white font-bold py-1.5 px-4 rounded-md ml-2 hover:bg-blue-700"
-              >
-                First Page
-              </button>
             </div>
-          )}
-        </div>
+            
+            {totalPages > 2 && (
+              <div className="flex justify-center mt-3">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  className="px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-lg hover:bg-[#e6b800] transition-colors font-medium text-sm"
+                >
+                  First Page
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default BetsHistory;
+

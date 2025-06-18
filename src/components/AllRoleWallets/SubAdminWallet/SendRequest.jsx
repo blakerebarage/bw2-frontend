@@ -1,62 +1,75 @@
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
+import { Check, Copy, CreditCard, Send } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useToasts } from "react-toast-notifications";
 import Swal from "sweetalert2";
 import useAxiosSecure from "./../../../Hook/useAxiosSecure";
-
 // Payment Method Selector Component
 const PaymentMethodSelector = ({ bankTypes, paymentMethods, selectedMethod, onSelect }) => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 rounded-lg shadow-md bg-gray-900/80">
-    {bankTypes.map((bankType) => {
-      const methodInfo = paymentMethods.find(m => m.name === bankType);
-      return (
-        <div
-          key={bankType}
-          onClick={() => onSelect(bankType)}
-          className={`relative group cursor-pointer transition-all duration-300 ease-in-out ${
-            selectedMethod === bankType
-              ? "ring-2 ring-yellow-400 bg-yellow-50/10"
-              : "hover:bg-gray-800/50"
-          }`}
-        >
-          <div className="relative w-16 h-16 mx-auto overflow-hidden rounded-lg p-2">
-            <img
-              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
-              src={methodInfo?.logo || ""}
-              alt={bankType}
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span className="text-white text-sm font-medium">
-                {bankType}
-              </span>
+  <div className="space-y-3">
+    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Select Payment Method</h3>
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {bankTypes.map((bankType) => {
+        const methodInfo = paymentMethods.find(m => m.name === bankType);
+        const isSelected = selectedMethod === bankType;
+        
+        return (
+          <button
+            key={bankType}
+            onClick={() => onSelect(bankType)}
+            className={`relative p-3 rounded-lg border transition-all duration-200 ${
+              isSelected
+                ? "bg-[#facc15]/10 border-[#facc15] text-[#facc15]"
+                : "bg-[#22282e] border-gray-600 text-gray-300 hover:border-gray-500"
+            }`}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[#22282e] flex items-center justify-center">
+                {methodInfo?.logo ? (
+                  <img
+                    className="w-6 h-6 object-contain"
+                    src={methodInfo.logo}
+                    alt={bankType}
+                  />
+                ) : (
+                  <CreditCard className="w-4 h-4 text-[#facc15]" />
+                )}
+              </div>
+              <span className="text-xs font-medium">{bankType}</span>
+              {isSelected && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#facc15] rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-[#1a1f24]" />
+                </div>
+              )}
             </div>
-          </div>
-          <div className="mt-1 text-center">
-            <span className="text-xs text-gray-300">{bankType}</span>
-          </div>
-        </div>
-      );
-    })}
+          </button>
+        );
+      })}
+    </div>
   </div>
 );
 
 // Channel Selector Component
 const ChannelSelector = ({ channels, selectedChannel, onSelect }) => (
-  <div className="flex flex-wrap gap-2">
-    {channels.map((channel) => (
-      <button
-        key={channel}
-        onClick={() => onSelect(channel)}
-        className={`px-4 py-2 rounded-md border transition-all duration-300 ease-in-out ${
-          selectedChannel === channel
-            ? "bg-yellow-500 text-black font-bold transform scale-105"
-            : "bg-gray-700 hover:bg-gray-600 text-gray-200"
-        }`}
-        disabled={channel === "Bank-Transfer"}
-      >
-        {channel}
-      </button>
-    ))}
+  <div className="space-y-3">
+    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Select Channel</h3>
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      {channels.map((channel) => (
+        <button
+          key={channel}
+          onClick={() => onSelect(channel)}
+          className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            selectedChannel === channel
+              ? "bg-[#facc15] text-[#1a1f24]"
+              : "bg-[#22282e] text-gray-300 hover:bg-[#2a323a] border border-gray-600"
+          }`}
+          disabled={channel === "Bank-Transfer"}
+        >
+          {channel}
+        </button>
+      ))}
+    </div>
   </div>
 );
 
@@ -67,34 +80,36 @@ const AmountSelector = ({ amountOptions, selectedAmount, selectedAccount, onSele
   };
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-      {amountOptions.map((amount) => {
-        const exceedsLimit = isAmountExceedsLimit(amount);
-        const isSelected = selectedAmount === amount;
-        return (
-          <button
-            key={amount}
-            onClick={() => onSelect(amount)}
-            className={`relative px-3 py-2 rounded-md border transition-all duration-300 ease-in-out ${
-              exceedsLimit
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : isSelected
-                ? "bg-yellow-500 text-black font-bold transform scale-105"
-                : "bg-gray-800 hover:bg-gray-700 text-gray-200"
-            }`}
-            disabled={exceedsLimit}
-          >
-            <span className="text-sm font-medium">৳ {amount}</span>
-            {isSelected && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            )}
-          </button>
-        );
-      })}
+    <div className="space-y-3">
+      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Select Amount</h3>
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+        {amountOptions.map((amount) => {
+          const exceedsLimit = isAmountExceedsLimit(amount);
+          const isSelected = selectedAmount === amount;
+          
+          return (
+            <button
+              key={amount}
+              onClick={() => onSelect(amount)}
+              className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                exceedsLimit
+                  ? "bg-gray-600 cursor-not-allowed opacity-50 text-gray-400"
+                  : isSelected
+                  ? "bg-[#facc15] text-[#1a1f24]"
+                  : "bg-[#22282e] text-gray-300 hover:bg-[#2a323a] border border-gray-600"
+              }`}
+              disabled={exceedsLimit}
+            >
+              ৳ {amount}
+              {isSelected && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#facc15] rounded-full flex items-center justify-center">
+                  <Check className="w-2 h-2 text-[#1a1f24]" />
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -109,66 +124,59 @@ const BankCard = ({ bankDetails }) => {
       setCopiedField(field);
       setTimeout(() => setCopiedField(null), 2000);
     } catch (err) {
-      
+      // Handle error silently
     }
   };
 
   const CopyableField = ({ label, value, field }) => (
-    <div className="relative group">
-      <div className="flex items-center justify-between">
-        <span className="text-xs opacity-80">{label}</span>
-        <button
-          onClick={() => copyToClipboard(value, field)}
-          className="text-xs text-yellow-500 hover:text-yellow-400 transition-colors"
-        >
-          {copiedField === field ? 'Copied!' : 'Copy'}
-        </button>
+    <div className="flex items-center justify-between p-3 bg-[#22282e] rounded-lg">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-400 uppercase tracking-wide">{label}</p>
+        <p className="text-sm font-medium text-white truncate mt-1">{value}</p>
       </div>
-      <div 
-        className="text-sm font-semibold cursor-pointer hover:text-yellow-400 transition-colors"
+      <button
         onClick={() => copyToClipboard(value, field)}
+        className="ml-3 p-2 text-[#facc15] hover:bg-[#facc15]/10 rounded-lg transition-colors"
       >
-        {value}
-      </div>
+        {copiedField === field ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+      </button>
     </div>
   );
 
   return (
-    <div className="flex justify-center mt-4">
-      <div className="relative w-full max-w-xs rounded-xl shadow-lg bg-gradient-to-br from-gray-700 to-gray-800 p-4 text-white overflow-hidden transition-transform duration-300 hover:scale-[1.02]">
-        
-        <div className="flex flex-col gap-2">
-          <CopyableField
-            label="Bank Name"
-            value={bankDetails.bankName}
-            field="bankName"
-          />
-          <CopyableField 
-            label="Branch"
-            value={bankDetails.branchName}
-            field="branchName"
-          />
-          <CopyableField 
-            label="Account Number" 
-            value={bankDetails.accountNumber} 
-            field="accountNumber"
-          />
-          <CopyableField 
-            label="Account Holder" 
-            value={bankDetails.accountHolderName} 
-            field="accountHolder"
-          />
-          <CopyableField 
-            label="District" 
-            value={bankDetails.districtName} 
-            field="district"
-          />
-          <CopyableField 
-            label="Routing Number" 
-            value={bankDetails.routingNumber} 
-            field="routing"
-          />
-        </div>
+    <div className="space-y-3">
+      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Bank Details</h3>
+      <div className="bg-[#1a1f24] rounded-lg border border-[#facc15]/20 p-4 space-y-3">
+        <CopyableField
+          label="Bank Name"
+          value={bankDetails.bankName}
+          field="bankName"
+        />
+        <CopyableField 
+          label="Branch"
+          value={bankDetails.branchName}
+          field="branchName"
+        />
+        <CopyableField 
+          label="Account Number" 
+          value={bankDetails.accountNumber} 
+          field="accountNumber"
+        />
+        <CopyableField 
+          label="Account Holder" 
+          value={bankDetails.accountHolderName} 
+          field="accountHolder"
+        />
+        <CopyableField 
+          label="District" 
+          value={bankDetails.districtName} 
+          field="district"
+        />
+        <CopyableField 
+          label="Routing Number" 
+          value={bankDetails.routingNumber} 
+          field="routing"
+        />
       </div>
     </div>
   );
@@ -185,13 +193,14 @@ const DepositSection = () => {
   const [allChannels, setAllChannels] = useState([]);
   const [filteredChannels, setFilteredChannels] = useState([]);
   const [selectedAmount, setSelectedAmount] = useState("");
+  const [customAmount, setCustomAmount] = useState("");
   const [trxId, setTrxId] = useState("");
   const [senderPhone, setSenderPhone] = useState("");
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedBankDetails, setSelectedBankDetails] = useState(null);
+  const { addToast } = useToasts();
   const [reference, setReference] = useState("");
-  const [copiedField, setCopiedField] = useState(null);
   const amountOptions = ["100", "200", "500", "1000", "2000", "5000", "10000", "15000", "20000"];
   const bankamountOptions = ["30000", "50000", "100000", "150000", "200000"];
   const paymentMethodOrder = ["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet", "Crypto", "Bank"];
@@ -211,14 +220,13 @@ const DepositSection = () => {
     return ["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet"].includes(method);
   }, []);
 
-  // Add this new function to check if amount is valid
   const isAmountValid = useCallback(() => {
-    if (!selectedAmount) return false;
+    const amount = customAmount || selectedAmount;
+    if (!amount) return false;
     if (!selectedAccount) return false;
-    return parseFloat(selectedAmount) <= selectedAccount.dailyLimit;
-  }, [selectedAmount, selectedAccount]);
+    return parseFloat(amount) <= selectedAccount.dailyLimit;
+  }, [selectedAmount, customAmount, selectedAccount]);
 
-  // Modify the getSuitableBankAccount function
   const getSuitableBankAccount = useCallback((amount, availableBanks) => {
     if (!amount || !availableBanks.length) return null;
     const sortedBanks = [...availableBanks].sort((a, b) => b.dailyLimit - a.dailyLimit);
@@ -246,7 +254,6 @@ const DepositSection = () => {
           setBankTypes(sortPaymentMethods(uniqueBankTypes));
           setAllChannels([...new Set(banks.map(bank => bank.channel))]);
           
-          // Store bank list for bank selection
           if (selectedMethod === "Bank") {
             const activeBanks = banks.filter(bank => bank.bankType === "Bank");
             setBankList(activeBanks);
@@ -308,14 +315,14 @@ const DepositSection = () => {
         if (res.data.success) {
           const activeBanks = res.data.data.filter(bank => bank.status === "active");
           if (selectedMethod === "Bank") {
-            // Filter banks by selected bank name
             const selectedBankData = activeBanks.find(bank => bank.bankName === selectedBank?.bankName);
             if (selectedBankData) {
               setSelectedAccount(selectedBankData);
               setSelectedBankDetails(selectedBankData);
             }
           } else if (isMobileBanking(selectedMethod)) {
-            setSelectedAccount(getSuitableBankAccount(parseFloat(selectedAmount), activeBanks));
+            const amount = customAmount || selectedAmount;
+            setSelectedAccount(getSuitableBankAccount(parseFloat(amount), activeBanks));
           } else {
             setSelectedAccount(activeBanks[0]);
           }
@@ -331,16 +338,18 @@ const DepositSection = () => {
       }
     };
     fetchBankAccounts();
-  }, [selectedMethod, selectedChannel, selectedAmount, selectedBank, user.referredBy, axiosSecure, isMobileBanking, getSuitableBankAccount]);
+  }, [selectedMethod, selectedChannel, selectedAmount, customAmount, selectedBank, user.referredBy, axiosSecure, isMobileBanking, getSuitableBankAccount]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const finalAmount = customAmount || selectedAmount;
+    
     const validateFields = () => {
       if (selectedMethod === "Bank") {
-        return !selectedAmount || !selectedMethod || !selectedBank || !reference;
+        return !finalAmount || !selectedMethod || !selectedBank || !reference;
       }
-      return !selectedAmount || !senderPhone || !selectedMethod || !selectedAccount;
+      return !finalAmount || !senderPhone || !selectedMethod || !selectedAccount;
     };
 
     if (validateFields()) {
@@ -354,7 +363,7 @@ const DepositSection = () => {
 
     const rechargeData = {
       username: user?.username,
-      amount: parseFloat(selectedAmount),
+      amount: parseFloat(finalAmount),
       paymentMethod: selectedMethod,
       channel: selectedChannel,
       txnId: selectedMethod === "Bank" ? reference : trxId,
@@ -370,8 +379,8 @@ const DepositSection = () => {
       const res = await axiosSecure.post(`/api/v1/finance/create-recharge-request`, rechargeData);
       if (res.data.success) {
         Swal.fire({
-          title: "Deposit Request Submitted!",
-          text: `Amount: ৳${selectedAmount}, Method: ${selectedMethod}`,
+          title: "Request Submitted!",
+          text: `Amount: ৳${finalAmount}, Method: ${selectedMethod}`,
           icon: "success",
           confirmButtonText: "OK",
         });
@@ -379,12 +388,14 @@ const DepositSection = () => {
         setTrxId("");
         setSenderPhone("");
         setSelectedAmount("");
+        setCustomAmount("");
         setSelectedMethod(null);
         setSelectedChannel("");
         setSelectedAccount(null);
         setSelectedBank(null);
         setReference("");
-        document.getElementById("my_modal_1").close();
+        setSelectedBankDetails(null);
+        document.getElementById("deposit_modal")?.close();
       }
     } catch (err) {
       Swal.fire({
@@ -394,40 +405,22 @@ const DepositSection = () => {
       });
     }
   };
-  const copyToClipboard = async (text, field) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (err) {
-     
-    }
-  };
-  const CopyableField = ({ label, value, field,  }) => (
-     
-    <div className="relative group">
-      <div className="flex items-center justify-between">
-        <span className="text-xs opacity-80">{label}</span>
-        <button
-          onClick={() => copyToClipboard(value, field)}
-          className="text-xs text-yellow-500 hover:text-yellow-400 transition-colors"
-        >
-          {copiedField === field ? 'Copied!' : 'Copy'}
-        </button>
-      </div>
-      <div 
-        className="text-sm font-semibold cursor-pointer hover:text-yellow-400 transition-colors"
-        onClick={() => copyToClipboard(value, field)}
-      >
-        {value}
-      </div>
-    </div>
-  );
 
   return (
-    <div className="pt-12 max-w-3xl mx-auto">
-      <div className="bg-gray-900/80 rounded-lg shadow-lg overflow-hidden">
-        <div className="p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f24] to-[#0f1419] pt-20">
+      <div className="px-4 py-6 max-w-lg mx-auto space-y-6">
+        {/* Header */}
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#facc15] flex items-center justify-center">
+            <Send className="w-8 h-8 text-[#1a1f24]" />
+          </div>
+          <h1 className="text-2xl font-bold text-[#facc15] mb-2">Send Request</h1>
+          <p className="text-gray-300">Submit your deposit request</p>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-[#1a1f24] rounded-lg border border-[#facc15]/20 p-6 space-y-6">
+          {/* Payment Method Selection */}
           <PaymentMethodSelector
             bankTypes={bankTypes}
             paymentMethods={paymentMethods}
@@ -441,20 +434,22 @@ const DepositSection = () => {
               }
             }}
           />
+
+          {/* Selected Method Indicator */}
           {selectedMethod && (
-            <div className="mt-4 text-center w-2/4 mx-auto">
-              <span className="inline-block px-4 py-2 bg-yellow-500 text-gray-900  rounded-full text-sm w-full font-bold">
-                Selected: {selectedMethod}
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-full text-sm font-medium">
+                <Check className="w-4 h-4" />
+                {selectedMethod}
               </span>
             </div>
           )}
-        </div>
 
-        <div className="bg-gray-900/80 p-4 rounded-b-lg">
-          {selectedMethod === "Bank" ? (
-            <>
-              <h2 className="text-base text-white mb-3">Select Bank</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {/* Bank Selection for Bank Method */}
+          {selectedMethod === "Bank" && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Select Bank</h3>
+              <div className="grid grid-cols-2 gap-2">
                 {bankList.map((bank) => (
                   <button
                     key={bank.bankName}
@@ -462,179 +457,217 @@ const DepositSection = () => {
                       setSelectedBank(bank);
                       setSelectedChannel("Bank-Transfer");
                     }}
-                    className={`px-1 py-1 rounded-lg border text-sm transition-all duration-300 ease-in-out ${
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                       selectedBank?.bankName === bank.bankName
-                        ? "bg-yellow-500 text-black  transform scale-105"
-                        : "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                        ? "bg-[#facc15] text-[#1a1f24]"
+                        : "bg-[#22282e] text-gray-300 hover:bg-[#2a323a] border border-gray-600"
                     }`}
                   >
                     {bank.bankName}
                   </button>
                 ))}
               </div>
-            </>
-          ) : (
-            <>
-              <h2 className="text-base text-white mb-3">Select Channel</h2>
-              <ChannelSelector
-                channels={selectedMethod ? filteredChannels : allChannels}
-                selectedChannel={selectedChannel}
-                onSelect={setSelectedChannel}
-              />
-            </>
+            </div>
           )}
 
-          <h2 className="text-base font-semibold text-white mt-6 mb-3">Select Amount</h2>
-          <AmountSelector
-            amountOptions={selectedMethod === "Bank" ? bankamountOptions : amountOptions}
-            selectedAmount={selectedAmount}
-            selectedAccount={selectedBank || selectedAccount}
-            onSelect={setSelectedAmount}
-          />
-
-          <div className="mt-4">
-            <input
-              type="number"
-              placeholder="Enter Custom Amount"
-              className={`w-full p-3 bg-gray-800 text-white rounded-md border transition-all duration-300 ${
-                selectedAmount && !isAmountValid()
-                  ? "border-red-500 focus:border-red-500" 
-                  : "border-gray-700 focus:border-yellow-500"
-              } focus:ring-1 focus:ring-yellow-500/20 focus:outline-none`}
-              value={selectedAmount}
-              onChange={(e) => setSelectedAmount(e.target.value)}
-              disabled={!selectedMethod || (selectedMethod === "Bank" ? !selectedBank : !selectedChannel)}
+          {/* Channel Selection for Non-Bank Methods */}
+          {selectedMethod && selectedMethod !== "Bank" && (
+            <ChannelSelector
+              channels={filteredChannels}
+              selectedChannel={selectedChannel}
+              onSelect={setSelectedChannel}
             />
-          </div>
+          )}
 
+          {/* Amount Selection */}
+          {selectedMethod && selectedChannel && (
+            <AmountSelector
+              amountOptions={selectedMethod === "Bank" ? bankamountOptions : amountOptions}
+              selectedAmount={selectedAmount}
+              selectedAccount={selectedBank || selectedAccount}
+              onSelect={(amount) => {
+                setSelectedAmount(amount);
+                setCustomAmount("");
+              }}
+            />
+          )}
+
+          {/* Custom Amount Input */}
+          {selectedMethod && selectedChannel && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Or Enter Custom Amount</h3>
+              <input
+                type="number"
+                placeholder="Enter amount"
+                value={customAmount}
+                onChange={(e) => {
+                  setCustomAmount(e.target.value);
+                  setSelectedAmount("");
+                }}
+                className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
+              />
+            </div>
+          )}
+
+
+
+          {/* Submit Button */}
           <button
-            className={`mt-6 w-full px-6 py-3 font-bold rounded-md transition-all duration-300 ${
-              loading || !selectedMethod || 
-              (selectedMethod === "Bank" ? !selectedBank : !selectedChannel) || 
-              !selectedAmount || !isAmountValid()
-                ? "bg-gray-600 cursor-not-allowed"
-                : "bg-yellow-500 text-black hover:bg-yellow-400 transform hover:scale-[1.02]"
+            onClick={() => {
+              const finalAmount = customAmount || selectedAmount;
+              
+              // Validation for Bank method
+              if (selectedMethod === "Bank") {
+                if (!finalAmount || !selectedMethod || !selectedBank || !selectedChannel) {
+                  Swal.fire({
+                    icon: "warning",
+                    title: "Please complete all fields!",
+                    text: "Please select payment method, bank, and enter amount.",
+                    confirmButtonText: "OK",
+                  });
+                  return;
+                }
+              } else {
+                // Validation for other methods
+                if (!finalAmount || !selectedMethod || !selectedChannel) {
+                  Swal.fire({
+                    icon: "warning",
+                    title: "Please complete all fields!",
+                    text: "Please select payment method, channel, and enter amount.",
+                    confirmButtonText: "OK",
+                  });
+                  return;
+                }
+              }
+              
+              document.getElementById("deposit_modal")?.showModal();
+            }}
+            disabled={loading || !isAmountValid()}
+            className={`w-full py-3 rounded-lg font-medium transition-all duration-200 ${
+              loading || !isAmountValid()
+                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                : "bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800] active:scale-95"
             }`}
-            onClick={() => document.getElementById("my_modal_1").showModal()}
-            disabled={loading || !selectedMethod || 
-              (selectedMethod === "Bank" ? !selectedBank : !selectedChannel) || 
-              !selectedAmount || !isAmountValid()}
           >
-            {loading
-              ? "Processing..."
-              : !selectedAccount && selectedAmount
-                ? "No account available"
-                : !isAmountValid()
-                  ? "Select a valid amount"
-                  : `Deposit ৳ ${selectedAmount}`
-            }
+            {loading ? "Processing..." : "Confirm Deposit"}
           </button>
         </div>
-      </div>
 
-      <dialog id="my_modal_1" className="modal">
-        <div className="modal-box bg-gray-900 text-white max-w-md w-full mx-auto p-4 rounded-lg">
-          {selectedMethod && (
-            <div className="text-center mb-4">
-              <h2 className="text-xl font-bold">Confirm Deposit</h2>
-              <p className="text-sm text-gray-300 mt-1">
-                Method: <span className="text-yellow-500 font-medium">{selectedMethod}</span>
-              </p>
-            </div>
-          )}
-
-          {selectedAmount && !selectedAccount && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500 rounded-md">
-              <p className="text-red-400 text-sm">
-                No account available for this amount. Please enter a lower amount.
-              </p>
-            </div>
-          )}
-          
-          {selectedAmount && selectedAccount && !isAmountValid() && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500 rounded-md">
-              <p className="text-red-400 text-sm">
-                Maximum amount for this account is ৳{selectedAccount.dailyLimit}
-              </p>
-            </div>
-          )}
-
-          {selectedMethod === "Bank" && selectedBankDetails && (
-            <BankCard bankDetails={selectedBankDetails} />
-          )}
-
-          {selectedMethod === "Bank" && (
-            <div className="mt-4">
-              <label className="block mb-2 text-sm text-gray-300">Reference / Remarks</label>
-              <input
-                type="text"
-                className="w-full p-3 rounded-md border border-gray-700 bg-gray-800 text-white focus:ring-1 focus:ring-yellow-500 focus:border-transparent transition-all duration-300"
-                placeholder="Enter your bank transfer reference or remarks"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                required
-              />
-            </div>
-          )}
-          
-          {selectedMethod !== "Bank" && selectedAccount && (
-            <>
-              <div className="mt-4 p-3 bg-gray-800 rounded-md border border-gray-700">
-                <p className="text-sm font-medium text-yellow-500 mb-1">
-                  Send money to this number:
+        {/* Confirmation Modal */}
+        <dialog id="deposit_modal" className="modal">
+          <div className="modal-box bg-[#1a1f24] text-white max-w-md w-full mx-auto border border-[#facc15]/20">
+            {/* Modal Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#facc15] flex items-center justify-center">
+                <Send className="w-8 h-8 text-[#1a1f24]" />
+              </div>
+              <h2 className="text-2xl font-bold text-[#facc15] mb-2">Confirm Deposit</h2>
+              {selectedMethod && (
+                <p className="text-gray-300">
+                  Method: <span className="text-[#facc15] font-medium">{selectedMethod}</span>
                 </p>
-                <CopyableField 
-                  label="Account Number"
-                  value={selectedAccount.accountNumber}
-                  field="accountNumber"
-                />
-              </div>
+              )}
+            </div>
 
-              <div className="mt-4 space-y-3">
+            {/* Amount Display */}
+            {(selectedAmount || customAmount) && (
+              <div className="bg-[#22282e] rounded-lg p-4 mb-6 text-center">
+                <p className="text-sm text-gray-400 mb-1">Amount to Deposit</p>
+                <p className="text-3xl font-bold text-[#facc15]">৳ {customAmount || selectedAmount}</p>
+              </div>
+            )}
+
+            {/* Bank Details for Bank Method */}
+            {selectedMethod === "Bank" && selectedBankDetails && (
+              <div className="mb-6">
+                <BankCard bankDetails={selectedBankDetails} />
+              </div>
+            )}
+
+            {/* Mobile Banking Account Details */}
+            {selectedMethod !== "Bank" && selectedAccount && (
+              <div className="mb-6">
+                <div className="bg-[#22282e] rounded-lg p-4 border border-[#facc15]/20">
+                  <h3 className="text-[#facc15] font-medium mb-3 text-center">Send money to this number:</h3>
+                  <div className="flex items-center justify-between p-3 bg-[#1a1f24] rounded-lg">
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wide">Account Number</p>
+                      <p className="text-lg font-bold text-white">{selectedAccount.accountNumber}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedAccount.accountNumber);
+                        addToast("Copied to clipboard", {
+                          appearance: "success",
+                          autoDismiss: true,
+                        });
+                      }}
+                      className="px-3 py-2 bg-[#facc15] text-[#1a1f24] rounded-lg text-sm font-medium hover:bg-[#e6b800] transition-colors"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Form Fields */}
+            <div className="space-y-4 mb-6">
+              {selectedMethod === "Bank" ? (
                 <div>
-                  <label className="block mb-2 text-sm text-gray-300">Sender Phone</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Reference Number *</label>
                   <input
                     type="text"
-                    className="w-full p-3 rounded-md border border-gray-700 bg-gray-800 text-white focus:ring-1 focus:ring-yellow-500 focus:border-transparent transition-all duration-300"
-                    placeholder="Enter Sender Phone"
-                    value={senderPhone}
-                    required
-                    onChange={(e) => setSenderPhone(e.target.value)}
+                    value={reference}
+                    onChange={(e) => setReference(e.target.value)}
+                    placeholder="Enter reference number"
+                    className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
                   />
                 </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Sender Phone *</label>
+                    <input
+                      type="text"
+                      value={senderPhone}
+                      onChange={(e) => setSenderPhone(e.target.value)}
+                      placeholder="Enter sender phone number"
+                      className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Transaction ID *</label>
+                    <input
+                      type="text"
+                      value={trxId}
+                      onChange={(e) => setTrxId(e.target.value)}
+                      placeholder="Enter transaction ID"
+                      className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
 
-                <div>
-                  <label className="block mb-2 text-sm text-gray-300">
-                    Transaction ID
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full p-3 rounded-md border border-gray-700 bg-gray-800 text-white focus:ring-1 focus:ring-yellow-500 focus:border-transparent transition-all duration-300"
-                    placeholder="Enter Transaction ID"
-                    value={trxId}
-                    onChange={(e) => setTrxId(e.target.value)}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="modal-action flex flex-col sm:flex-row gap-3 mt-6">
-            <button
-              onClick={handleSubmit}
-              className="flex-1 bg-yellow-500 text-black font-bold px-6 py-3 rounded-md hover:bg-yellow-400 transition-all duration-300 transform hover:scale-[1.02]"
-            >
-              Submit Deposit Request
-            </button>
-            <button
-              onClick={() => document.getElementById("my_modal_1").close()}
-              className="flex-1 bg-red-500 text-white px-6 py-3 rounded-md hover:bg-red-600 transition-all duration-300"
-            >
-              Close
-            </button>
+            {/* Modal Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleSubmit}
+                className="flex-1 bg-[#facc15] text-[#1a1f24] font-medium px-6 py-3 rounded-lg hover:bg-[#e6b800] transition-colors"
+              >
+                Submit Request
+              </button>
+              <button
+                onClick={() => document.getElementById("deposit_modal")?.close()}
+                className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
-      </dialog>
+        </dialog>
+      </div>
     </div>
   );
 };
