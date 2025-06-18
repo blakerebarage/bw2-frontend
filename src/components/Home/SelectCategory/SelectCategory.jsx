@@ -130,6 +130,7 @@ export function SelectCategory() {
             isActive: true
           }
         });
+        console.log(response);
         if (response?.data?.data?.popularGames) {
           setMostPlayedGames(response.data.data.popularGames);
           setPopularTotalPages(response.data.data.pageCount || 1);
@@ -250,7 +251,14 @@ export function SelectCategory() {
     setGameLoading(true);
     try {
       // First get the game details to get the provider
-      const gameDetails = displayGames.find(game => game.gameId === gameId);
+      // Check both displayGames and mostPlayedGames arrays
+      let gameDetails = displayGames.find(game => game.gameId === gameId);
+      
+      // If not found in displayGames, check mostPlayedGames
+      if (!gameDetails) {
+        gameDetails = mostPlayedGames.find(game => game.gameId === gameId);
+      }
+      
       if (!gameDetails) {
         throw new Error('Game not found');
       }
@@ -312,7 +320,7 @@ export function SelectCategory() {
         <div className="space-y-4 px-3">
           {user?.username && (
             <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-bold text-[#ffffff] drop-shadow">
+              <h3 className="text-2xl font-bold text-[#facc15] drop-shadow">
                 Favourite Games
               </h3>
               <SearchBar
@@ -345,9 +353,9 @@ export function SelectCategory() {
               ))}
             </div>
           ) : (
-            user?.username && <div className="text-center text-[#ffffff] py-8">
+            user?.username && <div className="text-center text-gray-300 py-8">
               <p className="text-lg">No favorite games found</p>
-              <p className="text-sm mt-2 text-[#ffffff]">
+              <p className="text-sm mt-2 text-gray-400">
                 {user?.username ? "Add some games to your favorites" : "Please login to view your favorite games"}
               </p>
             </div>
@@ -356,7 +364,7 @@ export function SelectCategory() {
           {/* Most Played Games Section - Only in Favourite view */}
           {mostPlayedGames.length > 0 && (
             <div className="mt-8">
-              <h3 className="text-2xl font-bold text-[#ffffff] drop-shadow mb-4">
+              <h3 className="text-2xl font-bold text-[#facc15] drop-shadow mb-4">
                 Popular Games
               </h3>
               <MostPlayedGames
@@ -376,7 +384,7 @@ export function SelectCategory() {
       {selectedCategory.value !== "favourite" && (
         <div className="space-y-4 px-3 pb-8">
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold text-[#ffffff] drop-shadow">
+            <h3 className="text-2xl font-bold text-[#facc15] drop-shadow">
               {selectedCategory.title} Games
             </h3>
             <SearchBar
@@ -417,18 +425,18 @@ export function SelectCategory() {
                     disabled={currentPage === 1}
                     className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
                       currentPage === 1
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-red-500 text-white hover:bg-red-600'
+                        ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
+                        : 'bg-[#1a1f24] text-gray-300 hover:bg-[#22282e] border border-[#facc15]/20'
                     }`}
                   >
                     Previous
                   </button>
                   
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-700">Page</span>
-                    <span className="font-semibold text-red-500">{currentPage}</span>
-                    <span className="text-gray-700">of</span>
-                    <span className="font-semibold text-red-500">
+                    <span className="text-gray-300">Page</span>
+                    <span className="font-semibold text-[#facc15]">{currentPage}</span>
+                    <span className="text-gray-300">of</span>
+                    <span className="font-semibold text-[#facc15]">
                       {Math.ceil(totalGames / 45)}
                     </span>
                   </div>
@@ -438,8 +446,8 @@ export function SelectCategory() {
                     disabled={currentPage >= Math.ceil(totalGames / 45)}
                     className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
                       currentPage >= Math.ceil(totalGames / 45)
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-red-500 text-white hover:bg-red-600'
+                        ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
+                        : 'bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800]'
                     }`}
                   >
                     Next
@@ -448,9 +456,9 @@ export function SelectCategory() {
               )}
             </>
           ) : (
-            <div className="text-center text-[#ffffff] py-8">
+            <div className="text-center text-gray-300 py-8">
               <p className="text-lg">No games found</p>
-              <p className="text-sm mt-2 text-[#ffffff]">
+              <p className="text-sm mt-2 text-gray-400">
                 Try a different search or category
               </p>
             </div>

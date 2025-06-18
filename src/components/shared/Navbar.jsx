@@ -77,14 +77,14 @@ const Navbar = () => {
             <div className="flex flex-row items-center gap-2">
                {
           token && userData?.role === "user" &&  <div className="flex flex-row items-center gap-2">
-          <Link to="/balance-deposite" className="text-white hover:text-green-400 transition group relative">
-             <button className="bg-gradient-to-r from-green-400 to-green-500 text-white px-1 py-1 rounded-md flex items-center gap-2 hover:from-green-500 hover:to-green-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
-               <PiHandDepositFill className="text-xl text-white"/>
+          <Link to="/balance-deposite" className="transition group relative">
+              <button className="bg-white text-[#facc15] px-1 py-1 rounded-md flex items-center gap-2  transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
+               <PiHandDepositFill className="text-xl text-[#facc15]"/>
              </button>
              
           </Link>
-          <Link to="/balance-withdraw" className="text-white hover:text-red-400 transition group relative">
-             <button className="bg-gradient-to-r from-red-400 to-red-500 text-white px-1 py-1 rounded-md flex items-center gap-2 hover:from-red-500 hover:to-red-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
+          <Link to="/balance-withdraw" className=" transition group relative">
+             <button className="bg-[#facc15] text-white px-1 py-1 rounded-md flex items-center gap-2 hover:bg-[#facc15]/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
                <PiHandWithdrawFill className="text-xl text-white"/>
              </button>
              
@@ -122,7 +122,7 @@ const Navbar = () => {
               )}
 
               <div className="flex flex-col text-white">
-                <p className="text-blue-300 text-end">
+                <p className="text-white text-end">
                   {/* @****{userData?.phoneOrUserName?.slice(-4)} */}
                   {userData?.username}
                   
