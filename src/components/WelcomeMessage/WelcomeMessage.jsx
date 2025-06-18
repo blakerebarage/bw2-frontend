@@ -82,7 +82,7 @@ const WelcomeMessage = () => {
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-500 mb-1 sm:mb-2">
                 Welcome to 
               </h1>
-              <img src={`${import.meta.env.VITE_BASE_API_URL}/${logo?.url}`} alt="logo" className=" bg-cover h-8 mt-[-10px]" />
+              <img src={`${import.meta.env.VITE_BASE_API_URL}/${logo?.url}`} alt="logo" className=" bg-cover h-8 mt-[5px]" />
               </div>
              
               <p className="text-gray-300 text-base sm:text-lg md:text-xl">

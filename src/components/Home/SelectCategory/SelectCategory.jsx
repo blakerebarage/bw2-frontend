@@ -41,7 +41,7 @@ export function SelectCategory() {
 
  
 
-  // Fetch all games data
+  // Fetch all games data (consolidated with search functionality)
   useEffect(() => {
     const fetchAllGames = async () => {
       if (selectedCategory.value === "favourite") return;
@@ -53,17 +53,18 @@ export function SelectCategory() {
             page: currentPage,
             limit: 45,
             isActive: true,
-            category: selectedCategory.value === "allgames" ? undefined : selectedCategory.value.charAt(0).toUpperCase() + selectedCategory.value.slice(1)
+            // When searching, ignore category filter to search all games
+            category: searchQuery ? undefined : (selectedCategory.value === "allgames" ? undefined : selectedCategory.value.charAt(0).toUpperCase() + selectedCategory.value.slice(1)),
+            search: searchQuery || undefined
           }
         });
         
         if (response?.data?.data) {
           setTotalGames(response.data.data.totalItems || 0);
-          if (currentPage === 1) {
-            
+          // Always replace results when searching or on page 1, otherwise append for pagination
+          if (currentPage === 1 || searchQuery) {
             setDisplayGames(response.data.data.results);
           } else {
-            
             setDisplayGames(prev => [...prev, ...response.data.data.results]);
           }
         }
@@ -78,7 +79,7 @@ export function SelectCategory() {
     };
 
     fetchAllGames();
-  }, [currentPage, selectedCategory.value, categoryReloadKey]);
+  }, [currentPage, selectedCategory.value, categoryReloadKey, searchQuery]);
 
   // Fetch favorites
   const fetchFavorites = async () => {
@@ -119,6 +120,13 @@ export function SelectCategory() {
     }
   }, [searchQuery, favoriteGames, selectedCategory.value]);
 
+  // Reset page to 1 when search query changes for non-favorite categories
+  useEffect(() => {
+    if (selectedCategory.value !== "favourite" && searchQuery) {
+      setCurrentPage(1);
+    }
+  }, [searchQuery, selectedCategory.value]);
+
   // Fetch most played games
   useEffect(() => {
     const fetchMostPlayedGames = async () => {
@@ -146,36 +154,7 @@ export function SelectCategory() {
     fetchMostPlayedGames();
   }, [popularPage]);
 
-  // Add this effect to handle search for non-favourite categories
-  useEffect(() => {
-    if (selectedCategory.value !== "favourite") {
-      const fetchGames = async () => {
-        setLoading(true);
-        try {
-          const response = await axiosSecure.get('/api/v1/game/all-games', {
-            params: {
-              page: currentPage,
-              limit: 45,
-              isActive: true,
-              category: selectedCategory.value === "allgames" ? undefined : selectedCategory.value.charAt(0).toUpperCase() + selectedCategory.value.slice(1),
-              search: searchQuery || undefined
-            }
-          });
 
-          if (response?.data?.data) {
-            setDisplayGames(response.data.data.results);
-            setTotalGames(response.data.data.totalItems);
-          }
-        } catch (error) {
-          console.error('Error fetching games:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchGames();
-    }
-  }, [searchQuery, selectedCategory, currentPage, categoryReloadKey]);
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
@@ -320,7 +299,7 @@ export function SelectCategory() {
         <div className="space-y-4 px-3">
           {user?.username && (
             <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-bold text-[#facc15] drop-shadow">
+              <h3 className="text-2xl font-bold text-white drop-shadow">
                 Favourite Games
               </h3>
               <SearchBar
@@ -364,7 +343,7 @@ export function SelectCategory() {
           {/* Most Played Games Section - Only in Favourite view */}
           {mostPlayedGames.length > 0 && (
             <div className="mt-8">
-              <h3 className="text-2xl font-bold text-[#facc15] drop-shadow mb-4">
+              <h3 className="text-2xl font-bold text-white drop-shadow mb-4">
                 Popular Games
               </h3>
               <MostPlayedGames
@@ -384,7 +363,7 @@ export function SelectCategory() {
       {selectedCategory.value !== "favourite" && (
         <div className="space-y-4 px-3 pb-8">
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold text-[#facc15] drop-shadow">
+            <h3 className="text-2xl font-bold text-white drop-shadow">
               {selectedCategory.title} Games
             </h3>
             <SearchBar
