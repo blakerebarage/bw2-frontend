@@ -20,7 +20,7 @@ const BetsHistory = () => {
   useEffect(() => {
     if (user?.username) {
       fetchBets();
-    }
+    } 
   }, [currentPage, search, user?.username]);
 
   const fetchBets = async () => {

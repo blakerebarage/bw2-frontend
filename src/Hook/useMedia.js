@@ -24,10 +24,7 @@ const useMedia = () => {
       dispatch(setBanner(bannerResponse.data.data));
     } catch (err) {
       dispatch(setError(err.message));
-      addToast("Failed to fetch Media", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      
     } finally {
       dispatch(setLoading(false));
     }
