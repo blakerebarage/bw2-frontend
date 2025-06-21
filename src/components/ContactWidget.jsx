@@ -46,7 +46,7 @@ const ContactWidget = () => {
           setSupportContact(res.data.data.supportContact || []);
         }
       } catch (err) {
-        addToast("Failed to fetch support contacts", { appearance: "error", autoDismiss: true });
+        
       } finally {
         setLoading(false);
       }

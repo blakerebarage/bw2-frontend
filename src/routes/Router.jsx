@@ -91,7 +91,6 @@ const router = createBrowserRouter([
           { path: "/rules-regulation", element: <RulesRegulation /> },
           { path: "/kyc", element: <Kyc /> },
           { path: "/responsible-gaming", element: <ResponsibleGaming /> },
-
           // Protected routes for authenticated users only
           {
             element: <ProtectedRoute />,
@@ -109,7 +108,6 @@ const router = createBrowserRouter([
               { path: "/activity-log", element: <ActivityLog /> },
               { path: "/my-profile", element: <MyProfile /> },
               { path: "/setting", element: <Settings /> },
-
               { path: "/transaction-history", element: <TransactionHistory /> },
             ],
           },

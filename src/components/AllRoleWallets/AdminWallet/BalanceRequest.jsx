@@ -46,10 +46,7 @@ const BalanceRequest = () => {
       setTotalPages(res.data.data.pageCount);
     } catch (err) {
       setError(err.message || "Failed to fetch recharge requests. Please try again later.");
-      addToast(err.message || "Failed to fetch recharge requests. Please try again later.", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      
       setRequestData([]);
       setTotalPages(1);
     } finally {
@@ -78,10 +75,7 @@ const BalanceRequest = () => {
       });
       reloadUserData();
     } catch (err) {
-      addToast(err?.response?.data?.message || "Failed to approve request. Please try again.", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      
     }
   };
 

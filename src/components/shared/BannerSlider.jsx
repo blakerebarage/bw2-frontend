@@ -77,19 +77,19 @@ const BannerSlider = () => {
     <div className="relative w-full">
       <Carousel className="w-full" setApi={setApi}>
         {/* todo bannerImages image api not working  after given api then comment out that */}
-        <CarouselContent className="-ml-0">
-          {banner?.length && banner?.map((image, index) => (
-            <CarouselItem key={index} className="pl-0">
-              <div className="relative w-full aspect-[4/3] sm:aspect-[3/2] md:aspect-[16/9] lg:aspect-[2/1] min-h-[200px] sm:min-h-[220px] md:min-h-[240px] lg:min-h-[260px] overflow-hidden rounded-lg">
-                <img
-                  className="absolute inset-0 w-full h-full object-cover object-center"
-                  src={`${import.meta.env.VITE_BASE_API_URL}${image.url}`}
-                  alt={`Slide ${index + 1}`}
-                />
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
+        <CarouselContent>
+        {banner?.length && banner?.map((image, index) => (
+          <CarouselItem key={index}>
+            <div className="">
+              <img
+                className="w-full h-[200px] bg-cover object-cover"
+                src={`${import.meta.env.VITE_BASE_API_URL}${image.url}`}
+                alt={`Slide ${index + 1}`}
+              />
+            </div>
+          </CarouselItem>
+        ))}
+      </CarouselContent>
         {/* todo bannerImages image api not working  after given api then comment out that */}
 
         {/* Previous and Next Buttons */}

@@ -1,13 +1,91 @@
 import PageHeader from "@/components/shared/PageHeader";
-import { Activity, Calendar, Eye, EyeOff, Mail, Phone, Shield, User } from "lucide-react";
+import useAxiosSecure from "@/Hook/useAxiosSecure";
+import { Activity, Calendar, Eye, EyeOff, Key, Loader2, Lock, Mail, Phone, Shield, User, X } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { useToasts } from "react-toast-notifications";
 import ActivityLog from "../activity-log/ActivityLog";
 
 const MyProfile = () => {
   const { user } = useSelector((state) => state.auth);
   const [showActivity, setShowActivity] = useState(false);
   const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { addToast } = useToasts();
+  const axiosSecure = useAxiosSecure();
+
+  // Form state for password change
+  const [formData, setFormData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.oldPassword) {
+      addToast("Current password is required!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      addToast("New password and confirm password do not match!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    if (formData.newPassword.length < 8) {
+      addToast("Password must be at least 8 characters long!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axiosSecure.patch("/api/v1/user/reset-password", {
+        oldPassword: formData.oldPassword,
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword
+      });
+
+      if (response.data.success) {
+        addToast("Password changed successfully!", {
+          appearance: "success",
+          autoDismiss: true,
+        });
+        setShowPasswordModal(false);
+        setFormData({
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: ""
+        });
+      }
+    } catch (error) {
+      addToast(error.response?.data?.message || "Failed to change password", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f24] to-[#0f1419]">
@@ -43,18 +121,27 @@ const MyProfile = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           <button
             onClick={() => setShowSensitiveInfo(!showSensitiveInfo)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#1a1f24] text-gray-300 rounded-lg hover:bg-[#22282e] transition-colors border border-[#facc15]/20"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1a1f24] text-gray-300 rounded-lg hover:bg-[#22282e] transition-colors border border-[#facc15]/20"
           >
             {showSensitiveInfo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             <span className="text-sm font-medium">{showSensitiveInfo ? "Hide Info" : "Show Info"}</span>
           </button>
+          
+          <button
+            onClick={() => setShowPasswordModal(true)}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1a1f24] text-gray-300 rounded-lg hover:bg-[#22282e] transition-colors border border-[#facc15]/20"
+          >
+            <Key className="w-4 h-4" />
+            <span className="text-sm font-medium">Change Password</span>
+          </button>
+
           {user?.role !== "user" && (
             <button
               onClick={() => setShowActivity(!showActivity)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#facc15] text-[#1a1f24] rounded-lg hover:bg-[#e6b800] transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-[#facc15] text-[#1a1f24] rounded-lg hover:bg-[#e6b800] transition-colors"
             >
               <Activity className="w-4 h-4" />
               <span className="text-sm font-medium">{showActivity ? "Hide Activity" : "Activity"}</span>
@@ -138,6 +225,99 @@ const MyProfile = () => {
           </div>
         )}
       </div>
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-[#1a1f24] w-full max-w-md rounded-lg shadow-xl border border-[#facc15]/20">
+            <div className="flex items-center justify-between p-4 border-b border-[#facc15]/20">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-[#facc15] rounded-lg flex items-center justify-center">
+                  <Lock className="w-4 h-4 text-[#1a1f24]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#facc15]">Change Password</h3>
+              </div>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  name="oldPassword"
+                  value={formData.oldPassword}
+                  onChange={handleInputChange}
+                  placeholder="Enter current password"
+                  className="w-full px-3 py-2 bg-[#22282e] border border-[#facc15]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#facc15] focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={formData.newPassword}
+                  onChange={handleInputChange}
+                  placeholder="Enter new password"
+                  className="w-full px-3 py-2 bg-[#22282e] border border-[#facc15]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#facc15] focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm new password"
+                  className="w-full px-3 py-2 bg-[#22282e] border border-[#facc15]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#facc15] focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="flex-1 px-4 py-2 text-gray-300 bg-[#22282e] rounded-lg hover:bg-[#2a3036] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-lg hover:bg-[#e6b800] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="animate-spin w-4 h-4" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

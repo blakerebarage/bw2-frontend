@@ -20,6 +20,7 @@ export function SelectCategory() {
   const { user } = useSelector((state) => state.auth);
  
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [gameLoading, setGameLoading] = useState(false);
   const [favoriteGames, setFavoriteGames] = useState([]);
@@ -39,6 +40,15 @@ export function SelectCategory() {
     AOS.init({ duration: 800 });
   }, []);
 
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
  
 
   // Fetch all games data (consolidated with search functionality)
@@ -54,32 +64,29 @@ export function SelectCategory() {
             limit: 45,
             isActive: true,
             // When searching, ignore category filter to search all games
-            category: searchQuery ? undefined : (selectedCategory.value === "allgames" ? undefined : selectedCategory.value.charAt(0).toUpperCase() + selectedCategory.value.slice(1)),
-            search: searchQuery || undefined
+            category: debouncedSearchQuery ? undefined : (selectedCategory.value === "allgames" ? undefined : selectedCategory.value.charAt(0).toUpperCase() + selectedCategory.value.slice(1)),
+            search: debouncedSearchQuery || undefined
           }
         });
         
         if (response?.data?.data) {
           setTotalGames(response.data.data.totalItems || 0);
           // Always replace results when searching or on page 1, otherwise append for pagination
-          if (currentPage === 1 || searchQuery) {
+          if (currentPage === 1 || debouncedSearchQuery) {
             setDisplayGames(response.data.data.results);
           } else {
             setDisplayGames(prev => [...prev, ...response.data.data.results]);
           }
         }
       } catch (error) {
-        addToast("Failed to fetch games", {
-          appearance: "error",
-          autoDismiss: true,
-        });
+        
       } finally {
         setLoading(false);
       }
     };
 
     fetchAllGames();
-  }, [currentPage, selectedCategory.value, categoryReloadKey, searchQuery]);
+  }, [currentPage, selectedCategory.value, categoryReloadKey, debouncedSearchQuery]);
 
   // Fetch favorites
   const fetchFavorites = async () => {
@@ -94,10 +101,7 @@ export function SelectCategory() {
         }
       }
     } catch (error) {
-      addToast("Failed to load favorites", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+     
     } finally {
       setLoading(false);
     }
@@ -109,24 +113,50 @@ export function SelectCategory() {
    
   }, [user?.username, selectedCategory.value, categoryReloadKey]);
 
-  // Handle search for favorites
+  // Handle search for favorites - now searches ALL games with pagination
   useEffect(() => {
-    if (selectedCategory.value === "favourite" && searchQuery) {
-      const filteredFavorites = favoriteGames.filter(game => 
-        game.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        game.provider?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setDisplayGames(filteredFavorites);
-    }
-  }, [searchQuery, favoriteGames, selectedCategory.value]);
+    const searchInFavorites = async () => {
+      if (selectedCategory.value === "favourite" && debouncedSearchQuery) {
+        setLoading(true);
+        try {
+          const response = await axiosSecure.get('/api/v1/game/all-games', {
+            params: {
+              page: currentPage,
+              limit: 45,
+              isActive: true,
+              search: debouncedSearchQuery
+            }
+          });
+          
+          if (response?.data?.data) {
+            setTotalGames(response.data.data.totalItems);
+            if (currentPage === 1) {
+              setDisplayGames(response.data.data.results);
+            } else {
+              setDisplayGames(prev => [...prev, ...response.data.data.results]);
+            }
+          }
+        } catch (error) {
+          console.error('Error searching games:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else if (selectedCategory.value === "favourite" && !debouncedSearchQuery) {
+        // When search is cleared, show all favorite games
+        setDisplayGames(favoriteGames);
+        setTotalGames(0); // Reset total games count for favorites
+      }
+    };
 
-  // Reset page to 1 when search query changes for non-favorite categories
+    searchInFavorites();
+  }, [debouncedSearchQuery, favoriteGames, selectedCategory.value, currentPage]);
+
+  // Reset page to 1 when search query changes for all categories
   useEffect(() => {
-    if (selectedCategory.value !== "favourite" && searchQuery) {
+    if (debouncedSearchQuery) {
       setCurrentPage(1);
     }
-  }, [searchQuery, selectedCategory.value]);
-
+  }, [debouncedSearchQuery]);
   // Fetch most played games
   useEffect(() => {
     const fetchMostPlayedGames = async () => {
@@ -144,10 +174,7 @@ export function SelectCategory() {
           setPopularTotalPages(response.data.data.pageCount || 1);
         }
       } catch (error) {
-        addToast("Failed to fetch most played games", {
-          appearance: "error",
-          autoDismiss: true,
-        });
+        
       }
     };
 
@@ -161,6 +188,7 @@ export function SelectCategory() {
     setCurrentPage(1);
     setDisplayGames([]);
     setSearchQuery("");
+    setDebouncedSearchQuery(""); // Reset debounced search query
     setCategoryReloadKey(prev => prev + 1);
     if (category.value === "favourite") {
       fetchFavorites();
@@ -169,10 +197,7 @@ export function SelectCategory() {
 
   const handleFavoriteToggle = async (game) => {
     if (!user?.username) {
-      addToast("Please login to manage favorites", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      
       return;
     }
 
@@ -210,19 +235,13 @@ export function SelectCategory() {
         }
       }
     } catch (error) {
-      addToast("Failed to update favorite status", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      
     }
   };
 
   const initGameLaunch = async (gameId) => {
     if (!user?.username) {
-      addToast("Please login to play games", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      
       navigate('/login');
       return;
     }
@@ -268,16 +287,10 @@ export function SelectCategory() {
         navigate(`/game?url=${encodeURIComponent(data.result.payload.game_launch_url)}`);
       } 
       else {
-        addToast(data?.result?.message || "Something went wrong", {
-          appearance: "error",
-          autoDismiss: true,
-        });
+        
       }
     } catch (error) {
-      addToast(error.message || "Failed to launch game", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      
     } finally {
       setGameLoading(false);
     }
@@ -295,9 +308,9 @@ export function SelectCategory() {
       />
 
       {/* Favourite Games Section */}
-      {selectedCategory.value === "favourite" && (
+      {selectedCategory.value === "favourite" &&  (
         <div className="space-y-4 px-3">
-          {user?.username && (
+          {user?.username && favoriteGames?.length > 0 && (
             <div className="flex justify-between items-center">
               <h3 className="text-2xl font-bold text-white drop-shadow">
                 Favourite Games
@@ -305,7 +318,10 @@ export function SelectCategory() {
               <SearchBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
-                onClearSearch={() => setSearchQuery("")}
+                onClearSearch={() => {
+                  setSearchQuery("");
+                  setDebouncedSearchQuery("");
+                }}
               />
             </div>
           )}
@@ -326,13 +342,13 @@ export function SelectCategory() {
                   game={game}
                   onGameLaunch={initGameLaunch}
                   onFavoriteToggle={handleFavoriteToggle}
-                  isFavorite={true}
+                  isFavorite={favoriteGames.some(fav => fav.gameId === game.gameId)}
                   user={user}
                 />
               ))}
             </div>
           ) : (
-            user?.username && <div className="text-center text-gray-300 py-8">
+            user?.username && favoriteGames?.length > 0 && !debouncedSearchQuery && <div className="text-center text-gray-300 py-8">
               <p className="text-lg">No favorite games found</p>
               <p className="text-sm mt-2 text-gray-400">
                 {user?.username ? "Add some games to your favorites" : "Please login to view your favorite games"}
@@ -340,8 +356,56 @@ export function SelectCategory() {
             </div>
           )}
 
-          {/* Most Played Games Section - Only in Favourite view */}
-          {mostPlayedGames.length > 0 && (
+          {/* Pagination for Favorite search results */}
+          {debouncedSearchQuery && totalGames > 45 && (
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                  currentPage === 1
+                    ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
+                    : 'bg-[#1a1f24] text-gray-300 hover:bg-[#22282e] border border-[#facc15]/20'
+                }`}
+              >
+                Previous
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-gray-300">Page</span>
+                <span className="font-semibold text-[#facc15]">{currentPage}</span>
+                <span className="text-gray-300">of</span>
+                <span className="font-semibold text-[#facc15]">
+                  {Math.ceil(totalGames / 45)}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={currentPage >= Math.ceil(totalGames / 45)}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                  currentPage >= Math.ceil(totalGames / 45)
+                    ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-white/20'
+                    : 'bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800]'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          {/* Show "No results found" only when searching */}
+          {debouncedSearchQuery && displayGames?.length === 0 && !loading && (
+            <div className="text-center text-gray-300 py-8">
+              <p className="text-lg">No games found</p>
+              <p className="text-sm mt-2 text-gray-400">
+                Try a different search term
+              </p>
+            </div>
+          )}
+
+          {/* Most Played Games Section - Always show in Favourite view when not searching */}
+          { mostPlayedGames.length > 0 && (
             <div className="mt-8">
               <h3 className="text-2xl font-bold text-white drop-shadow mb-4">
                 Popular Games
@@ -353,7 +417,6 @@ export function SelectCategory() {
                 favoriteGames={favoriteGames}
                 user={user}
               />
-             
             </div>
           )}
         </div>
@@ -369,7 +432,10 @@ export function SelectCategory() {
             <SearchBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
-              onClearSearch={() => setSearchQuery("")}
+              onClearSearch={() => {
+                setSearchQuery("");
+                setDebouncedSearchQuery("");
+              }}
             />
           </div>
 

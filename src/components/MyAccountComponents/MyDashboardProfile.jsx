@@ -1,3 +1,4 @@
+import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { Check, Clock, Copy, Key, Loader2, Lock, Mail, Phone, PhoneCall, User } from "lucide-react";
 import moment from "moment";
 import { useState } from "react";
@@ -10,17 +11,78 @@ const MyDashboardProfile = () => {
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const { addToast } = useToasts();
+  const axiosSecure = useAxiosSecure();
 
-  const handleChangePassword = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setShowModal(false);
-      addToast("Password changed successfully!", {
-        appearance: "success",
+  // Form state for password change
+  const [formData, setFormData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.oldPassword) {
+      addToast("Current password is required!", {
+        appearance: "error",
         autoDismiss: true,
       });
-    }, 2000);
+      return;
+    }
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      addToast("New password and confirm password do not match!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    if (formData.newPassword.length < 8) {
+      addToast("Password must be at least 8 characters long!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axiosSecure.patch("/api/v1/user/reset-password", {
+        oldPassword: formData.oldPassword,
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword
+      });
+
+      if (response.data.success) {
+        addToast("Password changed successfully!", {
+          appearance: "success",
+          autoDismiss: true,
+        });
+        setShowModal(false);
+        setFormData({
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: ""
+        });
+      }
+    } catch (error) {
+      addToast(error.response?.data?.message || "Failed to change password", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCopy = () => {
@@ -233,42 +295,78 @@ const MyDashboardProfile = () => {
             </div>
 
             <div className="p-6 space-y-4">
-              {[
-                { label: "Current Password", icon: Lock },
-                { label: "New Password", icon: Key },
-                { label: "Confirm New Password", icon: Key },
-              ].map(({ label, icon: Icon }) => (
-                <div key={label} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-gray-500" />
-                    {label}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      placeholder={`Enter ${label.toLowerCase()}`}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                    />
-                  </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-gray-500" />
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    name="oldPassword"
+                    value={formData.oldPassword}
+                    onChange={handleInputChange}
+                    placeholder="Enter current password"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    required
+                  />
                 </div>
-              ))}
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Key className="w-4 h-4 text-gray-500" />
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={formData.newPassword}
+                    onChange={handleInputChange}
+                    placeholder="Enter new password"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Key className="w-4 h-4 text-gray-500" />
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="Enter confirm new password"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    required
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="p-6 bg-gray-50 rounded-b-2xl">
-              <button
-                onClick={handleChangePassword}
-                disabled={loading}
-                className="w-full bg-gray-800 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin h-5 w-5" />
-                    <span>Updating...</span>
-                  </>
-                ) : (
-                  "Update Password"
-                )}
-              </button>
+              <form onSubmit={handleChangePassword}>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gray-800 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="animate-spin h-5 w-5" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </button>
+              </form>
             </div>
           </div>
         </div>

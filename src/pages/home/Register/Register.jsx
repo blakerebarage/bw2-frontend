@@ -143,8 +143,8 @@ const Register = () => {
                 placeholder="Phone*"
                 className="pl-10 h-12 w-full rounded-xl border-gray-200 focus:border-[#1b1f23] focus:ring-2 focus:ring-[#1b1f23]/20 transition-all group-hover:border-[#1b1f23]/50"
                 {...register("phone", {
-                  required: "Phone or username is required.",
-                  minLength: { value: 4, message: "Minimum 4 characters." },
+                  required: "Mobile number is required.",
+                  minLength: { value: 10, message: "Minimum 10 characters." },
                 })}
                 aria-invalid={errors.phone ? "true" : "false"}
               />

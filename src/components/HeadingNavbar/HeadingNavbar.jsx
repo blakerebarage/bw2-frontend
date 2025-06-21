@@ -24,61 +24,26 @@ const HeadingNavbar = () => {
       path: "/admindashboard",
     },
     {
-      label: "User",
-      path: null, // No path for parent menu with sub-items
-      subItems: [
-        {
-          label: "User",
-          path: "usersdata/user",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "Sub Agent",
-          path: "usersdata/sub-agent",
-          roles: ["agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "Agent",
-          path: "usersdata/agent",
-          roles: ["master", "admin", "sub-admin",'super-admin'],
-        },
-        {
-          label: "Sub Admin",
-          path: "usersdata/sub-admin",
-          roles: ["admin",'super-admin'],
-        },
-        {
-          label: "Admin",
-          path: "usersdata/admin",
-          roles: ["admin",'super-admin'],
-        },
-      ],
-    },
-    {
       label: "Setting",
       path: null, // No path for parent menu with sub-items
       subItems: [
-        {
-          label: "General Setting",
-          path: "/admindashboard/generalsetting",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
+       
         {
           label: "Admin Setting",
           path: "/admindashboard/adminsetting",
           roles: ['super-admin'],
         },
-        {
-          label: "Game Api Key",
-          path: "/admindashboard/gameapi",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
+       
         {
           label: "Home Control",
           path: "/admindashboard/homecontrol",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
+          roles: ['super-admin'],
         },
-        
+        {
+          label: "Deposit To Main Balance",
+          path: "/admindashboard/addbalance",
+          roles: ["super-admin"],
+        },
       ],
     },
     {
@@ -87,61 +52,17 @@ const HeadingNavbar = () => {
     },
     {
       label: "BetList",
-      path: "/admindashboard/betlist",
-    },
-    {
-      label: "BetListLive",
-      path: "/admindashboard/betlive",
+      path: "admindashboard/all-bets-history",
     },
     {
       label: "Casino",
       path: null,
       subItems: [
         {
-          label: "Pragmatic Play",
-          path: "#pragmatic-play",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "Evolution",
-          path: "#evolution",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "BGaming",
-          path: "#bgaming",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "Amusnet",
-          path: "#amusnet",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "PG Soft",
-          path: "#pg-soft",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "Play and GO",
-          path: "#play-and-go",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "Playtech",
-          path: "#playtech",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "Nolimit City",
-          path: "#nolimit-city",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
-        {
-          label: "Hacksaw",
-          path: "#hacksaw",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        },
+          label: "Provider control",
+          path: "/admindashboard/gamestatuschanges",
+          roles: ['super-admin'],
+        }
       ],
     },
     {
@@ -175,11 +96,7 @@ const HeadingNavbar = () => {
           path: "/admindashboard/turnover-management",
           roles: ["admin", "sub-admin", "super-admin"],
         },
-        {
-          label: "Deposit To Main Balance",
-          path: "/admindashboard/addbalance",
-          roles: ["super-admin"],
-        },
+       
         {
           label: "All Transactions",
           path: "/admindashboard/all-transactions",
@@ -190,20 +107,14 @@ const HeadingNavbar = () => {
           path: "/admindashboard/transaction-summary",
           roles: ["super-admin"],
         },
-        {
-          label: "All Bets History",
-          path: "/admindashboard/all-bets-history",
-          roles: ["super-admin"],
-        }
+        
       ],
     },
     {
       label: "Game Center",
       path: null, // No path for parent menu with sub-items
       subItems: [
-        { label: "Active Game", path: "/admindashboard/activegame" },
-        { label: "Deactive Game", path: "/admindashboard/deactivegame" },
-        { label: "Live Game", path: "/admindashboard/livegame" },
+        
         {
           label: "Game Category Control",
           path: "/admindashboard/gamecontrol",
@@ -219,11 +130,7 @@ const HeadingNavbar = () => {
           path: "/admindashboard/mostplayedgamescontrol",
           roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
         },
-        {
-          label: "Game Status Changes",
-          path: "/admindashboard/gamestatuschanges",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
-        }
+       
       ],
     },
   ];
@@ -270,7 +177,6 @@ const HeadingNavbar = () => {
       const subAdminMenuItems = [
         "Dashboard",
         "User",
-        "Setting",
         "My Account",
         "BetList",
         "BetListLive",
