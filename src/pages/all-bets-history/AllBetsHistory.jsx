@@ -4,10 +4,12 @@ import { useCurrency } from "@/Hook/useCurrency";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { FaCalendarAlt, FaCoins, FaGamepad, FaMoneyBillWave, FaTrophy, FaUser } from "react-icons/fa";
+import { useSelector } from "react-redux";
 
 const AllBetsHistory = () => {
   const [loading, setLoading] = useState(true);
   const [bets, setBets] = useState([]);
+  const { user } = useSelector(state => state.auth)
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
@@ -22,8 +24,10 @@ const AllBetsHistory = () => {
   const fetchBets = async () => {
     try {
       setLoading(true);
-      const response = await axiosSecure.get(
+      const response = user?.role === 'super-admin' ? await axiosSecure.get(
         `/api/v1/game/bet-history?page=${currentPage}&limit=${limit}&search=${search}`
+      ) : await axiosSecure.get(
+        `/api/v1/game/bet-history/${user?.username}?page=${currentPage}&limit=${limit}&search=${search}`
       );
       if (response.data.success) {
         setBets(response.data.data.results);
