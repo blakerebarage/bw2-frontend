@@ -26,7 +26,7 @@ const Footer = () => {
             <Link
               target="_blank"
               rel="noreferrer noopenner"
-              to="https://www.youtube.com/@play9"
+              to="https://www.youtube.com/@play9yt"
               className="text-gray-300 hover:text-red-700 transition-colors duration-200"
             >
               <FaYoutube className="text-3xl sm:text-4xl" />
@@ -34,7 +34,7 @@ const Footer = () => {
           <Link
               target="_blank"
               rel="noreferrer noopenner"
-              to="https://www.facebook.com/oracletechnologyindia"
+              to="https://www.facebook.com/play9.live/"
               className="text-gray-300 hover:text-blue-500 transition-colors duration-200"
             >
               <FaFacebook className="text-3xl sm:text-4xl" />
@@ -42,7 +42,7 @@ const Footer = () => {
             <Link
               target="_blank"
               rel="noreferrer noopenner"
-              to="https://wa.me/+33756757364"
+              to="https://whatsapp.com/channel/0029Vb62NYA2ZjCkQNeuVH2u"
               className="text-gray-300 hover:text-green-400 transition-colors duration-200"
             >
               <FaWhatsappSquare className="text-3xl sm:text-4xl" />
@@ -50,7 +50,7 @@ const Footer = () => {
             <Link
               target="_blank"
               rel="noreferrer noopenner"
-              to="https://t.me/+fHC2LQO4BAg2MmRk"
+              to="https://t.me/Play9live"
               className="text-gray-300 hover:text-blue-400 transition-colors duration-200"
             >
               <FaTelegram className="text-3xl sm:text-4xl" />
