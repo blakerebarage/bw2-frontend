@@ -74,60 +74,62 @@ const BannerSlider = () => {
     scrollTo(prevIndex);
   };
   return (
-    <Carousel className="w-full" setApi={setApi}>
-      {/* todo bannerImages image api not working  after given api then comment out that */}
-      <CarouselContent>
-        {banner?.length && banner?.map((image, index) => (
-          <CarouselItem key={index}>
-            <div className="">
-              <img
-                className="w-full h-[200px] bg-cover object-cover"
-                src={`${import.meta.env.VITE_BASE_API_URL}${image.url}`}
-                alt={`Slide ${index + 1}`}
-              />
-            </div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      {/* todo bannerImages image api not working  after given api then comment out that */}
+    <div className="relative w-full">
+      <Carousel className="w-full" setApi={setApi}>
+        {/* todo bannerImages image api not working  after given api then comment out that */}
+        <CarouselContent className="-ml-0">
+          {banner?.length && banner?.map((image, index) => (
+            <CarouselItem key={index} className="pl-0">
+              <div className="relative w-full aspect-[4/3] sm:aspect-[3/2] md:aspect-[16/9] lg:aspect-[2/1] min-h-[200px] sm:min-h-[220px] md:min-h-[240px] lg:min-h-[260px] overflow-hidden rounded-lg">
+                <img
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  src={`${import.meta.env.VITE_BASE_API_URL}${image.url}`}
+                  alt={`Slide ${index + 1}`}
+                />
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        {/* todo bannerImages image api not working  after given api then comment out that */}
 
-      {/* Previous and Next Buttons */}
-      <div className="absolute inset-0 flex justify-between items-center px-4 h-full">
-        <Button
-          onClick={handlePrevious}
-          className="bg-transparent text-white text-2xl px-2 py-1"
-        >
-          <GrPrevious />
-        </Button>
-        <Button
-          onClick={handleNext}
-          className="bg-transparent text-white text-2xl px-2 py-1"
-        >
-          <GrNext />
-        </Button>
-      </div>
-
-      {
-        notices?.length > 0 && (
-        <div className="px-3 opacity-90 text-black bg-white w-full py-1">
-        <div className="flex items-center gap-4">
-          <BellIcon className="text-xl md:text-2xl" />
-          <Marquee className="text-xs md:text-sm">
-            <ul className="flex items-center justify-between gap-20 font-bold">
-               {/* todo bannerImages image api not working  after given api then comment out that */}
-              {notices?.map((notice) => 
-                <li key={notice._id} className="ms-8">
-                  {notice?.description}
-                </li>
-              )}
-               {/* todo bannerImages image api not working  after given api then comment out that */}
-            </ul>
-          </Marquee>
+        {/* Previous and Next Buttons */}
+        <div className="absolute inset-0 flex justify-between items-center px-2 sm:px-4 pointer-events-none">
+          <Button
+            onClick={handlePrevious}
+            className="bg-black/30 hover:bg-black/50 text-white text-lg sm:text-2xl px-2 py-1 pointer-events-auto backdrop-blur-sm border border-white/20"
+          >
+            <GrPrevious />
+          </Button>
+          <Button
+            onClick={handleNext}
+            className="bg-black/30 hover:bg-black/50 text-white text-lg sm:text-2xl px-2 py-1 pointer-events-auto backdrop-blur-sm border border-white/20"
+          >
+            <GrNext />
+          </Button>
         </div>
-      </div> 
-        )
-      }
-    </Carousel>
+              </Carousel>
+
+        {
+          notices?.length > 0 && (
+          <div className="px-3 opacity-90 text-black bg-white w-full py-1">
+          <div className="flex items-center gap-4">
+            <BellIcon className="text-xl md:text-2xl" />
+            <Marquee className="text-xs md:text-sm">
+              <ul className="flex items-center justify-between gap-20 font-bold">
+                 {/* todo bannerImages image api not working  after given api then comment out that */}
+                {notices?.map((notice) => 
+                  <li key={notice._id} className="ms-8">
+                    {notice?.description}
+                  </li>
+                )}
+                 {/* todo bannerImages image api not working  after given api then comment out that */}
+              </ul>
+            </Marquee>
+          </div>
+        </div> 
+          )
+        }
+      </div>
   );
 };
 
