@@ -50,6 +50,7 @@ const GameControl = () => {
     "Crash",
     "Fishing",
     "Lottery",
+    "Arcade",
     "Uncategorized"
   ];
 
