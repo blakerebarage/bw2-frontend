@@ -3,7 +3,6 @@ import {
   useGetUsersQuery,
 } from "@/redux/features/allApis/usersApi/usersApi";
 import debounce from 'lodash.debounce';
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -11,8 +10,9 @@ import { useToasts } from "react-toast-notifications";
 // import ProviderStatsDashboard from "../GameAPIComponet/ProviderStatsDashboard";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
-import { FaHouseUser } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import moment from 'moment';
+import { FaHouseUser } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const { user } = useSelector((state) => state.auth);
@@ -23,7 +23,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  
   const {
     register,
     handleSubmit,
@@ -41,11 +41,13 @@ const AdminDashboard = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [editingUser, setEditingUser] = useState(null);
   const [editingProperty, setEditingProperty] = useState(null);
-  const [selectedCommission, setSelectedCommission] = useState(null);
-  const [selectedExposure, setSelectedExposure] = useState(null);
+  // const [selectedCommission, setSelectedCommission] = useState(null);
+  // const [selectedExposure, setSelectedExposure] = useState(null);
   const [selectedRole, setSelectedRole] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
-
+  const [selectedStatus, setSelectedStatus] = useState("active");
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [selectedUserForAction, setSelectedUserForAction] = useState(null);
+  
   // Stat data state
   const [statData, setStatData] = useState(null);
 
@@ -57,6 +59,7 @@ const AdminDashboard = () => {
 
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [isUserControlsExpanded, setIsUserControlsExpanded] = useState(false);
+  const [hasSearchError, setHasSearchError] = useState(false);
 
   // Create a debounced search function
   const debouncedSearch = useCallback(
@@ -73,8 +76,15 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    // Fetch stat data on mount
+    // Reset error state on mount
+    setHasSearchError(false);
+    
+    // Fetch stat data on mount - only for super-admin
     const fetchStatData = async () => {
+      if (user?.role !== 'super-admin') {
+        return; // Don't fetch stat data for non-super-admin users
+      }
+      
       try {
         const res = await axiosSecure.get("/api/v1/report/stat-data");
         if (res.data.success) {
@@ -85,8 +95,11 @@ const AdminDashboard = () => {
         addToast("Failed to fetch stat data", { appearance: "error", autoDismiss: true });
       }
     };
-    fetchStatData();
-  }, [axiosSecure, addToast]);
+    
+    if (user?.role) {
+      fetchStatData();
+    }
+  }, [axiosSecure, addToast, user?.role]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -105,24 +118,38 @@ const AdminDashboard = () => {
         if (selectedStatus) {
           params.append('status', selectedStatus);
         }
-       
         const res = await axiosSecure.get(`/api/v1/user/all?${params.toString()}`);
         if (res.data.success) {
           // Filter out super-admin data for non-super-admin users
-          let filteredData = res.data.data.users;
+          let filteredData = res.data.data.users || [];
           if (user?.role !== 'super-admin') {
-            filteredData = filteredData.filter(user => user.role !== 'super-admin');
+            filteredData = filteredData.filter(userd => 
+              userd.referredBy === user.referralCode
+            );
           }
           setFilteredUsers(filteredData);
           setTotalPages(Math.ceil(filteredData.length / limit));
           setTotalItems(filteredData.length);
+          setHasSearchError(false);
+        } else {
+          // Handle API success but no data case
+          setFilteredUsers([]);
+          setTotalPages(0);
+          setTotalItems(0);
+          setHasSearchError(false);
         }
       } catch (err) {
-        
-        addToast(err.response.data.message, {
-          appearance: "error",
-          autoDismiss: true,
-        });
+        // Only show toast for actual errors, not for no data found
+        if (err.response?.status !== 404) {
+          setHasSearchError(true);
+         
+        } else {
+          // Handle 404 - no users found case
+          setFilteredUsers([]);
+          setTotalPages(0);
+          setTotalItems(0);
+          setHasSearchError(false);
+        }
       } finally {
         setLoading(false);
       }
@@ -214,15 +241,30 @@ const AdminDashboard = () => {
       const res = await axiosSecure.get(`/api/v1/user/all?${params.toString()}`);
       
       if (res.data.success) {
-        setFilteredUsers(res.data.data.users);
-        setTotalPages(Math.ceil(res.data.data.totalItems / limit));
-        setTotalItems(res.data.data.totalItems);
+        const users = res.data.data.users || [];
+        setFilteredUsers(users);
+        setTotalPages(Math.ceil((res.data.data.totalItems || users.length) / limit));
+        setTotalItems(res.data.data.totalItems || users.length);
+        setHasSearchError(false);
+      } else {
+        // Handle API success but no data case
+        setFilteredUsers([]);
+        setTotalPages(0);
+        setTotalItems(0);
+        setHasSearchError(false);
       }
     } catch (err) {
-      addToast(err.response.data.message, {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      // Only show toast for actual errors, not for no data found
+      if (err.response?.status !== 404) {
+        setHasSearchError(true);
+        
+      } else {
+        // Handle 404 - no users found case
+        setFilteredUsers([]);
+        setTotalPages(0);
+        setTotalItems(0);
+        setHasSearchError(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -240,13 +282,14 @@ const AdminDashboard = () => {
     setSearchTimeout(timeout);
 
     return () => {
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
+      if (timeout) {
+        clearTimeout(timeout);
       }
     };
   }, [page, keyword, selectedRole, selectedStatus]);
 
   const handleStatusUpdate = async (username, newStatus) => {
+     console.log(username, newStatus);
     try {
       setUpdatingStatus(true);
       const response = await axiosSecure.patch(`/api/v1/user/update/${username}`, {
@@ -261,7 +304,7 @@ const AdminDashboard = () => {
         });
         // Refresh the users list
         handleSearch();
-        setSelectedUser(null); // Close dropdown after successful update
+       
       }
     } catch (error) {
       
@@ -343,8 +386,7 @@ const AdminDashboard = () => {
     const baseRoles = [
       { value: "admin", label: "Admin" },
       { value: "sub-admin", label: "Sub Admin" },
-      { value: "super-agent", label: "Super Agent" },
-      { value: "master-agent", label: "Master Agent" },
+     
       { value: "agent", label: "Agent" },
       { value: "sub-agent", label: "Sub Agent" },
       { value: "user", label: "User" }
@@ -391,7 +433,7 @@ const AdminDashboard = () => {
       <>
         {[...Array(rows)].map((_, idx) => (
           <tr key={idx}>
-            {[...Array(13)].map((_, colIdx) => (
+            {[...Array(7)].map((_, colIdx) => (
               <td key={colIdx} className="px-4 py-4">
                 <div className="h-4 bg-gray-200 rounded animate-pulse w-full" />
               </td>
@@ -404,33 +446,34 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50"> 
-      {/* Stats Cards Section */}
-      <div className="p-4 md:p-6">
-        {/* Mobile Stats Toggle */}
-        <div className="md:hidden mb-4">
-          <button
-            onClick={() => setIsStatsExpanded(!isStatsExpanded)}
-            className="w-full flex items-center justify-between px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-          >
-            <span className="text-[#1f2937] font-medium">Balance Overview</span>
-            <svg
-              className={`w-5 h-5 text-[#1f2937] transform transition-transform duration-200 ${
-                isStatsExpanded ? 'rotate-180' : ''
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+      {/* Stats Cards Section - Only for super-admin */}
+      {user?.role === 'super-admin' && (
+        <div className="p-4 md:p-6">
+          {/* Mobile Stats Toggle */}
+          <div className="md:hidden mb-4">
+            <button
+              onClick={() => setIsStatsExpanded(!isStatsExpanded)}
+              className="w-full flex items-center justify-between px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
+              <span className="text-[#1f2937] font-medium">Balance Overview</span>
+              <svg
+                className={`w-5 h-5 text-[#1f2937] transform transition-transform duration-200 ${
+                  isStatsExpanded ? 'rotate-180' : ''
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
 
-        {/* Stats Cards Grid - Hidden on mobile unless expanded */}
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6 ${
-          isStatsExpanded ? 'block' : 'hidden md:grid'
-        }`}>
-          {statData && [
+          {/* Stats Cards Grid - Hidden on mobile unless expanded */}
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6 ${
+            isStatsExpanded ? 'block' : 'hidden md:grid'
+          }`}>
+            {statData && [
             {
               label: "Total System Balance",
               value: formatCurrency(statData.totalSystemBalance),
@@ -472,6 +515,7 @@ const AdminDashboard = () => {
           ))}
         </div>
       </div>
+      )}
 
       {/* Main Content Section */}
       <div className="p-4 md:p-6">
@@ -532,8 +576,8 @@ const AdminDashboard = () => {
                     onChange={handleStatusChange}
                     className="w-full h-11 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors"
                   >
-                    <option value="">All Status</option>
                     <option value="active">Active</option>
+                    <option value="">All Status</option>
                     <option value="inactive">Inactive</option>
                   </select>
                 </div>
@@ -581,29 +625,79 @@ const AdminDashboard = () => {
                   <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">
                     User Name
                   </th>
-                  <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Full Name</th>
+                 
                   <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Email</th>
                   <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Balance</th>
-                  <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Commission %</th>
-                  <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Exposure Limit</th>
-                  
-                  <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Last Login</th>
-                  
-                    <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Role</th>
-                  
-                  <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Referral Code</th>
-                  <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Referred By</th>
-                  <th scope="col" className="px-4 py-3.5 text-center text-sm font-semibold text-[#1f2937]">Status</th>
+                  <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Role</th>
                   <th scope="col" className="px-4 py-3.5 text-center text-sm font-semibold text-[#1f2937]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {loading ? (
                   <TableSkeleton rows={8} />
+                ) : hasSearchError ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                          <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-lg font-medium text-[#1f2937] mb-1">Unable to load users</h3>
+                          <p className="text-sm text-gray-500 mb-3">
+                            There was an error loading the user data. Please try again.
+                          </p>
+                          <button
+                            onClick={() => {
+                              setHasSearchError(false);
+                              handleSearch();
+                            }}
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2V19M20 4v5h-.581" />
+                            </svg>
+                            Try Again
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-4 text-center text-[#1f2937]">
-                      No users found
+                    <td colSpan="6" className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                          </svg>
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-lg font-medium text-[#1f2937] mb-1">No users found</h3>
+                          <p className="text-sm text-gray-500">
+                            {keyword || selectedRole || selectedStatus !== "active" 
+                              ? "Try adjusting your search filters to find what you're looking for" 
+                              : "No users have been created yet"}
+                          </p>
+                          {(keyword || selectedRole || selectedStatus !== "active") && (
+                            <button
+                              onClick={() => {
+                                setKeyword("");
+                                setSelectedRole("");
+                                setSelectedStatus("active");
+                                // Clear the search input
+                                const searchInput = document.querySelector('input[placeholder="Search users..."]');
+                                if (searchInput) searchInput.value = "";
+                              }}
+                              className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                              Clear all filters
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -626,9 +720,7 @@ const AdminDashboard = () => {
                       <td className="whitespace-nowrap px-4 py-4">
                         <span className="text-sm text-[#1f2937]">{row.username}</span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-4">
-                        <span className="text-sm text-[#1f2937] capitalize">{row?.fullName || "" }</span>
-                      </td>
+                      
                       
                       <td className="whitespace-nowrap px-4 py-4">
                         <span className="text-sm text-[#1f2937]">{row.email}</span>
@@ -636,233 +728,45 @@ const AdminDashboard = () => {
                       <td className="whitespace-nowrap px-4 py-4">
                         <span className="text-sm font-medium text-[#1f2937]">{formatCurrency(row?.balance)}</span>
                       </td>
+                      
                       <td className="whitespace-nowrap px-4 py-4">
-                        <div className="relative">
-                          <button
-                            onClick={() => setSelectedCommission(selectedCommission === row._id ? null : row._id)}
-                            className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                              selectedCommission === row._id ? 'bg-gray-100' : 'hover:bg-gray-50'
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              {row?.commissionPercentage || 0}%
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                            ${row?.role === "admin" ? "bg-purple-100 text-purple-800" :
+                              row?.role === "sub-admin" ? "bg-blue-100 text-blue-800" :
+                              row?.role === "super-agent" ? "bg-indigo-100 text-indigo-800" :
+                              row?.role === "master-agent" ? "bg-pink-100 text-pink-800" :
+                              row?.role === "agent" ? "bg-green-100 text-green-800" :
+                              row?.role === "sub-agent" ? "bg-yellow-100 text-yellow-800" :
+                              "bg-gray-100 text-gray-800"}`}>
+                            {row?.role?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          </span>
+                          {row?.role === "admin" && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                               </svg>
+                              Admin
                             </span>
-                          </button>
-
-                          {selectedCommission === row._id && (
-                            <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                              <div className="py-1">
-                                <div className="px-4 py-2 text-sm font-medium text-[#1f2937] border-b border-gray-100">
-                                  Current: <span className="font-semibold">{row?.commissionPercentage || 0}%</span>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    setSelectedCommission(null);
-                                    setEditingProperty({
-                                      type: 'commission',
-                                      username: row.username,
-                                      value: row.commissionPercentage || 0
-                                    });
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-[#1f2937] hover:bg-gray-50 transition-colors duration-200"
-                                >
-                                  Edit Commission
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4">
-                        <div className="relative">
-                          <button
-                            onClick={() => setSelectedExposure(selectedExposure === row._id ? null : row._id)}
-                            className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                              selectedExposure === row._id ? 'bg-gray-100' : 'hover:bg-gray-50'
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              {formatCurrency(row?.exposureLimit)}
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </span>
-                          </button>
-
-                          {selectedExposure === row._id && (
-                            <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                              <div className="py-1">
-                                <div className="px-4 py-2 text-sm font-medium text-[#1f2937] border-b border-gray-100">
-                                  Current: <span className="font-semibold">${row?.exposureLimit || 0}</span>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    setSelectedExposure(null);
-                                    setEditingProperty({
-                                      type: 'exposure',
-                                      username: row.username,
-                                      value: row.exposureLimit || 0
-                                    });
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-[#1f2937] hover:bg-gray-50 transition-colors duration-200"
-                                >
-                                  Edit Exposure Limit
-                                </button>
-                              </div>
-                            </div>
                           )}
                         </div>
                       </td>
                       
-                      <td className="whitespace-nowrap px-4 py-4">
-                        <span className="text-sm text-[#1f2937]">
-                          {row?.lastLoginAt ? moment(row?.lastLoginAt).fromNow() : "Never"}
-                        </span>
+                      <td className="whitespace-nowrap px-4 py-4 text-center">
+                        <button
+                          onClick={() => {
+                            setSelectedUserForAction(row);
+                            setActionModalOpen(true);
+                          }}
+                          className="inline-flex items-center justify-center w-8 h-8 text-[#1f2937] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                          </svg>
+                        </button>
                       </td>
-                      
-                         <td className="whitespace-nowrap px-4 py-4">
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                              ${row?.role === "admin" ? "bg-purple-100 text-purple-800" :
-                                row?.role === "sub-admin" ? "bg-blue-100 text-blue-800" :
-                                row?.role === "super-agent" ? "bg-indigo-100 text-indigo-800" :
-                                row?.role === "master-agent" ? "bg-pink-100 text-pink-800" :
-                                row?.role === "agent" ? "bg-green-100 text-green-800" :
-                                row?.role === "sub-agent" ? "bg-yellow-100 text-yellow-800" :
-                                "bg-gray-100 text-gray-800"}`}>
-                              {row?.role?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                            </span>
-                            {row?.role === "admin" && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                Admin
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      
-                        
-                        <td className="whitespace-nowrap px-4 py-4">
-                          <span className="text-sm text-[#1f2937]">{row?.referralCode || "-"}</span>
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-4">
-                          <span className="text-sm text-[#1f2937]">{row?.referredBy }</span>
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-4 text-center">
-                          <div className="relative">
-                            <button
-                              onClick={() => setSelectedUser(selectedUser === row._id ? null : row._id)}
-                              className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200
-                                ${row.status === "active" 
-                                  ? "bg-green-100 text-green-800 hover:bg-green-200" 
-                                  : "bg-red-100 text-red-800 hover:bg-red-200"}`}
-                            >
-                              <span className="flex items-center gap-2">
-                                <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
-                                  <circle cx="4" cy="4" r="3" />
-                                </svg>
-                                {row.status === "active" ? "Active" : "Inactive"}
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                              </span>
-                            </button>
-
-                            {selectedUser === row._id && (
-                              <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10 overflow-hidden">
-                                <div className="py-1" role="menu" aria-orientation="vertical">
-                                  <div className="px-4 py-2 text-sm font-medium text-[#1f2937] border-b border-gray-100">
-                                    Current Status: <span className={`font-semibold ${row.status === "active" ? "text-green-600" : "text-red-600"}`}>
-                                      {row.status === "active" ? "Active" : "Inactive"}
-                                    </span>
-                                  </div>
-                                  <button
-                                    onClick={() => handleStatusUpdate(row.username, row.status === "active" ? "inactive" : "active")}
-                                    disabled={updatingStatus}
-                                    className="w-full text-left px-4 py-3 text-sm text-[#1f2937] hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2"
-                                    role="menuitem"
-                                  >
-                                    <svg 
-                                      className={`w-4 h-4 ${row.status === "active" ? "text-red-500" : "text-green-500"}`}
-                                      fill="none" 
-                                      stroke="currentColor" 
-                                      viewBox="0 0 24 24"
-                                    >
-                                      {row.status === "active" ? (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                      ) : (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                      )}
-                                    </svg>
-                                    {row.status === "active" ? "Deactivate User" : "Activate User"}
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedUser(null);
-                                      setEditingProperty({
-                                        type: 'commission',
-                                        username: row.username,
-                                        value: row.commissionPercentage || 0
-                                      });
-                                    }}
-                                    className="w-full text-left px-4 py-3 text-sm text-[#1f2937] hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2"
-                                    role="menuitem"
-                                  >
-                                    <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Edit Commission
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedUser(null);
-                                      setEditingProperty({
-                                        type: 'exposure',
-                                        username: row.username,
-                                        value: row.exposureLimit || 0
-                                      });
-                                    }}
-                                    className="w-full text-left px-4 py-3 text-sm text-[#1f2937] hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2"
-                                    role="menuitem"
-                                  >
-                                    <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Edit Exposure Limit
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <Link
-                              to={`/admindashboard/userprofile/${row?._id}`}
-                              className="inline-flex items-center justify-center w-8 h-8 text-[#1f2937] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                            >
-                              <FaHouseUser className="w-5 h-5" />
-                            </Link>
-                            <button
-                              onClick={() => {
-                                setUserToDelete(row);
-                                setDeleteModalOpen(true);
-                              }}
-                              className="inline-flex items-center justify-center w-8 h-8 text-[#1f2937] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -932,7 +836,7 @@ const AdminDashboard = () => {
               <div>
                 <label className="block text-sm font-medium text-[#1f2937] mb-1">Phone Number</label>
                 <input
-                  type="number"
+                  type="text"
                   {...register("phone")}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors"
                 />
@@ -949,8 +853,7 @@ const AdminDashboard = () => {
                   <option value="">Select a role</option>
                   {user.role === "admin" || user.role === "super-admin" && <option value="admin">Admin</option>}
                   <option value="sub-admin">Sub Admin</option>
-                  <option value="super-agent">Super Agent</option>
-                  <option value="master-agent">Master Agent</option>
+                 
                   <option value="agent">Agent</option>
                   <option value="sub-agent">Sub Agent</option>
                   <option value="user">User</option>
@@ -1186,6 +1089,156 @@ const AdminDashboard = () => {
                   'Delete User'
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Action Modal */}
+      {actionModalOpen && selectedUserForAction && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-[450px] max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl font-bold text-[#1f2937]">User Actions</h1>
+                <button
+                  onClick={() => {
+                    setActionModalOpen(false);
+                    setSelectedUserForAction(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* User Info Section */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-sm font-semibold text-[#1f2937] mb-3">User Information</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span className={`font-medium ${selectedUserForAction.status === "active" ? "text-green-600" : "text-red-600"}`}>
+                      {selectedUserForAction.status === "active" ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                 
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Referral Code:</span>
+                    <span className="font-medium text-[#1f2937]">{selectedUserForAction.referralCode || "-"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Commission:</span>
+                    <span className="font-medium text-[#1f2937]">{selectedUserForAction.commissionPercentage || 0}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Exposure Limit:</span>
+                    <span className="font-medium text-[#1f2937]">{formatCurrency(selectedUserForAction.exposureLimit)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Last Login:</span>
+                    <span className="font-medium text-[#1f2937]">{selectedUserForAction.lastLoginAt ? moment(selectedUserForAction.lastLoginAt).fromNow() : "Never"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Referred By:</span>
+                    <span className="font-medium text-[#1f2937]">{selectedUserForAction.referredBy || "-"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    handleStatusUpdate(selectedUserForAction.username, selectedUserForAction.status === "active" ? "inactive" : "active");
+                    setActionModalOpen(false);
+                    setSelectedUserForAction(null);
+                  }}
+                  disabled={updatingStatus}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <svg 
+                    className={`w-5 h-5 ${selectedUserForAction.status === "active" ? "text-red-500" : "text-green-500"}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    {selectedUserForAction.status === "active" ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 715.636 5.636m12.728 12.728L5.636 5.636" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    )}
+                  </svg>
+                  <span>{selectedUserForAction.status === "active" ? "Deactivate User" : "Activate User"}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActionModalOpen(false);
+                    setSelectedUserForAction(null);
+                    setEditingProperty({
+                      type: 'commission',
+                      username: selectedUserForAction.username,
+                      value: selectedUserForAction.commissionPercentage || 0
+                    });
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Edit Commission</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActionModalOpen(false);
+                    setSelectedUserForAction(null);
+                    setEditingProperty({
+                      type: 'exposure',
+                      username: selectedUserForAction.username,
+                      value: selectedUserForAction.exposureLimit || 0
+                    });
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Edit Exposure Limit</span>
+                </button>
+
+                <Link
+                  to={`/admindashboard/userprofile/${selectedUserForAction._id}`}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  onClick={() => {
+                    setActionModalOpen(false);
+                    setSelectedUserForAction(null);
+                  }}
+                >
+                  <FaHouseUser className="w-5 h-5 text-green-500" />
+                  <span>View Profile</span>
+                </Link>
+
+                <button
+                  onClick={() => {
+                    setActionModalOpen(false);
+                    setSelectedUserForAction(null);
+                    setUserToDelete(selectedUserForAction);
+                    setDeleteModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Delete User</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

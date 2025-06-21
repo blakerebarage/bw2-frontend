@@ -22,6 +22,10 @@ const AddBank = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [dailyLimit, setDailyLimit] = useState("");
   const [editingBank, setEditingBank] = useState(null);
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [selectedBank, setSelectedBank] = useState(null);
+  const [purpose, setPurpose] = useState("");
+  const [selectedPurpose, setSelectedPurpose] = useState("");
 
   // New state variables for bank details
   const [bankName, setBankName] = useState("");
@@ -29,26 +33,47 @@ const AddBank = () => {
   const [accountHolderName, setAccountHolderName] = useState("");
   const [districtName, setDistrictName] = useState("");
   const [routingNumber, setRoutingNumber] = useState("");
-  const [bankChannel, setBankChannel] = useState("");
+  
 
   const fetchBanks = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axiosSecure.get(
-        `/api/v1/finance/bank-list?page=${currentPage}&limit=${selectBankLimit}&search=${bankType}&username=${user?.username}`
-      );
-      
-      setBanks(res.data.data.results);
-      setTotalPages(Math.ceil(res.data.data.total / parseInt(selectBankLimit)));
-    } catch (err) {
-      addToast("Failed to fetch banks", {
-        appearance: "error",
-        autoDismiss: true,
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: selectBankLimit,
+        username: user?.username || '',
       });
+      
+      if (bankType) {
+        params.append('search', bankType);
+      }
+      if (selectedPurpose) {
+        params.append('purpose', selectedPurpose);
+      }
+      
+      const res = await axiosSecure.get(`/api/v1/finance/bank-list?${params.toString()}`);
+      
+      if (res.data.success) {
+        setBanks(res.data.data.results || []);
+        setTotalPages(Math.ceil((res.data.data.total || 0) / parseInt(selectBankLimit)));
+      } else {
+        setBanks([]);
+        setTotalPages(1);
+      }
+    } catch (err) {
+      if (err.response?.status !== 404) {
+        addToast("Failed to fetch banks", {
+          appearance: "error",
+          autoDismiss: true,
+        });
+      } else {
+        setBanks([]);
+        setTotalPages(1);
+      }
     } finally {
       setLoading(false);
     }
-  }, [currentPage, selectBankLimit, bankType, axiosSecure, addToast, user?.username]);
+  }, [currentPage, selectBankLimit, bankType, selectedPurpose, axiosSecure, addToast, user?.username]);
 
   const debouncedSearch = useMemo(
     () => debounce(() => {
@@ -81,6 +106,7 @@ const AddBank = () => {
         setDistrictName("");
         setRoutingNumber("");
         setDailyLimit("");
+        setPurpose("");
         setEditingBank(null);
       }
       return !prevState;
@@ -91,7 +117,7 @@ const AddBank = () => {
     e.preventDefault();
 
     if (bankType === "Bank") {
-      if (!bankName || !branchName || !accountNumber || !accountHolderName || !districtName || !routingNumber) {
+      if (!bankName || !branchName || !accountNumber || !accountHolderName || !districtName || !routingNumber || !purpose) {
         addToast("All bank fields are required!", {
           appearance: "error",
           autoDismiss: true,
@@ -99,7 +125,7 @@ const AddBank = () => {
         return;
       }
     } else {
-      if (!bankType || !channel || !accountNumber) {
+      if (!bankType || !channel || !accountNumber || !purpose) {
         addToast("All fields are required!", {
           appearance: "error",
           autoDismiss: true,
@@ -107,7 +133,6 @@ const AddBank = () => {
         return;
       }
     }
-
     const newBank = bankType === "Bank" ? {
       username: user?.username,
       bankType,
@@ -118,13 +143,15 @@ const AddBank = () => {
       districtName,
       routingNumber,
       channel: "Bank-Transfer",
-      dailyLimit: dailyLimit || "0"
+      dailyLimit: dailyLimit || "0",
+      purpose
     } : {
       username: user?.username,
       bankType,
       channel,
       accountNumber,
-      dailyLimit: dailyLimit || "0"
+      dailyLimit: dailyLimit || "0",
+      purpose
     };
     try {
       if (editingBank) {
@@ -141,7 +168,7 @@ const AddBank = () => {
         }
       } else {
         const res = await axiosSecure.post("/api/v1/finance/create-bank", newBank);
-        
+          
         if (res.data.success) {
           Swal.fire({
             title: "Success!",
@@ -174,6 +201,7 @@ const AddBank = () => {
     setDistrictName(bank.districtName || "");
     setRoutingNumber(bank.routingNumber || "");
     setDailyLimit(bank.dailyLimit || "");
+    setPurpose(bank.purpose || "");
     setIsModalOpen(true);
   };
 
@@ -258,6 +286,16 @@ const AddBank = () => {
               </select>
               
               <select
+                className="select bg-white border-2 border-gray-200 rounded-lg px-4 py-2 focus:border-[#1f2937] focus:ring-2 focus:ring-gray-200 transition-all duration-200 w-40"
+                value={selectedPurpose}
+                onChange={(e) => setSelectedPurpose(e.target.value)}
+              >
+                <option value="">Select Purpose</option>
+                <option value="Deposit">Deposit</option>
+                <option value="Withdraw">Withdraw</option>
+              </select>
+              
+              <select
                 className="select bg-white border-2 border-gray-200 rounded-lg px-4 py-2 focus:border-[#1f2937] focus:ring-2 focus:ring-gray-200 transition-all duration-200 w-32"
                 value={selectBankLimit}
                 onChange={(e) => setSelectBankLimit(e.target.value)}
@@ -295,18 +333,18 @@ const AddBank = () => {
                 <th className="py-3 px-4 border-b">Bank Name</th>
                 <th className="py-3 px-4 border-b">Channel</th>
                 <th className="py-3 px-4 border-b">Account Number</th>
+                <th className="py-3 px-4 border-b">Purpose</th>
                 <th className="py-3 px-4 border-b">Daily Limit</th>
                 <th className="py-3 px-4 border-b">Remaining Limit</th>
                 <th className="py-3 px-4 border-b">Total Received Today</th>
                 <th className="py-3 px-4 border-b">Created Date</th>
-                <th className="py-3 px-4 border-b">Action</th>
-                <th className="py-3 px-4 border-b">View</th>
+                <th className="py-3 px-4 border-b">Action/View</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-8">
+                  <td colSpan="10" className="text-center py-8">
                     <div className="flex-col flex justify-center items-center space-y-4">
                       <div className="w-12 h-12 border-4 border-[#1f2937] border-t-transparent rounded-full animate-spin"></div>
                       <img src={logo} alt="" className="h-12" />
@@ -315,13 +353,32 @@ const AddBank = () => {
                 </tr>
               ) : banks?.length === 0 ? (
                 <tr>
-                    <td colSpan="9" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center text-gray-500">
-                        <svg className="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-lg font-medium">No Data Found</p>
-                        <p className="text-sm">There are no bank information found</p>
+                    <td colSpan="10" className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                          </svg>
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-lg font-medium text-[#1f2937] mb-1">No banks found</h3>
+                          <p className="text-sm text-gray-500">
+                            {bankType || selectedPurpose 
+                              ? "Try adjusting your search filters to find what you're looking for" 
+                              : "No bank information has been added yet"}
+                          </p>
+                          {(bankType || selectedPurpose) && (
+                            <button
+                              onClick={() => {
+                                setBankType("");
+                                setSelectedPurpose("");
+                              }}
+                              className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                              Clear all filters
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -332,44 +389,30 @@ const AddBank = () => {
                     <td className="py-3 px-4 border-b text-center">{ bank.bankType === "Bank" ? bank.bankName : bank.bankType}</td>
                     <td className="py-3 px-4 border-b text-center">{bank.channel}</td>
                     <td className="py-3 px-4 border-b text-center">{bank.accountNumber}</td>
+                    <td className="py-3 px-4 border-b text-center">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                        ${bank.purpose === "Deposit" ? "bg-green-100 text-green-800" :
+                          bank.purpose === "Withdraw" ? "bg-red-100 text-red-800" :
+                          "bg-gray-100 text-gray-800"}`}>
+                        {bank.purpose || "N/A"}
+                      </span>
+                    </td>
                     <td className="py-3 px-4 border-b text-center">{bank.dailyLimit || "0"}</td>
                     <td className="py-3 px-4 border-b text-center">{bank.remainingDailyLimit || "0"}</td>
                     <td className="py-3 px-4 border-b text-center">{bank.totalReceivedToday || "0"}</td>
-
                     <td className="py-3 px-4 border-b text-center">{new Date(bank.createdAt).toISOString().split('T')[0]}</td>
-                    <td className="py-3 px-4 border-b">
-                      <div className="flex justify-center space-x-3">
-                        <button
-                          onClick={() => handleEdit(bank)}
-                          className="px-4 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 transition-all duration-200"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleStatusbtn(bank._id, bank.status === "active")}
-                          className={`px-4 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
-                            bank.status === "active"
-                              ? "bg-green-100 text-green-600 hover:bg-green-200"
-                              : "bg-gray-300 text-gray-600 hover:bg-gray-400"
-                          }`}
-                        >
-                          {bank.status}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(bank._id)}
-                          className="px-4 py-1 rounded-full text-sm font-medium bg-red-100 text-red-600 hover:bg-red-200 transition-all duration-200"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 border-b">
-                      <Link
-                        to={`/admindashboard/bank-details/${bank.accountNumber}`}
-                        className="px-4 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 transition-all duration-200"
+                    <td className="py-3 px-4 border-b text-center">
+                      <button
+                        onClick={() => {
+                          setSelectedBank(bank);
+                          setActionModalOpen(true);
+                        }}
+                        className="inline-flex items-center justify-center w-8 h-8 text-[#1f2937] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                       >
-                        View
-                      </Link>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -569,6 +612,21 @@ const AddBank = () => {
 
               <div>
                 <label className="block text-sm font-medium text-[#1f2937] mb-1">
+                  Purpose*
+                </label>
+                <select
+                  className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-[#1f2937] transition-all duration-200"
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                >
+                  <option value="">Select Purpose</option>
+                  <option value="Deposit">Deposit</option>
+                  <option value="Withdraw">Withdraw</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#1f2937] mb-1">
                   Daily Limit
                 </label>
                 <input
@@ -596,6 +654,135 @@ const AddBank = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Action Modal */}
+      {actionModalOpen && selectedBank && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-[400px] max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl font-bold text-[#1f2937]">Bank Actions</h1>
+                <button
+                  onClick={() => {
+                    setActionModalOpen(false);
+                    setSelectedBank(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Bank Info Section */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-sm font-semibold text-[#1f2937] mb-3">Bank Information</h3>
+                <div className="space-y-2 text-sm"> 
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span className={`font-medium ${selectedBank.status === "active" ? "text-green-600" : "text-red-600"}`}>
+                      {selectedBank.status === "active" ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Purpose:</span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                      ${selectedBank.purpose === "Deposit" ? "bg-green-100 text-green-800" :
+                        selectedBank.purpose === "Withdraw" ? "bg-red-100 text-red-800" :
+                        "bg-gray-100 text-gray-800"}`}>
+                      {selectedBank.purpose || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Bank Type:</span>
+                    <span className="font-medium text-[#1f2937]">{selectedBank.bankType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Channel:</span>
+                    <span className="font-medium text-[#1f2937]">{selectedBank.channel}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Daily Limit:</span>
+                    <span className="font-medium text-[#1f2937]">{selectedBank.dailyLimit || "0"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    handleStatusbtn(selectedBank._id, selectedBank.status === "active");
+                    setActionModalOpen(false);
+                    setSelectedBank(null);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <svg 
+                    className={`w-5 h-5 ${selectedBank.status === "active" ? "text-red-500" : "text-green-500"}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    {selectedBank.status === "active" ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 715.636 5.636m12.728 12.728L5.636 5.636" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    )}
+                  </svg>
+                  <span>{selectedBank.status === "active" ? "Deactivate Bank" : "Activate Bank"}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActionModalOpen(false);
+                    setSelectedBank(null);
+                    handleEdit(selectedBank);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>Edit Bank</span>
+                </button>
+
+                <Link
+                  to={`/admindashboard/bank-details/${selectedBank.accountNumber}`}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  onClick={() => {
+                    setActionModalOpen(false);
+                    setSelectedBank(null);
+                  }}
+                >
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <span>View Details</span>
+                </Link>
+
+                <button
+                  onClick={() => {
+                    setActionModalOpen(false);
+                    setSelectedBank(null);
+                    handleDelete(selectedBank._id);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Delete Bank</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

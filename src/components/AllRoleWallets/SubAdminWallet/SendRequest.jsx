@@ -247,7 +247,8 @@ const DepositSection = () => {
     const fetchBankInfo = async () => {
       try {
         setLoading(true);
-        const res = await axiosSecure.get(`/api/v1/finance/bank-list/${user.referredBy}`);
+        const res = await axiosSecure.get(`/api/v1/finance/bank-list/${user.referredBy}?purpose=Deposit`);
+      
         if (res.data.success) {
           const banks = res.data.data.filter(bank => bank.status === "active");
           const uniqueBankTypes = [...new Set(banks.map(bank => bank.bankType))];
@@ -281,7 +282,7 @@ const DepositSection = () => {
       }
       try {
         setLoading(true);
-        const res = await axiosSecure.get(`/api/v1/finance/bank-list/${user.referredBy}?bankType=${selectedMethod}`);
+        const res = await axiosSecure.get(`/api/v1/finance/bank-list/${user.referredBy}?bankType=${selectedMethod}&purpose=Deposit`);
         if (res.data.success) {
           const channels = [...new Set(res.data.data.map(bank => bank.channel))];
           setFilteredChannels(channels);
@@ -310,7 +311,7 @@ const DepositSection = () => {
       try {
         setLoading(true);
         const res = await axiosSecure.get(
-          `/api/v1/finance/bank-list/${user.referredBy}?bankType=${selectedMethod}&channel=${selectedChannel}`
+          `/api/v1/finance/bank-list/${user.referredBy}?bankType=${selectedMethod}&channel=${selectedChannel}&purpose=Deposit`
         );
         if (res.data.success) {
           const activeBanks = res.data.data.filter(bank => bank.status === "active");
@@ -436,12 +437,12 @@ const DepositSection = () => {
           />
 
           {/* Selected Method Indicator */}
-          {selectedMethod && (
-            <div className="text-center">
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-full text-sm font-medium">
-                <Check className="w-4 h-4" />
-                {selectedMethod}
-              </span>
+          {selectedMethod && (selectedAmount || customAmount) && (
+            <div className=" flex justify-center items-center">
+              <h2 className=" items-center gap-2 px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-full  w-[100px] text-center font-bold text-2xl">
+                
+                {selectedAmount || customAmount}
+              </h2>
             </div>
           )}
 

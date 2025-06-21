@@ -201,7 +201,7 @@ export default function Withdraw() {
   useEffect(() => {
     setLoading(true);
     axiosSecure
-      .get(`/api/v1/finance/bank-list/${user.referredBy}`)
+      .get(`/api/v1/finance/bank-list/${user.referredBy}?purpose=Withdraw`)
       .then((res) => {
         if (res.data.success) {
           const banks = res.data?.data?.filter(bank => bank.status === "active");
@@ -289,6 +289,7 @@ export default function Withdraw() {
       channel: chanel,
       username: user.username,
       referralCode: user.referredBy,
+     
       // Add user bank info for direct bank
       ...(bank === "Bank" && {
         userBankName,
@@ -365,13 +366,13 @@ export default function Withdraw() {
           />
 
           {/* Selected Method Indicator */}
-          {bank && (
-            <div className="text-center">
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-full text-sm font-medium">
-                <Check className="w-4 h-4" />
-                {bank}
-              </span>
-            </div>
+          {amount && (
+            <div className=" flex justify-center items-center">
+            <h2 className=" items-center gap-2 px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-full  w-[100px] text-center font-bold text-2xl">
+              
+              {amount}
+            </h2>
+          </div>
           )}
 
           {/* Bank Selection for Bank Method */}

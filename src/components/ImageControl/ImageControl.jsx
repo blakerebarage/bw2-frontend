@@ -125,10 +125,7 @@ const ImageControl = () => {
   };
   const initGameLaunch = async (gameId) => {
     if (!user?.username) {
-      addToast("Please login to play games", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      
       navigate('/login');
       return;
     }
