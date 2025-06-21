@@ -3,6 +3,7 @@ import { FaHeart, FaUserTie } from "react-icons/fa";
 import { GiCardQueenSpades, GiFishing, GiGroundbreaker, GiLuckyFisherman } from "react-icons/gi";
 import { IoDiamondOutline } from "react-icons/io5";
 import { MdOutlineSportsCricket } from "react-icons/md";
+import { PiJoystick } from 'react-icons/pi';
 import { RiGalleryView2 } from "react-icons/ri";
 
 const categories = [
@@ -15,7 +16,9 @@ const categories = [
   { title: "Crash", image: <GiGroundbreaker size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "crash" },
   { title: "Fishing", image: <GiFishing  size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "fishing" },
   { title: "Lottery", image: <GiLuckyFisherman size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "Lottery" },
-    { title: "All", image: <RiGalleryView2 size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "allgames" }
+   {title:'Arcade',image:<PiJoystick size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />,value:'arcade'},
+    { title: "All", image: <RiGalleryView2 size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "allgames" },
+
 ];
 
 export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
