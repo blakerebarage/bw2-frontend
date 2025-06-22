@@ -39,7 +39,6 @@ const GameControl = () => {
   // Search filter state
   const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-    console.log(page);
   // Available categories
   const categories = [
     "All",
@@ -64,25 +63,44 @@ const GameControl = () => {
    * Fetch all games from the API
    */
   const fetchGames = async () => {
-    if(filterType === 'selected'){
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
+      // Build API parameters
+      const params = {
+        page: page,
+        limit: limit,
+        isActive: true,
+        search: searchQuery || undefined,
+      };
+
+      // Include category parameter when:
+      // 1. A specific category is selected (not "All" or empty)
+      // 2. Filter type is "selected" (to get games of that category)
+      if (selectedCategory && selectedCategory !== 'All' && filterType === 'selected') {
+        params.category = selectedCategory;
+      }
+
       const response = await axiosSecure.get('/api/v1/game/all-games', {
-        params: {
-          page: page,
-          limit: limit,
-          isActive: true,
-          search: searchQuery || undefined,
-        }
+        params: params
       });
       
       if (response?.data?.data) {
-        setAllGames(response.data.data.results);
+        const fetchedGames = response.data.data.results;
+        setAllGames(fetchedGames);
         setTotalPages(response.data.data.pageCount);
-         setTotalGames(response.data.data.totalItems);
+        setTotalGames(response.data.data.totalItems);
+
+        // If we're fetching category-specific games in "selected" mode,
+        // add these games to selectedGames state so they appear as selected in UI
+        if (selectedCategory && selectedCategory !== 'All' && filterType === 'selected') {
+          const newGameIds = fetchedGames.map(game => game.gameId);
+          setSelectedGames(prev => {
+            // Add new games to selected games, avoid duplicates
+            const combined = [...prev, ...newGameIds];
+            return [...new Set(combined)]; // Remove duplicates
+          });
+        }
       }
     } catch (error) {
       setError('Failed to fetch games. Please try again later.');
@@ -171,7 +189,6 @@ const GameControl = () => {
         category: selectedCategory,
         gameIds: selectedGames
       });
-      console.log(selectedGames,response);
       addToast("Category updated successfully.", {
         appearance: "success",
         autoDismiss: true,
@@ -250,7 +267,7 @@ const GameControl = () => {
   // Fetch games when page, limit, search, or filter changes
   useEffect(() => {
     fetchGames();
-  }, [page, limit, searchQuery, filterType, selectedCategory, selectedGames]);
+  }, [page, limit, searchQuery, filterType, selectedCategory]);
 
   useEffect(() => {
     debouncedSetSearchQuery(inputValue);
@@ -260,7 +277,13 @@ const GameControl = () => {
   // Update the getFilteredGames function to handle category games and remaining games
   const getFilteredGames = () => {
     let filteredGames = [];
-    if (selectedCategory && selectedCategory !== 'All') {
+    
+    // If filterType is "selected" and a specific category is chosen,
+    // allGames already contains the category-specific games from the API
+    // Don't apply selectedGames filter again as API already filtered them
+    if (filterType === 'selected' && selectedCategory && selectedCategory !== 'All') {
+      filteredGames = allGames;
+    } else if (selectedCategory && selectedCategory !== 'All') {
       // Get games for the selected category
       const categoryGames = existingCategoryGames;
       
@@ -285,10 +308,9 @@ const GameControl = () => {
       );
     }
 
-    // Apply selection filter
-    if (filterType === 'selected') {
+    // Apply selection filter only when NOT using category-specific API call
+    if (filterType === 'selected' && (!selectedCategory || selectedCategory === 'All')) {
       filteredGames = filteredGames.filter(game => selectedGames.includes(game.gameId));
-       
     } else if (filterType === 'unselected') {
       filteredGames = filteredGames.filter(game => !selectedGames.includes(game.gameId));
     }

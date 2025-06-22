@@ -71,12 +71,8 @@ export function SelectCategory() {
         
         if (response?.data?.data) {
           setTotalGames(response.data.data.totalItems || 0);
-          // Always replace results when searching or on page 1, otherwise append for pagination
-          if (currentPage === 1 || debouncedSearchQuery) {
-            setDisplayGames(response.data.data.results);
-          } else {
-            setDisplayGames(prev => [...prev, ...response.data.data.results]);
-          }
+          // Always replace results for traditional pagination
+          setDisplayGames(response.data.data.results);
         }
       } catch (error) {
         
@@ -130,11 +126,8 @@ export function SelectCategory() {
           
           if (response?.data?.data) {
             setTotalGames(response.data.data.totalItems);
-            if (currentPage === 1) {
-              setDisplayGames(response.data.data.results);
-            } else {
-              setDisplayGames(prev => [...prev, ...response.data.data.results]);
-            }
+            // Always replace results for traditional pagination
+            setDisplayGames(response.data.data.results);
           }
         } catch (error) {
           console.error('Error searching games:', error);
@@ -151,7 +144,7 @@ export function SelectCategory() {
     searchInFavorites();
   }, [debouncedSearchQuery, favoriteGames, selectedCategory.value, currentPage]);
 
-  // Reset page to 1 when search query changes for all categories
+  // Reset page to 1 when search query changes or category changes
   useEffect(() => {
     if (debouncedSearchQuery) {
       setCurrentPage(1);
@@ -168,7 +161,6 @@ export function SelectCategory() {
             isActive: true
           }
         });
-        console.log(response);
         if (response?.data?.data?.popularGames) {
           setMostPlayedGames(response.data.data.popularGames);
           setPopularTotalPages(response.data.data.pageCount || 1);
@@ -356,44 +348,6 @@ export function SelectCategory() {
             </div>
           )}
 
-          {/* Pagination for Favorite search results */}
-          {debouncedSearchQuery && totalGames > 45 && (
-            <div className="flex justify-center items-center gap-4 mt-8">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
-                  currentPage === 1
-                    ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
-                    : 'bg-[#1a1f24] text-gray-300 hover:bg-[#22282e] border border-[#facc15]/20'
-                }`}
-              >
-                Previous
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-gray-300">Page</span>
-                <span className="font-semibold text-[#facc15]">{currentPage}</span>
-                <span className="text-gray-300">of</span>
-                <span className="font-semibold text-[#facc15]">
-                  {Math.ceil(totalGames / 45)}
-                </span>
-              </div>
-
-              <button
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                disabled={currentPage >= Math.ceil(totalGames / 45)}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
-                  currentPage >= Math.ceil(totalGames / 45)
-                    ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-white/20'
-                    : 'bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800]'
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          )}
-
           {/* Show "No results found" only when searching */}
           {debouncedSearchQuery && displayGames?.length === 0 && !loading && (
             <div className="text-center text-gray-300 py-8">
@@ -462,8 +416,8 @@ export function SelectCategory() {
                 ))}
               </div>
               
-              {/* Pagination Controls for All Categories */}
-              {totalGames > 45 && (
+              {/* Pagination Controls for All Categories - Only show when there are multiple pages */}
+              {totalGames > 45 && Math.ceil(totalGames / 45) > 1 && (
                 <div className="flex justify-center items-center gap-4 mt-8">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
