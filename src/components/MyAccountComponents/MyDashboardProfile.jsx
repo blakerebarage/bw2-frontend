@@ -102,7 +102,7 @@ const MyDashboardProfile = () => {
       });
     }
   };
-
+// profile fields
   const profileFields = [
     { key: "name", label: "Full Name", icon: User },
     { key: "username", label: "Username", icon: Phone },
