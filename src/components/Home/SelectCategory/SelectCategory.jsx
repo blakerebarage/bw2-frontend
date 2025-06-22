@@ -71,8 +71,14 @@ export function SelectCategory() {
         
         if (response?.data?.data) {
           setTotalGames(response.data.data.totalItems || 0);
-          // Always replace results for traditional pagination
-          setDisplayGames(response.data.data.results);
+          // For "allgames" category, always use pagination (replace results)
+          // For other categories, use load more (append results) except on first page or search
+          if (selectedCategory.value === "allgames" || currentPage === 1 || debouncedSearchQuery) {
+            setDisplayGames(response.data.data.results);
+          } else {
+            // Load more: append new results to existing ones (for other categories)
+            setDisplayGames(prev => [...prev, ...response.data.data.results]);
+          }
         }
       } catch (error) {
         
@@ -288,6 +294,14 @@ export function SelectCategory() {
     }
   };
 
+  // Handle Load More functionality (for categories other than "allgames")
+  const handleLoadMore = () => {
+    setCurrentPage(prev => prev + 1);
+  };
+
+  // Calculate if there are more pages available
+  const hasMorePages = Math.ceil(totalGames / 45) > currentPage;
+
   if (gameLoading) {
     return <Loading />;
   }
@@ -416,42 +430,69 @@ export function SelectCategory() {
                 ))}
               </div>
               
-              {/* Pagination Controls for All Categories - Only show when there are multiple pages */}
-              {totalGames > 45 && Math.ceil(totalGames / 45) > 1 && (
-                <div className="flex justify-center items-center gap-4 mt-8">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
-                      currentPage === 1
-                        ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
-                        : 'bg-[#1a1f24] text-gray-300 hover:bg-[#22282e] border border-[#facc15]/20'
-                    }`}
-                  >
-                    Previous
-                  </button>
-                  
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-300">Page</span>
-                    <span className="font-semibold text-[#facc15]">{currentPage}</span>
-                    <span className="text-gray-300">of</span>
-                    <span className="font-semibold text-[#facc15]">
-                      {Math.ceil(totalGames / 45)}
-                    </span>
-                  </div>
+              {/* Conditional rendering based on category type */}
+              {selectedCategory.value === "allgames" ? (
+                // Traditional Pagination for "All Games" category
+                totalGames > 45 && Math.ceil(totalGames / 45) > 1 && (
+                  <div className="flex justify-center items-center gap-4 mt-8">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                        currentPage === 1
+                          ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
+                          : 'bg-[#1a1f24] text-gray-300 hover:bg-[#22282e] border border-[#facc15]/20'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-300">Page</span>
+                      <span className="font-semibold text-[#facc15]">{currentPage}</span>
+                      <span className="text-gray-300">of</span>
+                      <span className="font-semibold text-[#facc15]">
+                        {Math.ceil(totalGames / 45)}
+                      </span>
+                    </div>
 
-                  <button
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                    disabled={currentPage >= Math.ceil(totalGames / 45)}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
-                      currentPage >= Math.ceil(totalGames / 45)
-                        ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
-                        : 'bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800]'
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
+                    <button
+                      onClick={() => setCurrentPage(prev => prev + 1)}
+                      disabled={currentPage >= Math.ceil(totalGames / 45)}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                        currentPage >= Math.ceil(totalGames / 45)
+                          ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
+                          : 'bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800]'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )
+              ) : (
+                // Load More Button for other categories (Slots, Table Games, etc.)
+                hasMorePages && (
+                  <div className="flex justify-center mt-8">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                        loading
+                          ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
+                          : 'bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800] transform hover:scale-105'
+                      }`}
+                    >
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                          Loading...
+                        </div>
+                      ) : (
+                        'Load More'
+                      )}
+                    </button>
+                  </div>
+                )
               )}
             </>
           ) : (

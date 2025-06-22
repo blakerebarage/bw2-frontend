@@ -92,7 +92,7 @@ const Profile = () => {
       <CommonNavMenu />
       <div className="flex flex-col md:flex-row px-4 py-6 gap-6">
         <AccountTabs id={id} />
-        <div className="flex-1 space-y-6 mt-6">
+        <div className="flex-1 space-y-6 mt-6 border border-gray-200 rounded-lg p-4 drop-shadow-lg">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             👤 Profile Overview
           </h2>
