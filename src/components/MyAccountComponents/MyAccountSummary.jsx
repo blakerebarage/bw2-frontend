@@ -88,7 +88,7 @@ const MyAccountSummary = () => {
   return (
     <div className="w-full bg-gradient-to-b from-[#fefefe] to-[#f3f3f3]">
       <div>
-        <div className="w-full min-h-screen flex flex-col space-y-6 px-4">
+        <div className="w-full min-h-screen flex flex-col space-y-6">
           <div className="font-sans space-y-4 md:space-y-6 lg:space-y-6">
             <h3 className="text-lg font-bold sm:text-xl text-gray-800">
               Account Summary
