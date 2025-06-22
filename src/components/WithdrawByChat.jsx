@@ -1,7 +1,18 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useEffect, useState } from 'react';
-import { FaLink } from "react-icons/fa";
-
+import { FaFacebookMessenger, FaLink, FaTelegram, FaWhatsapp } from "react-icons/fa";
+import { FaSignalMessenger } from "react-icons/fa6";
+import { SiViber } from "react-icons/si";
+const iconForProvider = (providerName) => {
+  if (!providerName) return <FaLink className="text-gray-400" size={20} />;
+  const name = providerName.toLowerCase();
+  if (name.includes("whatsapp")) return <FaWhatsapp className="text-green-500" size={20} />;
+  if (name.includes("telegram")) return <FaTelegram className="text-[#229ED9]" size={20} />;
+  if (name.includes("signal")) return <FaSignalMessenger className="text-blue-700" size={20} />;
+  if (name.includes("messenger")) return <FaFacebookMessenger className="text-blue-700" size={20} />;
+  if (name.includes("imo")) return <SiViber className="text-sky-500" size={20} />;
+  return <FaLink className="text-gray-400" size={20} />;
+};
 const WithdrawByChat = () => {
   const axiosSecure = useAxiosSecure();
   const [depositWithdrawNumbers, setDepositWithdrawNumbers] = useState([]);
@@ -48,7 +59,7 @@ const WithdrawByChat = () => {
               className="bg-[#1a1f24] backdrop-blur-sm rounded-xl shadow-lg p-5 flex items-start gap-4 hover:shadow-2xl transition-all duration-300 border border-[#facc15]/20 hover:border-[#facc15]/40 group"
             >
               <div className="flex-shrink-0 p-3 rounded-lg bg-[#facc15]/10 group-hover:bg-[#facc15]/20 transition-colors duration-300">
-                <FaLink className="text-[#facc15]" size={24} />
+                {iconForProvider(item.method)}
               </div>
               <div className="flex-grow">
                 <div className="font-bold text-xl text-[#facc15] mb-2 flex items-center gap-2">

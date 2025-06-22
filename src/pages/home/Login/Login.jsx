@@ -59,6 +59,7 @@ const Login = () => {
   }, []);
 
   const onSubmit = async (data) => {
+    console.log(deviceInfo);
     const { phoneOrUserName, password } = data;
     try {
       const { data: loginData } = await loginUser({ 

@@ -29,16 +29,16 @@ const AccountStatementTabs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-adminBackground">
+    <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen">
       <CommonNavMenu></CommonNavMenu>
       <div className="mx-auto">
-        <div className="flex flex-col lg:flex-row gap-6 px-4 py-6">
+        <div className="flex flex-col md:flex-row px-4 py-6 gap-6">
           <AccountTabs
           id={id}
           ></AccountTabs>
-          <div className="flex-1 min-w-0 mt-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-gray-800 sm:text-xl">User Account Statement</h3>
+          <div className="flex-1 space-y-6 mt-6 border border-gray-200 rounded-lg p-4 drop-shadow-lg">
+            
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">User Account Statement</h3>
               
               {/* Table Container with proper overflow handling */}
               <div className="bg-white rounded-lg shadow">
@@ -166,7 +166,7 @@ const AccountStatementTabs = () => {
             </div>
           </div>
         </div>
-      </div>
+     
     </div>
   );
 };
