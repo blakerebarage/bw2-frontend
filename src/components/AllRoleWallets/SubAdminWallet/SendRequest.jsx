@@ -498,7 +498,7 @@ const DepositSection = () => {
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Or Enter Custom Amount</h3>
               <input
-                type="number"
+                type="text"
                 placeholder="Enter amount"
                 value={customAmount}
                 onChange={(e) => {

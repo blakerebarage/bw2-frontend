@@ -474,7 +474,7 @@ export default function Withdraw() {
                 <label className="block text-sm font-medium text-gray-400 mb-2">Amount *</label>
                 <div className="relative">
                   <input
-                    type="number"
+                    type="text"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"

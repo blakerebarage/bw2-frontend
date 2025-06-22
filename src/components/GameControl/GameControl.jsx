@@ -39,7 +39,7 @@ const GameControl = () => {
   // Search filter state
   const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  
+    console.log(page);
   // Available categories
   const categories = [
     "All",
@@ -64,6 +64,9 @@ const GameControl = () => {
    * Fetch all games from the API
    */
   const fetchGames = async () => {
+    if(filterType === 'selected'){
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -72,14 +75,14 @@ const GameControl = () => {
           page: page,
           limit: limit,
           isActive: true,
-          search: searchQuery || undefined
+          search: searchQuery || undefined,
         }
       });
       
       if (response?.data?.data) {
         setAllGames(response.data.data.results);
         setTotalPages(response.data.data.pageCount);
-        setTotalGames(response.data.data.totalItems);
+         setTotalGames(response.data.data.totalItems);
       }
     } catch (error) {
       setError('Failed to fetch games. Please try again later.');
@@ -97,20 +100,24 @@ const GameControl = () => {
       setExistingCategoryGames([]);
       return;
     }
-
     setLoading(true);
     try {
       const response = await axiosSecure.get('/api/v1/game/all-games', {
         params: {
           isActive: true,
-          category: category
+          category: category,
+          page:page,
+          limit:limit,
+          search:searchQuery,
+          isActive:true
         }
       });
-      console.log(response);
+      
       if (response?.data?.data) {
         const categoryGames = response.data.data.results;
         setExistingCategoryGames(categoryGames);
         setSelectedGames(categoryGames.map(game => game.gameId));
+        setTotalPages(response.data.data.pageCount);
       }
     } catch (error) {
       addToast("Failed to fetch category games.", {
@@ -253,11 +260,10 @@ const GameControl = () => {
   // Update the getFilteredGames function to handle category games and remaining games
   const getFilteredGames = () => {
     let filteredGames = [];
-
     if (selectedCategory && selectedCategory !== 'All') {
       // Get games for the selected category
       const categoryGames = existingCategoryGames;
-       console.log(allGames);
+      
       // Get remaining games from all games that aren't in the category
       const remainingGames = allGames.filter(game => 
         !existingCategoryGames.some(catGame => catGame.gameId === game.gameId)
@@ -278,10 +284,11 @@ const GameControl = () => {
         game.provider.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    console.log(selectedGames);
+
     // Apply selection filter
     if (filterType === 'selected') {
       filteredGames = filteredGames.filter(game => selectedGames.includes(game.gameId));
+       
     } else if (filterType === 'unselected') {
       filteredGames = filteredGames.filter(game => !selectedGames.includes(game.gameId));
     }
