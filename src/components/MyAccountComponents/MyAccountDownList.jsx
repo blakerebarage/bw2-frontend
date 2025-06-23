@@ -12,9 +12,9 @@ const MyAccountDownList = () => {
   const [referredUsers, setReferredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 20;
-  
+
   useEffect(() => {
-    if (!isLoading && !error && user && users.data.users) {
+    if (!isLoading && !error && user && users?.data?.users) {
       const filteredUsers = users.data.users.filter(
         (u) => u.referredBy === user?.referralCode
       );
@@ -41,114 +41,133 @@ const MyAccountDownList = () => {
 
   return (
     <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen p-4 w-full">
-      <div className="overflow-x-auto">
-        <table className="w-full divide-y divide-gray-300">
-          <thead className="bg-headerGray text-headingTextColor">
-            <tr>
-              {[
-                "Phone/User",
-                "Full Name",
-                "Email",
-                "Balance",
-                "Joined At",
-                "Last Login",
-                "Role",
-                "Status",
-                "Actions",
-              ].map((header) => (
-                <th
-                  key={header}
-                  className=" bg-headerGray border-gray-300 px-4 py-2 text-left text-xs font-semibold uppercase"
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {isLoading ? (
-              <tr>
-                <td colSpan="9">
-                  <div className="flex flex-col justify-center items-center space-y-3 h-64">
-                    <div className="w-12 h-12 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
-                    <img src={logo} alt="Loading" className="w-20 rounded-2xl" />
-                  </div>
-                </td>
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-headerGray text-headingTextColor border-b border-gray-300">
+                {[
+                  "Phone",
+                  "User Name", 
+                  "Email",
+                  "Balance",
+                  "Joined At",
+                  "Last Login",
+                  "Status",
+                  "Actions",
+                ].map((header) => (
+                  <th
+                    key={header}
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider border-r border-gray-300 last:border-r-0"
+                  >
+                    {header}
+                  </th>
+                ))}
               </tr>
-            ) : currentUsers.length > 0 ? (
-              currentUsers.map((row, index) => (
-                <tr key={row._id || index} className="hover:bg-yellow-100">
-                  <td className=" px-4 py-2 whitespace-nowrap text-sm text-gray-700 flex items-center space-x-2">
-                    <RoleBadge role={row?.role} />
-                    <span className="text-blue-500">{row?.phoneOrUserName}</span>
-                  </td>
-                  <td className=" px-4 py-2 capitalize text-sm text-gray-700">
-                    {row?.fullName} {row?.lastName}
-                  </td>
-                  <td className=" px-4 py-2 text-sm text-red-700">
-                    {row?.email}
-                  </td>
-                  <td className=" px-2 py-2 text-sm text-gray-700">
-                    {row?.balance || 0}
-                  </td>
-                  <td className=" px-2 py-2 text-sm text-gray-700">
-                    {moment(row?.createdAt).format("Do MMM YYYY, h:mm a")}
-                  </td>
-                  <td className=" px-4 py-2 text-sm text-gray-700">
-                    {row?.lastLoginAt
-                      ? moment(row?.lastLoginAt).fromNow()
-                      : "No Data"}
-                  </td>
-                  <td className=" px-4 py-2 text-sm text-gray-700 capitalize">
-                    {row?.role}
-                  </td>
-                  <td className=" px-4 py-2 text-center">
-                    <div className="inline-flex items-center space-x-1 bg-green-100 rounded px-2 py-1">
-                      <div className="w-2.5 h-2.5 bg-green-600 rounded-full"></div>
-                      <span className="text-green-800 text-xs">Active</span>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {isLoading ? (
+                <tr>
+                  <td colSpan="8" className="px-4 py-8">
+                    <div className="flex flex-col justify-center items-center space-y-3">
+                      <div className="w-12 h-12 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+                      <img src={logo} alt="Loading" className="w-20 rounded-2xl" />
+                      <p className="text-gray-500">Loading users...</p>
                     </div>
                   </td>
-                  <td className="px-4 py-2 text-center">
-                    <Link
-                      to={`/admindashboard/userprofile/${row?._id}`}
-                      className="inline-flex items-center justify-center w-8 h-8 bg-green-100 hover:bg-green-300 rounded-sm text-gray-700"
-                    >
-                      <FaHouseUser />
-                    </Link>
+                </tr>
+              ) : currentUsers.length > 0 ? (
+                currentUsers.map((row, index) => (
+                  <tr key={row._id || index} className="hover:bg-yellow-50 transition-colors duration-200">
+                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
+                      <div className="flex items-center space-x-2">
+                        <RoleBadge role={row?.role} />
+                        <span className="text-blue-600 font-medium">{row?.phone}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
+                      <span className="text-blue-600 font-medium">{row?.username}</span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
+                      <span className="text-red-600">{row?.email}</span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
+                      <span className="text-gray-900 font-medium">${(row?.balance || 0).toLocaleString()}</span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
+                      <span className="text-gray-600">{moment(row?.createdAt).format("MMM DD, YYYY")}</span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
+                      <span className="text-gray-600">
+                        {row?.lastLoginAt
+                          ? moment(row?.lastLoginAt).fromNow()
+                          : "Never"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
+                      <div className="inline-flex items-center space-x-1 bg-green-100 rounded-full px-3 py-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-green-800 text-xs font-medium">Active</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-center">
+                      <Link
+                        to={`/admindashboard/userprofile/${row?._id}`}
+                        className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-600 transition-colors duration-200"
+                        title="View Profile"
+                      >
+                        <FaHouseUser className="w-4 h-4" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center space-y-3">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                        <FaHouseUser className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-1">No referred users found</h3>
+                        <p className="text-gray-500">You haven't referred any users yet.</p>
+                      </div>
+                    </div>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="9" className="text-center py-10 text-gray-500">
-                  No referred users found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between space-x-4 mt-6">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="font-semibold text-gray-700">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
-          >
-            Next
-          </button>
+        <div className="flex items-center justify-between mt-6 px-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-700">
+              Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, referredUsers.length)} of {referredUsers.length} users
+            </span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              Previous
+            </button>
+            <span className="font-semibold text-gray-700">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -156,18 +175,22 @@ const MyAccountDownList = () => {
 };
 
 const RoleBadge = ({ role }) => {
-  const roleMap = {
-    admin: "AD",
-    "sub-admin": "SA",
-    agent: "AG",
-    "sub-agent": "SG",
-    user: "US",
+  const roleConfig = {
+    "super-admin": { code: "SA", bg: "bg-red-500" },
+    "admin": { code: "AD", bg: "bg-purple-500" },
+    "sub-admin": { code: "SUB", bg: "bg-blue-500" },
+    "super-agent": { code: "SPR", bg: "bg-indigo-500" },
+    "master-agent": { code: "MST", bg: "bg-pink-500" },
+    "agent": { code: "AG", bg: "bg-green-500" },
+    "user": { code: "US", bg: "bg-gray-500" },
   };
 
+  const config = roleConfig[role] || { code: "??", bg: "bg-gray-400" };
+
   return role ? (
-    <button className="w-6 h-6 bg-green-500 font-sans text-white text-xs rounded-sm">
-      {roleMap[role] || "??"}
-    </button>
+    <div className={`inline-flex items-center justify-center w-8 h-8 ${config.bg} text-white text-xs font-semibold rounded-lg`}>
+      {config.code}
+    </div>
   ) : null;
 };
 

@@ -73,7 +73,6 @@ const Register = () => {
 
   
   const onSubmit = async (data) => {
-    
     const userInfo = {
       phone: data.phone,
       fullName: data.fullName,
@@ -81,6 +80,7 @@ const Register = () => {
       referredBy: data.referCode ? data.referCode : "",
       role: "user",
     };
+    console.log(userInfo);
     // Only add email to userInfo if it has a value
     if (data.email && data.email.trim() !== "") {
       userInfo.email = data.email;
