@@ -94,14 +94,14 @@ const Downlist = () => {
                 <thead className="bg-headerGray text-headingTextColor">
                   <tr>
                     <th className="border-y bg-headerGray border-gray-300 px-4 py-3 text-left text-sm font-medium uppercase tracking-wider">
-                      User Info
+                      Phone Number
                     </th>
                     <th className="border-y bg-headerGray border-gray-300 px-4 py-3 text-left text-sm font-medium uppercase tracking-wider">
-                      Full Name
+                      User Name
                     </th>
-                    <th className="border-y bg-headerGray border-gray-300 px-4 py-3 text-left text-sm font-medium uppercase tracking-wider">
-                      Email
-                    </th>
+                      <th className="border-y bg-headerGray border-gray-300 px-4 py-3 text-left text-sm font-medium uppercase tracking-wider">
+                        Email
+                      </th>
                     <th className="border-y bg-headerGray border-gray-300 px-4 py-3 text-left text-sm font-medium uppercase tracking-wider">
                       Balance
                     </th>
@@ -154,11 +154,11 @@ const Downlist = () => {
                               <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${roleBadge.bg} ${roleBadge.text} font-medium text-sm`}>
                                 {roleBadge.label}
                               </span>
-                              <span className="text-blue-600 font-medium">{row.username}</span>
+                              <span className="text-blue-600 font-medium">{row.phonenumber}</span>
                             </div>
                           </td>
                           <td className="border-b px-4 py-3 whitespace-nowrap text-sm text-gray-900 capitalize">
-                            {row?.name}
+                            {row?.username}
                           </td>
                           <td className="border-b px-4 py-3 whitespace-nowrap text-sm text-red-600">
                             {row.email}
