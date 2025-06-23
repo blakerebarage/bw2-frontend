@@ -59,7 +59,7 @@ const Login = () => {
   }, []);
 
   const onSubmit = async (data) => {
-    console.log(deviceInfo);
+    
     const { phoneOrUserName, password } = data;
     try {
       const { data: loginData } = await loginUser({ 
@@ -68,6 +68,7 @@ const Login = () => {
         deviceId,
         deviceInfo
       });
+    
       
       if (loginData.token) {
         const { data: userData } = await getUser(loginData.token);

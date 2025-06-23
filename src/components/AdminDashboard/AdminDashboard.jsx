@@ -35,6 +35,7 @@ const AdminDashboard = () => {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [allusers, setUser] = useState([]);
+ 
   const [page, setPage] = useState(1);
   const limit = 50;
   const [totalPages, setTotalPages] = useState(0);
@@ -47,7 +48,7 @@ const AdminDashboard = () => {
   const [selectedStatus, setSelectedStatus] = useState("active");
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [selectedUserForAction, setSelectedUserForAction] = useState(null);
-  
+ 
   // Stat data state
   const [statData, setStatData] = useState(null);
 
@@ -403,12 +404,15 @@ const AdminDashboard = () => {
         updateData.commissionPercentage = parseFloat(editingProperty.value);
       } else if (editingProperty.type === 'exposure') {
         updateData.exposureLimit = parseFloat(editingProperty.value);
+      } else if (editingProperty.type === 'deviceCount') {
+        updateData.allowedDeviceCount = parseInt(editingProperty.value);
       }
 
       const response = await axiosSecure.patch(`/api/v1/user/update/${editingProperty.username}`, updateData);
 
       if (response.data.success) {
-        addToast(`${editingProperty.type === 'commission' ? 'Commission Percentage' : 'Exposure Limit'} updated successfully`, {
+        addToast(`${editingProperty.type === 'commission' ? 'Commission Percentage' : 
+                     editingProperty.type === 'exposure' ? 'Exposure Limit' : 'Allowed Device Count'} updated successfully`, {
           appearance: "success",
           autoDismiss: true,
         });
@@ -523,11 +527,12 @@ const AdminDashboard = () => {
 
   // Add TableSkeleton component for loading state
   function TableSkeleton({ rows = 8 }) {
+    const colCount = user?.role === 'super-admin' ? 7 : 6; // Extra column for device count
     return (
       <>
         {[...Array(rows)].map((_, idx) => (
           <tr key={idx}>
-            {[...Array(7)].map((_, colIdx) => (
+            {[...Array(colCount)].map((_, colIdx) => (
               <td key={colIdx} className="px-4 py-4">
                 <div className="h-4 bg-gray-200 rounded animate-pulse w-full" />
               </td>
@@ -701,7 +706,7 @@ const AdminDashboard = () => {
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0118 0z" />
                       </svg>
                     </div>
 
@@ -734,6 +739,10 @@ const AdminDashboard = () => {
                       <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Email</th>
                       <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Balance</th>
                       <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Role</th>
+                      {/* Only show Device Count column for super-admin */}
+                      {user?.role === 'super-admin' && (
+                        <th scope="col" className="px-4 py-3.5 text-left text-sm font-semibold text-[#1f2937]">Device Count</th>
+                      )}
                       <th scope="col" className="px-4 py-3.5 text-center text-sm font-semibold text-[#1f2937]">Actions</th>
                     </tr>
                   </thead>
@@ -742,7 +751,7 @@ const AdminDashboard = () => {
                       <TableSkeleton rows={8} />
                     ) : hasSearchError ? (
                       <tr>
-                        <td colSpan="6" className="px-6 py-12 text-center">
+                        <td colSpan={user?.role === 'super-admin' ? "7" : "6"} className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center justify-center space-y-3">
                             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
                               <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -772,7 +781,7 @@ const AdminDashboard = () => {
                       </tr>
                     ) : filteredUsers.length === 0 ? (
                       <tr>
-                        <td colSpan="6" className="px-6 py-12 text-center">
+                        <td colSpan={user?.role === 'super-admin' ? "7" : "6"} className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center justify-center space-y-3">
                             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -870,6 +879,20 @@ const AdminDashboard = () => {
                               )}
                             </div>
                           </td>
+
+                          {/* Only show Device Count column for super-admin */}
+                          {user?.role === 'super-admin' && (
+                            <td className="whitespace-nowrap px-4 py-4">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
+                                  </svg>
+                                  {row?.allowedDeviceCount || 1}
+                                </span>
+                              </div>
+                            </td>
+                          )}
                           
                           <td className="whitespace-nowrap px-4 py-4 text-center">
                             <button
@@ -1122,7 +1145,8 @@ const AdminDashboard = () => {
               >
                 <div className="flex items-center justify-between border-b pb-4">
                   <h3 className="text-lg font-semibold text-[#1f2937]">
-                    Edit {editingProperty.type === 'commission' ? 'Commission Percentage' : 'Exposure Limit'}
+                    Edit {editingProperty.type === 'commission' ? 'Commission Percentage' : 
+                         editingProperty.type === 'exposure' ? 'Exposure Limit' : 'Allowed Device Count'}
                   </h3>
                   <button
                     type="button"
@@ -1138,17 +1162,23 @@ const AdminDashboard = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-[#1f2937] mb-1">
-                      {editingProperty.type === 'commission' ? 'Commission Percentage (%)' : 'Exposure Limit ($)'}
+                      {editingProperty.type === 'commission' ? 'Commission Percentage (%)' : 
+                       editingProperty.type === 'exposure' ? 'Exposure Limit ($)' : 'Allowed Device Count'}
                     </label>
                     <input
                       type="number"
-                      step="0.01"
-                      min="0"
-                      max={editingProperty.type === 'commission' ? "100" : undefined}
+                      step={editingProperty.type === 'deviceCount' ? "1" : "0.01"}
+                      min={editingProperty.type === 'deviceCount' ? "1" : "0"}
+                      max={editingProperty.type === 'commission' ? "100" : editingProperty.type === 'deviceCount' ? "10" : undefined}
                       value={editingProperty.value}
                       onChange={(e) => setEditingProperty({...editingProperty, value: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors"
                     />
+                    {editingProperty.type === 'deviceCount' && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        Number of devices this user can log in from simultaneously (1-10)
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -1157,7 +1187,8 @@ const AdminDashboard = () => {
                     type="submit"
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                   >
-                    Update {editingProperty.type === 'commission' ? 'Commission' : 'Exposure Limit'}
+                    Update {editingProperty.type === 'commission' ? 'Commission' : 
+                           editingProperty.type === 'exposure' ? 'Exposure Limit' : 'Device Count'}
                   </button>
                 </div>
               </form>
@@ -1272,6 +1303,13 @@ const AdminDashboard = () => {
                         <span className="text-gray-600">Exposure Limit:</span>
                         <span className="font-medium text-[#1f2937]">{formatCurrency(selectedUserForAction.exposureLimit)}</span>
                       </div>
+                      {/* Only show Device Count for super-admin */}
+                      {user?.role === 'super-admin' && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Allowed Device Count:</span>
+                          <span className="font-medium text-[#1f2937]">{selectedUserForAction.allowedDeviceCount || 1}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-gray-600">Last Login:</span>
                         <span className="font-medium text-[#1f2937]">{selectedUserForAction.lastLoginAt ? moment(selectedUserForAction.lastLoginAt).fromNow() : "Never"}</span>
@@ -1344,6 +1382,27 @@ const AdminDashboard = () => {
                       </svg>
                       <span>Edit Exposure Limit</span>
                     </button>
+
+                    {/* Only show Device Count edit for super-admin */}
+                    {user?.role === 'super-admin' && (
+                      <button
+                        onClick={() => {
+                          setActionModalOpen(false);
+                          setSelectedUserForAction(null);
+                          setEditingProperty({
+                            type: 'deviceCount',
+                            username: selectedUserForAction.username,
+                            value: selectedUserForAction.allowedDeviceCount || 1
+                          });
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                      >
+                        <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span>Edit Device Count</span>
+                      </button>
+                    )}
 
                     <Link
                       to={`/admindashboard/userprofile/${selectedUserForAction._id}`}

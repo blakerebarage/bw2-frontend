@@ -26,7 +26,6 @@ const Banking = () => {
 
   const totalPages = Math.ceil((filteredUsers?.length || 0) / itemsPerPage);
   const paginatedUsers = filteredUsers?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto">
@@ -118,7 +117,7 @@ const Banking = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {paginatedUsers?.length > 0 ? (
-                  paginatedUsers.map((row, index) => (
+                  paginatedUsers.map((row, index) => ( row?.status === "active" &&
                     <tr key={index} className="hover:bg-gray-50 transition-colors duration-200">
                       <td className="px-6 py-4 text-sm">
                         <span className="text-[#1f2937] font-medium">
