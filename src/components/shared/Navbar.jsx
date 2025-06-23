@@ -78,13 +78,13 @@ const Navbar = () => {
                {
           token && userData?.role === "user" &&  <div className="flex flex-row items-center gap-2">
           <Link to="/balance-deposite" className="transition group relative">
-              <button className="bg-white text-[#facc15] px-1 py-1 rounded-md flex items-center gap-2  transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
-               <PiHandDepositFill className="text-xl text-[#facc15]"/>
+              <button className="text-white bg-red-500 px-1 py-1 rounded-md flex items-center gap-2  transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
+               <PiHandDepositFill className="text-xl text-white"/>
              </button>
              
           </Link>
           <Link to="/balance-withdraw" className=" transition group relative">
-             <button className="bg-[#facc15] text-white px-1 py-1 rounded-md flex items-center gap-2 hover:bg-[#facc15]/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
+             <button className="bg-green-500 text-white px-1 py-1 rounded-md flex items-center gap-2 hover:bg-green-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
                <PiHandWithdrawFill className="text-xl text-white"/>
              </button>
              
