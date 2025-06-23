@@ -36,8 +36,8 @@ export const GameCard = ({
       )}
   
       <div className="absolute bottom-0 left-0 right-0 p-3">
-        <div className="bg-[#22282e]/80 backdrop-blur-sm text-white px-2 py-1 rounded-lg border border-[#facc15]/30 shadow-sm">
-          <p className="text-sm font-medium text-[#facc15] truncate">
+        <div className="bg-[#22282e]/80 backdrop-blur-sm text-white px-2 py-2 rounded-lg border border-[#facc15]/30 shadow-sm">
+          <p className="text-sm font-medium text-[#facc15] leading-tight break-words">
             {game.name === "LuckSportGaming" ? "Lucky Exchange" : game.name}
           </p>
           
