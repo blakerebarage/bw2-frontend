@@ -2,7 +2,6 @@ import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useUser } from "@/UserContext/UserContext";
 import { Loader2, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import { useParams } from "react-router-dom";
@@ -29,8 +28,6 @@ const Profile = () => {
     confirmPassword: ""
   });
   const axiosSecure = useAxiosSecure();
-  const { user } = useSelector((state) => state.auth);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -61,7 +58,7 @@ const Profile = () => {
     try {
       setLoading(true);
       const response = await axiosSecure.patch("/api/v1/user/password-change", {
-        username: user.username,
+        username: selectedUser?.username,
         password: formData.newPassword
       });
 
