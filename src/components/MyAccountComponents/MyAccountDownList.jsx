@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FaHouseUser } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import logo from "../../assets/ourbet.png";
+import logo from "../../../public/logoBlack.png";
 
 const MyAccountDownList = () => {
   const { user } = useSelector((state) => state.auth);

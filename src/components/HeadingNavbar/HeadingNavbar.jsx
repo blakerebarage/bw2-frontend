@@ -1,6 +1,6 @@
 import Logo from "@/components/Logo/Logo";
 import usePendingRequests from "@/Hook/usePendingRequests";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IoNotifications } from "react-icons/io5";
 import { PiHandDepositFill } from "react-icons/pi";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,7 +15,9 @@ const HeadingNavbar = () => {
   const { user } = useSelector((state) => state.auth);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(location.pathname);
+  const [openSubmenu, setOpenSubmenu] = useState(null); // Track which submenu is open
   const { pendingDeposits, pendingWithdraws } = usePendingRequests();
+  const navRef = useRef(null); // Reference to the navigation container
 
   const userData = user;
   const menuItems = [
@@ -248,8 +250,36 @@ const HeadingNavbar = () => {
     return allowedItemsForRole.includes(item.label);
   });
 
+  // Handle click outside to close submenus
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setOpenSubmenu(null);
+      }
+    };
+
+    // Add event listener when a submenu is open
+    if (openSubmenu !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openSubmenu]);
+
+  // Close submenus when route changes
+  useEffect(() => {
+    setOpenSubmenu(null);
+  }, [location.pathname]);
+
+  const handleSubmenuToggle = (itemIndex) => {
+    setOpenSubmenu(openSubmenu === itemIndex ? null : itemIndex);
+  };
+
   return (
-    <header className="w-full shadow-md">
+    <header className="w-full shadow-md" ref={navRef}>
       {/* Top Bar */}
       <div className="bg-[#1f2937] flex items-center justify-between px-4 py-3 w-full">
         {/* Logo */}
@@ -320,8 +350,11 @@ const HeadingNavbar = () => {
             <MenuItem
               key={index}
               item={item}
+              itemIndex={index}
               activeTab={activeTab}
               handleTabClick={handleTabClick}
+              openSubmenu={openSubmenu}
+              onSubmenuToggle={handleSubmenuToggle}
             />
           ))}
         </ul>
@@ -364,11 +397,14 @@ const HeadingNavbar = () => {
                 <MenuItem
                   key={index}
                   item={item}
+                  itemIndex={index}
                   activeTab={activeTab}
                   handleTabClick={(path) => {
                     handleTabClick(path);
                     setMenuOpen(false);
                   }}
+                  openSubmenu={openSubmenu}
+                  onSubmenuToggle={handleSubmenuToggle}
                   isMobile={true}
                 />
               ))}
