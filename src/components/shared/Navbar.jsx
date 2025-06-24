@@ -10,7 +10,6 @@ import { PiHandDepositFill, PiHandWithdrawFill } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Sidebar from "../Sidebar";
-import PrimaryButton from "./PrimaryButton";
 
 const Navbar = () => {
    
@@ -147,14 +146,16 @@ const Navbar = () => {
                 rel="noreferrer noopenner"
                 to="/signup"
               >
-                <PrimaryButton icon={FiPlusCircle} background={""}>
+                <button className="bg-yellow-500 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-yellow-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
+                  <FiPlusCircle className="text-xl text-white"/>
                   SignUp
-                </PrimaryButton>
+                </button>
               </Link>
               <Link to="/login">
-                <PrimaryButton icon={IoMdLogIn} background={"red"}>
+                <button className="bg-red-500 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-red-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
+                  <IoMdLogIn className="text-xl text-white"/>
                   Login
-                </PrimaryButton>
+                </button>
               </Link>
             </div>
           )}
