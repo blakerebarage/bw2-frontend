@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { FaHouseUser } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
-import logo from "../../assets/ourbet.png";
+import logo from "../../../public/logoBlack.png";
 import AccountTabs from "../AccountTabs/AccountTabs";
 import CommonNavMenu from "../CommonNavMenu/CommonNavMenu";
 

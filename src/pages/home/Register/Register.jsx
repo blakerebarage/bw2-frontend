@@ -1,9 +1,13 @@
 import SpinLoader from "@/components/loaders/SpinLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useDeviceInfo from "@/Hook/useDeviceInfo";
+import useDeviceManager from "@/Hook/useDeviceManager";
 import {
-  useAddUserMutation
+  useAddUserMutation,
+  useLazyGetAuthenticatedUserQuery
 } from "@/redux/features/allApis/usersApi/usersApi";
+import { setCredentials } from "@/redux/slices/authSlice";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -17,7 +21,7 @@ import {
 } from "react-icons/fa";
 import { FaShield } from "react-icons/fa6";
 import { IoIosUnlock } from "react-icons/io";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import logo from "../../../../public/logoBlack.png";
@@ -25,10 +29,12 @@ import { useWelcome } from '../../../UserContext/WelcomeContext';
 
 const Register = () => {
   const [addUser] = useAddUserMutation();
+  const [getUser] = useLazyGetAuthenticatedUserQuery();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   
   const { triggerWelcome } = useWelcome();
-  
+  const { deviceId } = useDeviceManager();
 
   const {
     register,
@@ -59,7 +65,8 @@ const Register = () => {
   const { addToast } = useToasts();
   
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-
+  const deviceInfo = useDeviceInfo();
+  
   useEffect(() => {
     generateVerificationCode();
   }, []);
@@ -76,11 +83,6 @@ const Register = () => {
     setValue("validationCode", "");
   };
 
-  
-
-  
-
-  
   const onSubmit = async (data) => {
     const userInfo = {
       phone: data.phone,
@@ -88,8 +90,10 @@ const Register = () => {
       password: data.password,
       referredBy: data.referCode ? data.referCode : "",
       role: "user",
+      deviceInfo: deviceInfo,
+      deviceId: deviceId,
     };
-    console.log(userInfo);
+    
     // Only add email to userInfo if it has a value
     if (data.email && data.email.trim() !== "") {
       userInfo.email = data.email;
@@ -98,28 +102,64 @@ const Register = () => {
     if (data.validationCode === verificationCode) {
       try {
         setLoading(true);
-        const { data, error } = await addUser(userInfo)
+        const { data: registerData, error } = await addUser(userInfo);
         
-        if (data.success) {
-          addToast("Registration successful", {
-            appearance: "success",
-            autoDismiss: true,
-          });
-          setLoading(false);
-          triggerWelcome();
-          navigate("/login");
+        if (registerData?.success) {
+          // Check if registration response includes session/token for auto-login
+          if (registerData.session && registerData.session.token) {
+            try {
+              // Get user data using the token from registration
+              const { data: userData } = await getUser(registerData.session.token);
+              
+              // Set credentials to automatically log in the user
+              dispatch(setCredentials({ 
+                token: registerData.session.token, 
+                user: userData?.data,
+                session: registerData.session,
+                deviceId,
+                deviceInfo
+              }));
+
+              addToast("Registration successful! Welcome to Our Bet!", {
+                appearance: "success",
+                autoDismiss: true,
+              });
+
+              // Trigger welcome message and navigate to home
+              triggerWelcome();
+              navigate("/");
+              
+            } catch (authError) {
+              // If auto-login fails, still show success but redirect to login
+              console.error("Auto-login failed:", authError);
+              addToast("Registration successful! Please log in to continue.", {
+                appearance: "success",
+                autoDismiss: true,
+              });
+              navigate("/login");
+            }
+          } else {
+            // If no session token in response, show success and redirect to login
+            addToast("Registration successful! Please log in to continue.", {
+              appearance: "success",
+              autoDismiss: true,
+            });
+            navigate("/login");
+          }
         }
+        
         if (error) {
-          addToast(error.message, {
+          addToast(error.data?.message || error.message || "Registration failed", {
             appearance: "error",
             autoDismiss: true,
           });
         }
       } catch (error) {
-        addToast(error.message, {
+        addToast(error.data?.message || error.message || "Registration failed", {
           appearance: "error",
           autoDismiss: true,
         });
+      } finally {
         setLoading(false);
       }
     } else {
