@@ -158,7 +158,7 @@ const MyAccountDownList = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <Link
-                        to={`/admindashboard/userprofile/${row?._id}`}
+                        to={`/accountsummary/${row?._id}`}
                         className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-600 transition-colors duration-200"
                         title="View Profile"
                       >

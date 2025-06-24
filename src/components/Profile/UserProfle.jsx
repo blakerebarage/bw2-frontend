@@ -1,14 +1,22 @@
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import { useUser } from "@/UserContext/UserContext";
 import { useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import AccountTabs from "../AccountTabs/AccountTabs";
 
 const UserProfile = () => {
   const { id } = useParams();
-  const { data: users = [] } = useGetUsersQuery();
   const { selectedUser, setSelectedUser } = useUser();
-
+  const { user } = useSelector((state) => state.auth);
+   // Build query parameters based on user role
+   const queryParams = {
+    page: 1,
+    limit: 100000, // Get all users for client-side filtering
+    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+  };
+  const { data: users = [] } = useGetUsersQuery(queryParams);
+ 
   useEffect(() => {
     const foundUser = users?.data?.users.find((user) => user._id === id);
     if (foundUser) {

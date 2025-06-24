@@ -13,10 +13,11 @@ const MyActivity = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const { selectedUser } = useUser();
-    const { isLoading: usersLoading, error: usersError } = useGetUsersQuery();
+    
     const axiosSecure = useAxiosSecure();
     const limit = 10;
      const { user } = useSelector((state) => state.auth);
+     const { isLoading: usersLoading, error: usersError } = useGetUsersQuery(user.referralCode,currentPage,limit );
     useEffect(() => {
         const fetchActivityLog = async () => {
             if (!user) return;

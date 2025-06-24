@@ -4,6 +4,7 @@ import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { FaCheckCircle, FaClock, FaDesktop, FaExclamationTriangle, FaGlobe, FaMapMarkerAlt, FaUser } from "react-icons/fa";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import AccountTabs from "../AccountTabs/AccountTabs";
 import CommonNavMenu from "../CommonNavMenu/CommonNavMenu";
@@ -13,10 +14,10 @@ const Activity = () => {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    
-    const { data: users, isLoading: usersLoading, error: usersError } = useGetUsersQuery();
+    const { user } = useSelector((state) => state.auth);
     const axiosSecure = useAxiosSecure();
     const limit = 10;
+    const { data: users, isLoading: usersLoading, error: usersError } = useGetUsersQuery(user.referralCode,currentPage,limit);
     const { id } = useParams();
     const [selectedUser, setSelectedUser] = useState(null);
   

@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import Swal from "sweetalert2";
-import logo from "../../assets/ourbet.png";
+import logo from "../../../public/logoBlack.png";
 
 const AddBank = () => {
   const { user } = useSelector((state) => state.auth);

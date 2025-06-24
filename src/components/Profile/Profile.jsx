@@ -18,8 +18,8 @@ const Profile = () => {
   const { selectedUser, setSelectedUser } = useUser();
   const { user } = useSelector((state) => state.auth);
   const queryParams = {
-    page: currentPage,
-    limit: usersPerPage,
+    page: 1,
+    limit: 100000,
     ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
   };
   const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
