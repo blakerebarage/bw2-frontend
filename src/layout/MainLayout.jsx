@@ -2,7 +2,7 @@ import ContactWidget from "@/components/ContactWidget";
 import Footer from "@/components/shared/Footer";
 import Navbar from "@/components/shared/Navbar";
 import { Outlet } from "react-router-dom";
-import bgimage from "../../public/bgimage1.jpg";
+import bgimage from "../../public/bgimage.webp";
 const MainLayout = () => {
   return (
     <div
