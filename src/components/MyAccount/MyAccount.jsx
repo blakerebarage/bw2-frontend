@@ -1,9 +1,11 @@
 import { Activity, CreditCard, FileText, User, Users } from "lucide-react";
+import { useSelector } from "react-redux";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 const MyAccount = () => {
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
+  const { user } = useSelector((state) => state.auth);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -94,7 +96,8 @@ const MyAccount = () => {
                       Downlist
                     </Link>
                   </li>
-                  <li>
+                  {
+                    user.role === "super-admin" && <li>
                     <Link
                       to="/admindashboard/myaccount/myActivity"
                       className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
@@ -107,6 +110,7 @@ const MyAccount = () => {
                       Activity Log
                     </Link>
                   </li>
+                  }
                  
                 </ul>
               </div>

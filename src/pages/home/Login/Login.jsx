@@ -4,18 +4,18 @@ import { Input } from "@/components/ui/input";
 import useDeviceInfo from "@/Hook/useDeviceInfo";
 import useDeviceManager from "@/Hook/useDeviceManager";
 import {
-  useLazyGetAuthenticatedUserQuery,
-  useLoginUserMutation,
+    useLazyGetAuthenticatedUserQuery,
+    useLoginUserMutation,
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  FaEye,
-  FaEyeSlash,
-  FaInfoCircle,
-  FaRedo,
-  FaUser
+    FaEye,
+    FaEyeSlash,
+    FaInfoCircle,
+    FaRedo,
+    FaUser
 } from "react-icons/fa";
 import { FaShield } from "react-icons/fa6";
 import { IoIosUnlock } from "react-icons/io";
@@ -39,8 +39,6 @@ const Login = () => {
   const { deviceId } = useDeviceManager();
   const deviceInfo = useDeviceInfo();
 
-
-  
   const {
     register,
     handleSubmit,
@@ -123,8 +121,8 @@ const Login = () => {
       <div className="w-full max-w-md">
         {/* Logo Section */}
         <div className="text-center mb-8">
-          <div className="w-32 h-32 mx-auto mb-2 rounded-full bg-gradient-to-br from-[#facc15] via-[#e6b800] to-[#d4af00] flex items-center justify-center shadow-2xl border-4 border-[#facc15]/30 backdrop-blur-sm">
-            <div className="w-28 h-28 rounded-full bg-white/90 flex items-center justify-center shadow-inner">
+          <div className="w-32 h-32 mx-auto mb-2 rounded-full bg-gradient-to-br from-[#facc15] via-[#e6b800] to-[#d4af00] flex items-center justify-center shadow-2xl border-4 border-[#facc15]/30">
+            <div className="w-28 h-28 rounded-full bg-white/90 flex items-center justify-center shadow-inner" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
               <img 
                 src={logo}
                 alt="Our Bet" 
@@ -252,7 +250,14 @@ const Login = () => {
             <Button
               type="submit"
               disabled={isLoginDisabled}
-              className="w-full h-12 bg-[#facc15] hover:bg-[#e6b800] text-[#1a1f24] font-semibold rounded-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
+              className="w-full h-12 bg-[#facc15] hover:bg-[#e6b800] text-[#1a1f24] font-semibold rounded-lg transition-all duration-300 ease-in-out hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none shadow-md border-2 border-transparent hover:border-[#facc15]/20"
+              style={{
+                background: isLoginDisabled ? '#facc15' : '#facc15',
+                opacity: isLoginDisabled ? '0.5' : '1',
+                WebkitTransform: 'translateZ(0)', // Hardware acceleration for better performance
+                MozTransform: 'translateZ(0)',
+                transform: 'translateZ(0)'
+              }}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">

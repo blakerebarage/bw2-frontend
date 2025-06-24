@@ -117,3 +117,28 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;     /* Firefox */
 }
+
+/* Firefox-specific button fixes */
+@-moz-document url-prefix() {
+  button[type="submit"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background-color: #facc15 !important;
+  }
+  
+  button[type="submit"]:disabled {
+    opacity: 0.5 !important;
+  }
+  
+  button[type="submit"]:hover:not(:disabled) {
+    background-color: #e6b800 !important;
+  }
+}
+
+/* Additional Firefox compatibility */
+button {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+}

@@ -4,14 +4,22 @@ import { useEffect, useState } from "react";
 import { FaHouseUser } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import logo from "../../assets/ourbet.png";
+import logo from "../../../public/logoBlack.png";
 
 const MyAccountDownList = () => {
   const { user } = useSelector((state) => state.auth);
-  const { data: users, isLoading, error } = useGetUsersQuery();
   const [referredUsers, setReferredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 20;
+  
+  // Build query parameters based on user role
+  const queryParams = {
+    page: currentPage,
+    limit: usersPerPage, // Get all users for client-side filtering
+    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+  };
+  
+  const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
 
   useEffect(() => {
     if (!isLoading && !error && user && users?.data?.users) {
@@ -28,7 +36,37 @@ const MyAccountDownList = () => {
   const totalPages = Math.ceil(referredUsers.length / usersPerPage);
 
   const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  const renderPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+            currentPage === i
+              ? 'bg-blue-600 text-white'
+              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+    return pages;
   };
 
   if (error) {
@@ -41,6 +79,14 @@ const MyAccountDownList = () => {
 
   return (
     <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen p-4 w-full">
+      {/* Header */}
+      <div className="mb-6 bg-white rounded-lg p-4 shadow-sm">
+        <h2 className="text-2xl font-bold text-gray-900">My Referred Users</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          View users you have referred ({referredUsers.length} total)
+        </p>
+      </div>
+
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -112,7 +158,7 @@ const MyAccountDownList = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <Link
-                        to={`/admindashboard/userprofile/${row?._id}`}
+                        to={`/accountsummary/${row?._id}`}
                         className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-600 transition-colors duration-200"
                         title="View Profile"
                       >
@@ -139,37 +185,37 @@ const MyAccountDownList = () => {
             </tbody>
           </table>
         </div>
-      </div>
 
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6 px-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-700">
-              Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, referredUsers.length)} of {referredUsers.length} users
-            </span>
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-4 py-4 bg-gray-50 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-gray-700">
+                Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, referredUsers.length)} of {referredUsers.length} users
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center space-x-1">
+                  {renderPageNumbers()}
+                </div>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              Previous
-            </button>
-            <span className="font-semibold text-gray-700">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

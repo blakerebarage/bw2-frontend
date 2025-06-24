@@ -4,6 +4,7 @@ import { Loader2, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import AccountTabs from "../AccountTabs/AccountTabs";
@@ -15,7 +16,13 @@ const Profile = () => {
   const { addToast } = useToasts();
   const { id } = useParams();
   const { selectedUser, setSelectedUser } = useUser();
-  const { data: users = [] } = useGetUsersQuery();
+  const { user } = useSelector((state) => state.auth);
+  const queryParams = {
+    page: 1,
+    limit: 100000,
+    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+  };
+  const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
 
   useEffect(() => {
     const foundUser = users?.data?.users.find((user) => user._id === id);

@@ -5,7 +5,7 @@ import { setCredentials } from "@/redux/slices/authSlice";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
-import logo from "../../assets/ourbet.png";
+import logo from "../../../public/logoBlack.png";
 
 const AllWithdraw = () => {
   const axiosSecure = useAxiosSecure();

@@ -35,7 +35,19 @@ const usersApi = baseApi.injectEndpoints({
 
     // get all users
     getUsers: builder.query({
-      query: () => "/api/v1/user/all?limit=100000",
+      query: ({ referredBy, page, limit }) => {
+        console.log({ referredBy, page, limit });
+        const params = new URLSearchParams({
+          page: page?.toString() || '1',
+          limit: limit?.toString() || '20'
+        });
+        
+        if (referredBy) {
+          params.append('referredBy', referredBy);
+        }
+        
+        return `/api/v1/user/all?${params.toString()}`;
+      },
       providesTags: ["users"],
     }),
 
