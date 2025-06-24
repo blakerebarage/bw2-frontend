@@ -2,6 +2,7 @@ import { useGetUsersQuery, useGetUserTransactionsQuery } from "@/redux/features/
 import { useUser } from "@/UserContext/UserContext";
 import moment from "moment";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import AccountTabs from "../AccountTabs/AccountTabs";
 import CommonNavMenu from "../CommonNavMenu/CommonNavMenu";
@@ -10,8 +11,14 @@ const AccountStatementTabs = () => {
   const { id } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
   const { selectedUser, setSelectedUser } = useUser();
-  const { data: users = [] } = useGetUsersQuery();
-
+  const { user } = useSelector((state) => state.auth);
+  const queryParams = {
+    page: currentPage,
+    limit: 50,
+    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+  };
+  const { data: users = [] } = useGetUsersQuery(queryParams);
+  
   useEffect(() => {
     const foundUser = users?.data?.users.find((user) => user._id === id);
     if (foundUser) {

@@ -35,7 +35,12 @@ const usersApi = baseApi.injectEndpoints({
 
     // get all users
     getUsers: builder.query({
-      query: () => "/api/v1/user/all?limit=100000",
+      query: (referredBy,page,limit) => {
+        if(referredBy){
+          return `/api/v1/user/all?limit=${limit}&page=${page}&referredBy=${referredBy}`;
+        }
+        return `/api/v1/user/all?limit=${limit}&page=${page}`;
+      },
       providesTags: ["users"],
     }),
 

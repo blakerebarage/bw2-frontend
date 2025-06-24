@@ -1,8 +1,10 @@
 import { Activity, CreditCard, FileText, User, Users } from "lucide-react";
+import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 
 const AccountTabs = ({id}) => {
   const location = useLocation();
+  const { user } = useSelector((state) => state.auth);
 
   // Helper function to apply active class
   const isActive = (path) => location.pathname === path;
@@ -86,20 +88,23 @@ const AccountTabs = ({id}) => {
             </a>
           </li>
         </Link>
-        <Link to={`/activitylog/${id}`}>
-        <li>
-        <a
-              className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
-                isActive("/activitylog")
-                  ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent"
-              }`}
-            >
-            <Activity className="w-4 h-4" />
-            Activity Log
-          </a>
-        </li>
-        </Link>
+        {
+          user.role === "super-admin" &&  <Link to={`/activitylog/${id}`}>
+          <li>
+          <a
+                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+                  isActive("/activitylog")
+                    ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent"
+                }`}
+              >
+              <Activity className="w-4 h-4" />
+              Activity Log
+            </a>
+          </li>
+          </Link>
+        }
+       
       </ul>
     </div>
   );

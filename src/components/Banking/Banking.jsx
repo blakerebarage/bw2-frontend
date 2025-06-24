@@ -7,12 +7,18 @@ import Transaction from "./Transaction";
 
 const Banking = () => {
   const { user } = useSelector((state) => state.auth);
-  const { data: users } = useGetUsersQuery();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+  const queryParams = {
+    page: currentPage,
+    limit: itemsPerPage,
+    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+  };
+  const { data: users } = useGetUsersQuery(queryParams);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  
   const { formatCurrency } = useCurrency();
 
   

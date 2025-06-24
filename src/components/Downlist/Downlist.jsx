@@ -3,14 +3,14 @@ import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { FaHouseUser } from "react-icons/fa";
+import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import logo from "../../assets/ourbet.png";
 import AccountTabs from "../AccountTabs/AccountTabs";
 import CommonNavMenu from "../CommonNavMenu/CommonNavMenu";
 
 const Downlist = () => {
-  
-  const { data: users, isLoading, error } = useGetUsersQuery();
+  const { user } = useSelector((state) => state.auth);
   const [referredUsers, setReferredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -18,8 +18,13 @@ const Downlist = () => {
   const usersPerPage = 20;
   const { id } = useParams();
   const { selectedUser, setSelectedUser } = useUser();
- 
-
+ // Build query parameters based on user role
+ const queryParams = {
+  page: currentPage,
+  limit: usersPerPage, // Get all users for client-side filtering
+  ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+};
+const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
   useEffect(() => {
     const foundUser = users?.data?.users.find((user) => user._id === id);
     if (foundUser) {
