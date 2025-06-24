@@ -14,7 +14,6 @@ const AccountSummary = () => {
   const { data: users = [] } = useGetUsersQuery();
   const { formatCurrency } = useCurrency();
   const axiosSecure = useAxiosSecure();
-  
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
