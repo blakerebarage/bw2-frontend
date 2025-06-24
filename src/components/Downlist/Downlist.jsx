@@ -191,7 +191,7 @@ const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
                           </td>
                           <td className="border-b px-4 py-3 whitespace-nowrap text-center">
                             <Link
-                              to={`/admindashboard/userprofile/${row?._id}`}
+                              to={`/profile/${row?._id}`}
                               className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors duration-200"
                               title="View Profile"
                             >
