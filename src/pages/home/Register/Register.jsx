@@ -211,7 +211,7 @@ const Register = () => {
                   className="pl-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   {...register("phone", {
                     required: "Mobile number is required.",
-                    minLength: { value: 10, message: "Minimum 10 characters." },
+                    minLength: { value: 11, message: "Minimum 11 characters." },
                   })}
                   aria-invalid={errors.phone ? "true" : "false"}
                 />

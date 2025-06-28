@@ -420,7 +420,6 @@ const DepositSection = () => {
           </h1>
           <p className="text-gray-300">Submit your deposit request</p>
         </div>
-
         {/* Form Card */}
         <div className="bg-[#1a1f24] rounded-lg border border-[#facc15]/20 p-6 space-y-6">
           {/* Payment Method Selection */}

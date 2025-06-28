@@ -4,18 +4,18 @@ import { Input } from "@/components/ui/input";
 import useDeviceInfo from "@/Hook/useDeviceInfo";
 import useDeviceManager from "@/Hook/useDeviceManager";
 import {
-    useLazyGetAuthenticatedUserQuery,
-    useLoginUserMutation,
+  useLazyGetAuthenticatedUserQuery,
+  useLoginUserMutation,
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-    FaEye,
-    FaEyeSlash,
-    FaInfoCircle,
-    FaRedo,
-    FaUser
+  FaEye,
+  FaEyeSlash,
+  FaInfoCircle,
+  FaRedo,
+  FaUser
 } from "react-icons/fa";
 import { FaShield } from "react-icons/fa6";
 import { IoIosUnlock } from "react-icons/io";
@@ -155,7 +155,7 @@ const Login = () => {
                   type="text"
                   {...register("phoneOrUserName", {
                     required: "Phone/Username is required",
-                    minLength: { value: 4, message: "Minimum 4 characters" }
+                    minLength: { value: 4, message: "Minimum 4 characters"}
                   })}
                   placeholder="Enter your phone or username"
                   className="pl-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
