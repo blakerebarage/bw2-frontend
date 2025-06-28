@@ -13,6 +13,7 @@ import { useCurrency } from "@/Hook/useCurrency";
 import moment from 'moment';
 import { FaHouseUser } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import TransactionSummaryCards from '../TransactionSummaryCards/TransactionSummaryCards';
 
 const AdminDashboard = () => {
   const { user } = useSelector((state) => state.auth);
@@ -443,19 +444,17 @@ const AdminDashboard = () => {
     // Define allowed user creation roles hierarchy
     const allowedUserCreationRoles = {
       "super-admin": [
-        "super-admin",
         "admin",
         "sub-admin",
-        "super-agent",
-        "master-agent",
         "agent",
+        "sub-agent",
         "user",
       ],
-      "admin": ["sub-admin", "super-agent", "master-agent", "agent"],
-      "sub-admin": ["super-agent", "master-agent", "agent"],
-      "super-agent": ["master-agent", "agent"],
-      "master-agent": ["agent"],
-      "agent": ["user"],
+      "admin": ["sub-admin","agent","sub-agent","user"],
+      "sub-admin": ["agent","sub-agent","user"],
+      "agent": ["sub-agent","user"],
+      "sub-agent": ["user"],
+      "user": [],
     };
 
     // Get allowed roles for current user
@@ -625,6 +624,15 @@ const AdminDashboard = () => {
             </div>
           </div>
           )}
+
+          {/* Transaction Summary Cards Section */}
+          <div className="p-4 md:p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-gray-800">Transaction Summary (Last 30 Days)</h3>
+              <p className="text-sm text-gray-600">Overview of your deposits, withdrawals, and net balance</p>
+            </div>
+            <TransactionSummaryCards />
+          </div>
 
           {/* Main Content Section */}
           <div className="p-4 md:p-6">
