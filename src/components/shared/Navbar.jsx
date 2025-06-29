@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { FiPlusCircle } from "react-icons/fi";
 import { IoMdLogIn } from "react-icons/io";
 import { IoMenu, IoNotifications } from "react-icons/io5";
-import { PiHandDepositFill, PiHandWithdrawFill } from "react-icons/pi";
+import { PiHandDepositFill } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Sidebar from "../Sidebar";
@@ -75,16 +75,12 @@ const Navbar = () => {
           {token && userData && (
             <div className="flex flex-row items-center gap-2">
                {
-          token && userData?.role === "user" &&  <div className="flex flex-row items-center gap-2">
+          token && userData?.role === "user" &&  <div className="flex flex-row items-center gap-3">
+          
           <Link to="/balance-deposite" className="transition group relative">
-              <button className="text-white bg-red-500 px-1 py-1 rounded-md flex items-center gap-2  transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
-               <PiHandDepositFill className="text-xl text-white"/>
-             </button>
-             
-          </Link>
-          <Link to="/balance-withdraw" className=" transition group relative">
-             <button className="bg-green-500 text-white px-1 py-1 rounded-md flex items-center gap-2 hover:bg-green-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
-               <PiHandWithdrawFill className="text-xl text-white"/>
+             <button className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl border border-green-400/30">
+             <PiHandDepositFill className="text-lg text-white"/>
+               <span className="text-sm font-medium">Deposit</span>
              </button>
              
           </Link>

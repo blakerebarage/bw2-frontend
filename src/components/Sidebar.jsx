@@ -84,31 +84,53 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 scrollbar-hide">
         {/* Main Menu Items */}
         <ul className="bg-white/80 backdrop-blur-sm mx-4 rounded-2xl shadow-sm">
-          {menuItems.map(({ id, label, Icon, link, count }, index) => (
-            <li
-              key={id}
-              className={`border-b border-gray-100 last:border-b-0 ${
-                index === 0 ? 'rounded-t-2xl' : ''
-              } ${index === menuItems.length - 1 ? 'rounded-b-2xl' : ''}`}
-            >
-              <Link
-                to={link}
-                className="flex items-center justify-between p-4 text-gray-700 hover:bg-gray-50/80 transition-all duration-200 active:scale-[0.99]"
-                onClick={toggleSidebar}
+          {menuItems.map(({ id, label, Icon, link, count }, index) => {
+            // Define colors for specific menu items
+            const isDeposit = label === "Deposite Balance";
+            const isWithdraw = label === "Withdraw Balance";
+            
+            const getItemClasses = () => {
+              if (isDeposit) {
+                return "flex items-center justify-between p-4 text-green-700 hover:bg-green-50/80 transition-all duration-200 active:scale-[0.99] bg-green-50/30";
+              }
+              if (isWithdraw) {
+                return "flex items-center justify-between p-4 text-red-700 hover:bg-red-50/80 transition-all duration-200 active:scale-[0.99] bg-red-50/30";
+              }
+              return "flex items-center justify-between p-4 text-gray-700 hover:bg-gray-50/80 transition-all duration-200 active:scale-[0.99]";
+            };
+
+            const getIconClasses = () => {
+              if (isDeposit) return "text-xl text-green-600";
+              if (isWithdraw) return "text-xl text-red-600";
+              return "text-xl text-gray-600";
+            };
+
+            return (
+              <li
+                key={id}
+                className={`border-b border-gray-100 last:border-b-0 ${
+                  index === 0 ? 'rounded-t-2xl' : ''
+                } ${index === menuItems.length - 1 ? 'rounded-b-2xl' : ''}`}
               >
-                <div className="flex items-center gap-3">
-                  <Icon className="text-xl text-gray-600" />
-                  <span className="text-base font-medium">{label}</span>
-                  {count !== undefined && (
-                    <span className="ml-2 px-2.5 py-0.5 text-sm font-semibold bg-yellow-500/90 text-gray-900 rounded-md">
-                      {count}
-                    </span>
-                  )}
-                </div>
-                <IoIosArrowForward className="text-xl text-gray-400" />
-              </Link>
-            </li>
-          ))}
+                <Link
+                  to={link}
+                  className={getItemClasses()}
+                  onClick={toggleSidebar}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className={getIconClasses()} />
+                    <span className="text-base font-medium">{label}</span>
+                    {count !== undefined && (
+                      <span className="ml-2 px-2.5 py-0.5 text-sm font-semibold bg-yellow-500/90 text-gray-900 rounded-md">
+                        {count}
+                      </span>
+                    )}
+                  </div>
+                  <IoIosArrowForward className="text-xl text-gray-400" />
+                </Link>
+              </li>
+            );
+          })}
         </ul>
 
         {/* Additional Menu Items */}
