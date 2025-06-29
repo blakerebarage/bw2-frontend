@@ -94,7 +94,7 @@ const AllBetsHistory = () => {
                       <FaUser className="inline" /> {bet.username}
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-semibold">
-                      <FaGamepad className="inline" /> {bet.data.game_uid}
+                      <FaGamepad className="inline" /> {bet?.gameName || bet.data.game_uid}
                     </span>
                   </div>
 
