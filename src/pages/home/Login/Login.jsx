@@ -184,7 +184,7 @@ const Login = () => {
                       value: true,
                       message: "Password is required"
                     },
-                    minLength: { value: 8, message: "Minimum 8 characters" }
+                    minLength: { value: 3, message: "Minimum 3 characters" }
                   })}
                   placeholder="Enter your password"
                   className="pl-12 pr-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
