@@ -109,33 +109,12 @@ const InstallPrompt = () => {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-      // If no deferred prompt, guide user to browser install options
-      console.log('No deferred prompt available. Showing browser install guide.');
-      
-      // Check if install icon is visible in address bar
-      const isChrome = /Chrome/.test(navigator.userAgent);
-      const isEdge = /Edg/.test(navigator.userAgent);
-      
-      let instructions = 'To install this app:\n\n';
-      
-      if (isChrome) {
-        instructions += '✅ Chrome Browser:\n';
-        instructions += '1. Look for install icon (⊕) in address bar\n';
-        instructions += '2. OR: Menu (⋮) → "Install Play9"\n';
-        instructions += '3. OR: Right-click page → "Install Play9"\n\n';
-        instructions += '💡 Tip: Try refreshing and interacting with the page more!';
-      } else if (isEdge) {
-        instructions += '✅ Edge Browser:\n';
-        instructions += '1. Look for install icon (📱) in address bar\n';
-        instructions += '2. OR: Menu (⋯) → Apps → "Install this site as an app"\n\n';
-        instructions += '💡 Tip: Try refreshing and interacting with the page more!';
+      // Simple guide for manual installation
+      if (isIOS) {
+        alert('📱 Safari: Tap Share (⇧) → Add to Home Screen');
       } else {
-        instructions += '1. Look for install option in browser menu\n';
-        instructions += '2. Try Chrome or Edge for best PWA support\n';
-        instructions += '3. Make sure you\'re on HTTPS (not localhost)';
+        alert('📱 Look for install icon (⊕) in your browser address bar, or check browser menu for "Install Play9"');
       }
-      
-      alert(instructions);
       return;
     }
 
@@ -146,15 +125,10 @@ const InstallPrompt = () => {
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-      // Mark app as installed
       localStorage.setItem('pwaInstalled', 'true');
-      localStorage.removeItem('installPromptDismissed'); // Clear dismiss flag
-    } else {
-      console.log('User dismissed the install prompt');
+      localStorage.removeItem('installPromptDismissed');
     }
     
-    // Clear the deferredPrompt
     setDeferredPrompt(null);
     setShowInstallPrompt(false);
   };
@@ -186,11 +160,8 @@ const InstallPrompt = () => {
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-white font-semibold text-base sm:text-lg leading-tight">Install Play9 App</h3>
-              <p className="text-gray-300 text-xs sm:text-sm leading-tight">Add to your home screen for quick access</p>
-              {canInstall && (
-                <p className="text-green-400 text-xs leading-tight mt-1">✓ Ready to install!</p>
-              )}
+              <h3 className="text-white font-semibold text-base sm:text-lg leading-tight">Install Play9</h3>
+              <p className="text-gray-300 text-xs sm:text-sm leading-tight">Quick access from home screen</p>
             </div>
           </div>
           <button
@@ -201,60 +172,17 @@ const InstallPrompt = () => {
           </button>
         </div>
 
-        {isIOS ? (
-          // iOS specific instructions
-          <div className="text-xs sm:text-sm text-gray-300 mb-3 sm:mb-4">
-            <p className="mb-2 font-medium">To install this app on your iPhone/iPad:</p>
-            <ol className="list-decimal list-inside space-y-1 text-xs leading-relaxed">
-              <li>Tap the Share button in Safari</li>
-              <li>Scroll down and tap "Add to Home Screen"</li>
-              <li>Tap "Add" to confirm</li>
-            </ol>
-          </div>
-        ) : (
-          // Android/Desktop install button
-          <div className="space-y-2">
-            <button
-              onClick={handleInstallClick}
-              className="w-full bg-gradient-to-r from-[#facc15] to-yellow-500 hover:from-yellow-500 hover:to-[#facc15] text-[#1b1f23] font-semibold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl flex items-center justify-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg text-sm sm:text-base"
-            >
-              <IoDownload className="text-lg sm:text-xl" />
-              <span className="truncate">{canInstall ? 'Install App' : 'Show Install Guide'}</span>
-            </button>
-            
-            {!canInstall && (
-              <div className="text-xs text-gray-400 text-center">
-                <p className="mb-1">🔍 <span className="text-[#facc15]">Look for install icon (⊕)</span> in address bar</p>
-                <p>Or try: Browser Menu → "Install Play9"</p>
-              </div>
-            )}
-          </div>
-        )}
+        <button
+          onClick={handleInstallClick}
+          className="w-full bg-gradient-to-r from-[#facc15] to-yellow-500 hover:from-yellow-500 hover:to-[#facc15] text-[#1b1f23] font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg text-sm sm:text-base"
+        >
+          <IoDownload className="text-lg" />
+          <span>Install Now</span>
+        </button>
 
-        <div className="flex items-center justify-center gap-2 sm:gap-4 mt-3 text-xs text-gray-400 flex-wrap">
-          <span className="flex items-center gap-1">
-            <span className="text-green-400">✓</span>
-            <span className="hidden xs:inline">Works </span>offline
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="text-green-400">✓</span>
-            <span className="hidden xs:inline">Fast </span>loading
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="text-green-400">✓</span>
-            <span className="hidden sm:inline">Native-like </span>experience
-          </span>
-        </div>
-
-        {/* Debug info for testing */}
-        <div className="mt-2 text-xs text-gray-500 text-center">
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span>📱 Mobile: {isMobile ? '✓' : '✗'}</span>
-            <span>|</span>
-            <span>Status: {canInstall ? 'Can Install' : 'Checking...'}</span>
-            <span>|</span>
-            <span>Installed: {localStorage.getItem('pwaInstalled') === 'true' ? '✓' : '✗'}</span>
-          </div>
+        <div className="flex items-center justify-center gap-4 mt-3 text-xs text-gray-400">
+          <span>✓ Fast & Secure</span>
+          <span>✓ Works Offline</span>
         </div>
       </div>
     </div>

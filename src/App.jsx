@@ -23,8 +23,6 @@ function App() {
     fetchPendingRequests();
   }, [reloadUserData, dispatch, user?.role, pathname]);
 
-  
-
   return (
     <WelcomeProvider>
       <div className="bg-gray-900">
