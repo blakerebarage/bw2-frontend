@@ -10,37 +10,40 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/fav.png",
+      "src": "/favicon.ico",
       "sizes": "48x48",
-      "type": "image/png",
+      "type": "image/x-icon",
       "purpose": "any maskable"
     },
     {
-      "src": "/favicon-16x16.png",
-      "sizes": "16x16",
-      "type": "image/png"
+      "src": "/favicon.ico",
+      "sizes": "72x72",
+      "type": "image/x-icon",
+      "purpose": "any"
     },
     {
-      "src": "/favicon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png"
+      "src": "/favicon.ico",
+      "sizes": "96x96",
+      "type": "image/x-icon",
+      "purpose": "any"
     },
     {
-      "src": "/fav@0.25x.png",
-      "sizes": "64x64",
-      "type": "image/png"
+      "src": "/favicon.ico",
+      "sizes": "144x144",
+      "type": "image/x-icon",
+      "purpose": "any"
     },
     {
-      "src": "/fav.png",
+      "src": "/favicon.ico",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/x-icon",
       "purpose": "any"
     },
     {
-      "src": "/fav.png",
+      "src": "/favicon.ico",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/x-icon",
+      "purpose": "any maskable"
     }
   ],
   "categories": ["entertainment", "games", "sports"],
