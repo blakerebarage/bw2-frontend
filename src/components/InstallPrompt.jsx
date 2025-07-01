@@ -45,18 +45,47 @@ const InstallPrompt = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Check if already installed
-    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
-                       window.navigator.standalone === true;
+    // Listen for app installation (when user installs via browser menu)
+    const handleAppInstalled = () => {
+      console.log('App was installed via browser!');
+      localStorage.setItem('pwaInstalled', 'true');
+      setShowInstallPrompt(false);
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Enhanced check if already installed
+    const checkIfInstalled = () => {
+      // Method 1: Check if running in standalone mode (PWA installed)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      
+      // Method 2: Check iOS standalone mode
+      const isIOSStandalone = window.navigator.standalone === true;
+      
+      // Method 3: Check if app was launched from home screen
+      const isFromHomeScreen = window.location.search.includes('utm_source=homescreen') ||
+                              window.location.search.includes('source=pwa');
+      
+      // Method 4: Check if previously installed (stored in localStorage)
+      const wasPreviouslyInstalled = localStorage.getItem('pwaInstalled') === 'true';
+      
+      return isStandalone || isIOSStandalone || isFromHomeScreen || wasPreviouslyInstalled;
+    };
+
+    const isInstalled = checkIfInstalled();
     
     if (isInstalled) {
       setShowInstallPrompt(false);
-      console.log('App is already installed');
+      console.log('App is already installed - hiding install prompt');
+      // Store that app is installed
+      localStorage.setItem('pwaInstalled', 'true');
     } else {
       // Show install prompt after a delay on mobile (even without beforeinstallprompt)
       const timer = setTimeout(() => {
         const wasDismissed = localStorage.getItem('installPromptDismissed');
-        if (!wasDismissed && !isInstalled) {
+        const isCurrentlyInstalled = checkIfInstalled(); // Check again after delay
+        
+        if (!wasDismissed && !isCurrentlyInstalled) {
           setShowInstallPrompt(true);
         }
       }, 3000); // Show after 3 seconds on mobile
@@ -64,6 +93,7 @@ const InstallPrompt = () => {
       return () => {
         clearTimeout(timer);
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.removeEventListener('appinstalled', handleAppInstalled);
       };
     }
 
@@ -118,6 +148,9 @@ const InstallPrompt = () => {
     
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt');
+      // Mark app as installed
+      localStorage.setItem('pwaInstalled', 'true');
+      localStorage.removeItem('installPromptDismissed'); // Clear dismiss flag
     } else {
       console.log('User dismissed the install prompt');
     }
@@ -131,6 +164,7 @@ const InstallPrompt = () => {
     setShowInstallPrompt(false);
     // Remember user dismissed (you can use localStorage if needed)
     localStorage.setItem('installPromptDismissed', 'true');
+    console.log('User dismissed install prompt');
   };
 
   // Only show on mobile devices
@@ -214,7 +248,7 @@ const InstallPrompt = () => {
             <span>|</span>
             <span>Status: {canInstall ? 'Can Install' : 'Checking...'}</span>
             <span>|</span>
-            <span>SW: {'serviceWorker' in navigator ? '✓' : '✗'}</span>
+            <span>Installed: {localStorage.getItem('pwaInstalled') === 'true' ? '✓' : '✗'}</span>
           </div>
         </div>
       </div>
