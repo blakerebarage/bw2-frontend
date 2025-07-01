@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { FaMobile } from 'react-icons/fa';
 import { IoClose, IoDownload } from 'react-icons/io5';
 
 const InstallPrompt = () => {
@@ -177,8 +176,14 @@ const InstallPrompt = () => {
       <div className="bg-gradient-to-r from-[#1b1f23] to-gray-800 rounded-xl sm:rounded-2xl shadow-2xl border border-[#facc15]/20 p-3 sm:p-4">
         <div className="flex items-start sm:items-center justify-between mb-3">
           <div className="flex items-center gap-2 sm:gap-3 flex-1">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#facc15] rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-              <FaMobile className="text-lg sm:text-xl text-[#1b1f23]" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 p-1">
+              <img 
+                src="/logo.png" 
+                alt="Play9 Logo" 
+                className="w-full h-full object-contain"
+                draggable="false"
+                onContextMenu={(e) => e.preventDefault()}
+              />
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="text-white font-semibold text-base sm:text-lg leading-tight">Install Play9 App</h3>
