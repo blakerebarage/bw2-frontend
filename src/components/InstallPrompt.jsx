@@ -178,7 +178,7 @@ const InstallPrompt = () => {
           <div className="flex items-center gap-2 sm:gap-3 flex-1">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 p-1">
               <img 
-                src="/logo.png" 
+                src="/favicon.ico" 
                 alt="Play9 Logo" 
                 className="w-full h-full object-contain"
                 draggable="false"
