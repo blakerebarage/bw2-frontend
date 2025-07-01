@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation } from 'react-router-dom';
 import "./App.css";
+import InstallPrompt from './components/InstallPrompt';
 import WelcomeMessage from './components/WelcomeMessage/WelcomeMessage';
 import usePendingRequests from './Hook/usePendingRequests';
 import { fetchSystemSettings } from "./redux/slices/systemSettingsSlice";
@@ -29,6 +30,7 @@ function App() {
       <div className="bg-gray-900">
         <WelcomeMessage />
         <Outlet />
+        <InstallPrompt />
       </div>
     </WelcomeProvider>
   );
