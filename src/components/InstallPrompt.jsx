@@ -4,18 +4,36 @@ import { IoClose, IoDownload } from 'react-icons/io5';
 
 const InstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showInstallPrompt, setShowInstallPrompt] = useState(true);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
 
   useEffect(() => {
+    // Check if device is mobile (phone/tablet)
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
+             /tablet|ipad|playbook|silk/i.test(userAgent) ||
+             (window.innerWidth <= 768 && window.matchMedia('(pointer: coarse)').matches);
+    };
+
+    const mobile = checkMobile();
+    setIsMobile(mobile);
+
     // Check if device is iOS
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     setIsIOS(iOS);
 
-    // Handle PWA install prompt
+    // Only proceed if on mobile device
+    if (!mobile) {
+      console.log('PWA install prompt hidden - Desktop device detected');
+      return;
+    }
+
+    // Handle PWA install prompt (only on mobile)
     const handleBeforeInstallPrompt = (e) => {
-      console.log('PWA install prompt triggered!');
+      console.log('PWA install prompt triggered on mobile device!');
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       // Store the event so it can be triggered later
@@ -34,19 +52,30 @@ const InstallPrompt = () => {
     if (isInstalled) {
       setShowInstallPrompt(false);
       console.log('App is already installed');
+    } else {
+      // Show install prompt after a delay on mobile (even without beforeinstallprompt)
+      const timer = setTimeout(() => {
+        const wasDismissed = localStorage.getItem('installPromptDismissed');
+        if (!wasDismissed && !isInstalled) {
+          setShowInstallPrompt(true);
+        }
+      }, 3000); // Show after 3 seconds on mobile
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      };
     }
 
     // For testing: log PWA status
     console.log('PWA Status:', {
+      isMobile: mobile,
       isIOS,
       isInstalled,
       hasServiceWorker: 'serviceWorker' in navigator,
       isSecureContext: window.isSecureContext
     });
 
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
   }, []);
 
   const handleInstallClick = async () => {
@@ -104,13 +133,8 @@ const InstallPrompt = () => {
     localStorage.setItem('installPromptDismissed', 'true');
   };
 
-  // For testing, show the prompt even if dismissed (comment out in production)
-  // const wasDismissed = localStorage.getItem('installPromptDismissed');
-  // if (wasDismissed || !showInstallPrompt) {
-  //   return null;
-  // }
-
-  if (!showInstallPrompt) {
+  // Only show on mobile devices
+  if (!isMobile || !showInstallPrompt) {
     return null;
   }
 
@@ -186,11 +210,11 @@ const InstallPrompt = () => {
         {/* Debug info for testing */}
         <div className="mt-2 text-xs text-gray-500 text-center">
           <div className="flex items-center justify-center gap-2 flex-wrap">
+            <span>📱 Mobile: {isMobile ? '✓' : '✗'}</span>
+            <span>|</span>
             <span>Status: {canInstall ? 'Can Install' : 'Checking...'}</span>
             <span>|</span>
             <span>SW: {'serviceWorker' in navigator ? '✓' : '✗'}</span>
-            <span>|</span>
-            <span>HTTPS: {window.isSecureContext ? '✓' : '✗'}</span>
           </div>
         </div>
       </div>
