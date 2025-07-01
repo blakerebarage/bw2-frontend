@@ -1,0 +1,201 @@
+import { useEffect, useState } from 'react';
+import { FaMobile } from 'react-icons/fa';
+import { IoClose, IoDownload } from 'react-icons/io5';
+
+const InstallPrompt = () => {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(true);
+  const [isIOS, setIsIOS] = useState(false);
+  const [canInstall, setCanInstall] = useState(false);
+
+  useEffect(() => {
+    // Check if device is iOS
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    setIsIOS(iOS);
+
+    // Handle PWA install prompt
+    const handleBeforeInstallPrompt = (e) => {
+      console.log('PWA install prompt triggered!');
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Store the event so it can be triggered later
+      setDeferredPrompt(e);
+      setCanInstall(true);
+      // Show the install prompt
+      setShowInstallPrompt(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Check if already installed
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
+                       window.navigator.standalone === true;
+    
+    if (isInstalled) {
+      setShowInstallPrompt(false);
+      console.log('App is already installed');
+    }
+
+    // For testing: log PWA status
+    console.log('PWA Status:', {
+      isIOS,
+      isInstalled,
+      hasServiceWorker: 'serviceWorker' in navigator,
+      isSecureContext: window.isSecureContext
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      // If no deferred prompt, guide user to browser install options
+      console.log('No deferred prompt available. Showing browser install guide.');
+      
+      // Check if install icon is visible in address bar
+      const isChrome = /Chrome/.test(navigator.userAgent);
+      const isEdge = /Edg/.test(navigator.userAgent);
+      
+      let instructions = 'To install this app:\n\n';
+      
+      if (isChrome) {
+        instructions += '✅ Chrome Browser:\n';
+        instructions += '1. Look for install icon (⊕) in address bar\n';
+        instructions += '2. OR: Menu (⋮) → "Install Play9"\n';
+        instructions += '3. OR: Right-click page → "Install Play9"\n\n';
+        instructions += '💡 Tip: Try refreshing and interacting with the page more!';
+      } else if (isEdge) {
+        instructions += '✅ Edge Browser:\n';
+        instructions += '1. Look for install icon (📱) in address bar\n';
+        instructions += '2. OR: Menu (⋯) → Apps → "Install this site as an app"\n\n';
+        instructions += '💡 Tip: Try refreshing and interacting with the page more!';
+      } else {
+        instructions += '1. Look for install option in browser menu\n';
+        instructions += '2. Try Chrome or Edge for best PWA support\n';
+        instructions += '3. Make sure you\'re on HTTPS (not localhost)';
+      }
+      
+      alert(instructions);
+      return;
+    }
+
+    // Show the install prompt
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    } else {
+      console.log('User dismissed the install prompt');
+    }
+    
+    // Clear the deferredPrompt
+    setDeferredPrompt(null);
+    setShowInstallPrompt(false);
+  };
+
+  const handleDismiss = () => {
+    setShowInstallPrompt(false);
+    // Remember user dismissed (you can use localStorage if needed)
+    localStorage.setItem('installPromptDismissed', 'true');
+  };
+
+  // For testing, show the prompt even if dismissed (comment out in production)
+  // const wasDismissed = localStorage.getItem('installPromptDismissed');
+  // if (wasDismissed || !showInstallPrompt) {
+  //   return null;
+  // }
+
+  if (!showInstallPrompt) {
+    return null;
+  }
+
+  return (
+    <div className="fixed bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4 z-50 animate-slide-up max-w-md mx-auto">
+      <div className="bg-gradient-to-r from-[#1b1f23] to-gray-800 rounded-xl sm:rounded-2xl shadow-2xl border border-[#facc15]/20 p-3 sm:p-4">
+        <div className="flex items-start sm:items-center justify-between mb-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#facc15] rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <FaMobile className="text-lg sm:text-xl text-[#1b1f23]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-white font-semibold text-base sm:text-lg leading-tight">Install Play9 App</h3>
+              <p className="text-gray-300 text-xs sm:text-sm leading-tight">Add to your home screen for quick access</p>
+              {canInstall && (
+                <p className="text-green-400 text-xs leading-tight mt-1">✓ Ready to install!</p>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={handleDismiss}
+            className="text-gray-400 hover:text-white transition-colors p-1 flex-shrink-0 ml-2"
+          >
+            <IoClose className="text-lg sm:text-xl" />
+          </button>
+        </div>
+
+        {isIOS ? (
+          // iOS specific instructions
+          <div className="text-xs sm:text-sm text-gray-300 mb-3 sm:mb-4">
+            <p className="mb-2 font-medium">To install this app on your iPhone/iPad:</p>
+            <ol className="list-decimal list-inside space-y-1 text-xs leading-relaxed">
+              <li>Tap the Share button in Safari</li>
+              <li>Scroll down and tap "Add to Home Screen"</li>
+              <li>Tap "Add" to confirm</li>
+            </ol>
+          </div>
+        ) : (
+          // Android/Desktop install button
+          <div className="space-y-2">
+            <button
+              onClick={handleInstallClick}
+              className="w-full bg-gradient-to-r from-[#facc15] to-yellow-500 hover:from-yellow-500 hover:to-[#facc15] text-[#1b1f23] font-semibold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl flex items-center justify-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg text-sm sm:text-base"
+            >
+              <IoDownload className="text-lg sm:text-xl" />
+              <span className="truncate">{canInstall ? 'Install App' : 'Show Install Guide'}</span>
+            </button>
+            
+            {!canInstall && (
+              <div className="text-xs text-gray-400 text-center">
+                <p className="mb-1">🔍 <span className="text-[#facc15]">Look for install icon (⊕)</span> in address bar</p>
+                <p>Or try: Browser Menu → "Install Play9"</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mt-3 text-xs text-gray-400 flex-wrap">
+          <span className="flex items-center gap-1">
+            <span className="text-green-400">✓</span>
+            <span className="hidden xs:inline">Works </span>offline
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="text-green-400">✓</span>
+            <span className="hidden xs:inline">Fast </span>loading
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="text-green-400">✓</span>
+            <span className="hidden sm:inline">Native-like </span>experience
+          </span>
+        </div>
+
+        {/* Debug info for testing */}
+        <div className="mt-2 text-xs text-gray-500 text-center">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <span>Status: {canInstall ? 'Can Install' : 'Checking...'}</span>
+            <span>|</span>
+            <span>SW: {'serviceWorker' in navigator ? '✓' : '✗'}</span>
+            <span>|</span>
+            <span>HTTPS: {window.isSecureContext ? '✓' : '✗'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default InstallPrompt; 
