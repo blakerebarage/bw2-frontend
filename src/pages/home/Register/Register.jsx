@@ -265,42 +265,7 @@ const Register = () => {
               )}
             </div>
 
-            {/* Confirm Password */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                {t('confirmPassword')} <span className="text-red-400">*</span>
-              </label>
-              <div className="relative group">
-                <IoIosUnlock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-xl" />
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder={t('confirmYourPassword')}
-                  className="pl-12 pr-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
-                  {...register("confirmPassword", {
-                    required: `Please confirm your ${t('password').toLowerCase()}.`,
-                    validate: (value) =>
-                      value === watch("password") || "Passwords do not match.",
-                  })}
-                  aria-invalid={errors.confirmPassword ? "true" : "false"}
-                />
-                <div
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#facc15] transition-colors cursor-pointer"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                >
-                  {showConfirmPassword ? <FaEyeSlash className="text-lg" /> : <FaEye className="text-lg" />}
-                </div>
-              </div>
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-400 flex items-center gap-2 mt-1">
-                  <FaInfoCircle className="text-sm" />
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
-
+         
             {/* Referral Code Toggle Button */}
             <div className="flex justify-center">
               <button
