@@ -4,12 +4,14 @@ import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useState } from 'react';
 import { FaImage, FaSearch, FaUpload } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { useToasts } from 'react-toast-notifications';
 
 const ImageControl = () => {
   const { user } = useSelector((state) => state.auth);
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
+  const navigate = useNavigate();
 
   // State Management
   const [games, setGames] = useState([]);
@@ -38,40 +40,19 @@ const ImageControl = () => {
   useEffect(()=>{
     fetchAllGames()
   },[page,searchQuery])
+
   // Fetch all games
   const fetchAllGames = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch both APIs in parallel
-      const [gamesResponse, imagesResponse] = await Promise.all([
-        axiosSecure.get(`/api/v1/playwin/all-games?page=${page}&limit=${limit}&search=${searchQuery}`),
-        axiosSecure.get('/api/v1/content/all-game-images')
-      ]);
-
+      const gamesResponse = await axiosSecure.get(`/api/v1/game/all-games?page=${page}&limit=${limit}&search=${searchQuery}`);
+      
       if (gamesResponse?.data?.data) {
-        // Create a map of updated images
-        const updatedImagesMap = {};
-        if (imagesResponse?.data?.data) {
-          imagesResponse.data.data.forEach(game => {
-            if (game.url) {
-              updatedImagesMap[game.game_code] = game.url;
-            }
-          });
-        }
-
-        // Update all games with their images, prioritizing updated images
-        const updatedGames = gamesResponse.data.data.results.map(game => ({
-          ...game,
-          game_image: updatedImagesMap[game.game_code] || game.game_image,
-          isUpdatedImage: !!updatedImagesMap[game.game_code] // Add flag to identify updated images
-        }));
-
-        setGames(updatedGames);
+        setGames(gamesResponse.data.data.results || gamesResponse.data.data);
         setTotalPages(Math.ceil(gamesResponse.data.data.totalItems / limit));
       }
     } catch (error) {
-      
       setError('Failed to fetch games. Please try again later.');
     } finally {
       setLoading(false);
@@ -79,17 +60,15 @@ const ImageControl = () => {
   };
 
   // Handle image upload
-  const handleImageUpload = async (gameCode, file) => {
+  const handleImageUpload = async (gameId, file) => {
     if (!file) return;
     setUploading(true);
     const formData = new FormData();
-    formData.append('image', 
-        file
-    );
+    formData.append('image', file);
 
     try {
       const response = await axiosSecure.patch(
-        `/api/v1/content/update-game-image/${gameCode}`,
+        `/api/v1/content/update-game-image/${gameId}`,
         formData,
         {
           headers: {
@@ -102,11 +81,10 @@ const ImageControl = () => {
           appearance: 'success',
           autoDismiss: true,
         });
-        // Refresh both games and images
+        // Refresh games
         fetchAllGames();
       }
     } catch (error) {
-    
       addToast('Failed to upload image. Please try again.', {
         appearance: 'error',
         autoDismiss: true,
@@ -117,29 +95,53 @@ const ImageControl = () => {
   };
 
   // Handle file selection
-  const handleFileSelect = (gameCode, event) => {
+  const handleFileSelect = (gameId, event) => {
     const file = event.target.files[0];
     if (file) {
-      handleImageUpload(gameCode, file);
+      handleImageUpload(gameId, file);
     }
   };
+
   const initGameLaunch = async (gameId) => {
     if (!user?.username) {
-      
       navigate('/login');
       return;
     }
 
     setLoading(true);
-    await axiosSecure.post(`/api/v1/playwin/increment-game-play-count/${gameId}`);
     try {
-      const { data } = await axiosSecure.get(
-        `/api/v1/playwin/game-launch?user_id=${user?.username}&wallet_amount=${user?.balance}&game_uid=${gameId}`
-      );
-
-      if (data?.url) {
-        window.open(data.url, "_blank");
+      // Find the game details from the games array
+      const gameDetails = games.find(game => game.gameId === gameId);
+      if (!gameDetails) {
+        throw new Error('Game not found');
       }
+      
+      const provider = await axiosSecure.get(`/api/v1/game/providers?page=1&limit=300`);
+      const providerDetails = provider?.data?.data?.results?.find(p => p.name.toLowerCase() === gameDetails.provider.toLowerCase());
+      if (!providerDetails) {
+        throw new Error('Provider not found');
+      }
+
+      const providerCurrency = providerDetails.currencyCode || 'NGN';
+      
+      // Increment play count
+      await axiosSecure.patch(`/api/v1/game/increment-game-play-count/${gameId}`);
+      
+      // Launch game with provider's currency
+      const { data } = await axiosSecure.post(
+        `/api/v1/game/game-launch`,
+        {
+          username: user?.username,
+          currency: providerCurrency || 'NGN',
+          gameId,
+          lang: 'en',
+          platform: 2,
+        }
+      );
+      if (data?.result?.payload?.game_launch_url) {
+        // Navigate to the game page with the game URL
+        navigate(`/game?url=${encodeURIComponent(data.result.payload.game_launch_url)}`);
+      } 
     } catch (error) {
       addToast("Failed to launch game", {
         appearance: "error",
@@ -150,7 +152,6 @@ const ImageControl = () => {
     }
   };
 
-  // Remove the local filtering since we're using API search
   const filteredGames = games;
 
   return (
@@ -207,54 +208,54 @@ const ImageControl = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                 {filteredGames?.map((game) => (
                   <div
-                    key={game.game_code}
+                    key={game.gameId}
                     className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200 "
-                    // onClick={() => initGameLaunch(game.game_code)}
                   >
                     {/* Game Image */}
                     <div className="relative aspect-video">
                       <img
                         src={
-                          game.game_image
-                            ? !game.isUpdatedImage
-                              ? game.game_image // Use full URL for updated images
-                              : `${import.meta.env.VITE_BASE_API_URL}${game.game_image}` // Prepend base URL for original images
-                            : 'https://via.placeholder.com/300x200?text=No+Image'
+                          game?.imageUrl ? `${import.meta.env.VITE_BASE_API_URL}${game?.imageUrl}` :
+                          game.img || 'https://via.placeholder.com/300x200?text=No+Image'
                         }
-                        alt={game.game_name}
+                        alt={game.name}
                         className="w-full h-full object-cover"
                       />
                       {/* Upload Overlay */}
                       <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                         <label className="cursor-pointer bg-white text-[#1f2937] px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 flex items-center gap-2">
                           <FaUpload className="w-4 h-4" />
-                          {game.game_image ? 'Update Image' : 'Add Image'}
+                          {game.img ? 'Update Image' : 'Add Image'}
                           <input
                             type="file"
                             className="hidden"
                             accept="image/*"
-                            onChange={(e) => handleFileSelect(game.game_code, e)}
+                            onChange={(e) => handleFileSelect(game.gameId, e)}
                             disabled={uploading}
                           />
                         </label>
-                        
-                         
                       </div>
                     </div>
 
                     {/* Game Info */}
                     <div className="p-4">
                       <h3 className="font-semibold text-gray-900 truncate">
-                        {game.game_name}
+                        {game.name}
                       </h3>
                       <p className="text-sm text-gray-500 mt-1">
-                        {game.game_provider}
+                        {game.provider}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        Code: {game.game_code}
+                        ID: {game.gameId}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Category: {game.category}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Play Count: {game.playCount || 0}
                       </p>
                       <button
-                        onClick={() => initGameLaunch(game.game_code)}
+                        onClick={() => initGameLaunch(game.gameId)}
                         className="mt-3 w-full bg-[#1f2937] text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

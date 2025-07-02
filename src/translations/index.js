@@ -38,7 +38,7 @@ export const translations = {
     signIn: 'সাইন ইন',
     
     // Auth Pages
-    welcomeBack: 'ফিরে এসেছেন, স্বাগতম',
+    welcomeBack: 'স্বাগতম',
     signInToContinue: 'অব্যাহত রাখতে আপনার অ্যাকাউন্টে সাইন ইন করুন',
     createAccount: 'অ্যাকাউন্ট তৈরি করুন',
     joinBettingJourney: 'আমাদের সাথে যোগ দিন এবং আপনার বেটিং যাত্রা শুরু করুন',
