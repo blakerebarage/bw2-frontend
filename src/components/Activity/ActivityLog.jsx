@@ -67,9 +67,7 @@ const Activity = () => {
         return <div className="mt-16 text-center text-red-500">Error loading users data</div>;
     }
 
-    if (!selectedUser) {
-        return <div className="mt-16 text-center text-red-500">No data found</div>;
-    }
+    
 
     return (
         <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen">

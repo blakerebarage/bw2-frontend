@@ -147,6 +147,16 @@ export const translations = {
     winAmount: 'জেতার পরিমাণ',
     round: 'রাউন্ড',
     serial: 'সিরিয়াল',
+    loadingBets: 'বেট লোড হচ্ছে...',
+    noBetsFound: 'কোনো বেট পাওয়া যায়নি',
+    betsHistoryWillAppear: 'আপনার বেটিং ইতিহাস এখানে দেখা যাবে',
+    previous: 'পূর্ববর্তী',
+    next: 'পরবর্তী',
+    pageOf: 'পৃষ্ঠা',
+    of: 'এর',
+    firstPage: 'প্রথম পৃষ্ঠা',
+    account: 'অ্যাকাউন্ট',
+    gameName: 'গেমের নাম',
     
     // Transaction History
     transactionHistory: 'লেনদেনের ইতিহাস',
@@ -360,6 +370,16 @@ export const translations = {
     winAmount: 'Win Amount',
     round: 'Round',
     serial: 'Serial',
+    loadingBets: 'Loading bets...',
+    noBetsFound: 'No bets found',
+    betsHistoryWillAppear: 'Your betting history will appear here',
+    previous: 'Previous',
+    next: 'Next',
+    pageOf: 'Page',
+    of: 'of',
+    firstPage: 'First Page',
+    account: 'Account',
+    gameName: 'Game Name',
     
     // Transaction History
     transactionHistory: 'Transaction History',

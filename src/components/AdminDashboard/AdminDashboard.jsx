@@ -205,16 +205,12 @@ const AdminDashboard = () => {
         "super-admin",
         "admin",
         "sub-admin",
-        "super-agent",
-        "master-agent",
         "agent",
         "user",
       ],
-      "admin": ["sub-admin", "super-agent", "master-agent", "agent"],
-      "sub-admin": ["super-agent", "master-agent", "agent"],
-      "super-agent": ["master-agent", "agent"],
-      "master-agent": ["agent"],
-      "agent": ["user"],
+      "admin": ["sub-admin", "agent"],
+      "sub-admin": ["agent"],
+      "agent": ["user","agent"],
     };
 
     const allowedRoles = allowedUserCreationRoles[user?.role] || [];
@@ -447,13 +443,12 @@ const AdminDashboard = () => {
         "admin",
         "sub-admin",
         "agent",
-        "sub-agent",
+        
         "user",
       ],
-      "admin": ["sub-admin","agent","sub-agent","user"],
-      "sub-admin": ["agent","sub-agent","user"],
-      "agent": ["sub-agent","user"],
-      "sub-agent": ["user"],
+      "admin": ["sub-admin","agent","user"],
+      "sub-admin": ["agent","user"],
+      "agent": ["user","agent"],
       "user": [],
     };
 
@@ -465,8 +460,6 @@ const AdminDashboard = () => {
       "super-admin": "Super Admin",
       "admin": "Admin",
       "sub-admin": "Sub Admin",
-      "super-agent": "Super Agent",
-      "master-agent": "Master Agent", 
       "agent": "Agent",
       "user": "User"
     };
@@ -481,17 +474,40 @@ const AdminDashboard = () => {
   // Update the role options for filtering - show all roles for visibility but limit creation
   const getFilterRoleOptions = () => {
     const baseRoles = [
-      { value: "admin", label: "Admin" },
-      { value: "sub-admin", label: "Sub Admin" },
-      { value: "super-agent", label: "Super Agent" },
-      { value: "master-agent", label: "Master Agent" },
-      { value: "agent", label: "Agent", },
-      { value: "user", label: "User" }
+      
     ];
 
     // Only show super-admin option for super-admin users
     if (user?.role === 'super-admin') {
-      baseRoles.unshift({ value: "super-admin", label: "Super Admin" });
+      baseRoles.unshift({ value: "super-admin", label: "Super Admin" },
+        { value: "admin", label: "Admin" },
+        { value: "sub-admin", label: "Sub Admin" },
+        { value: "agent", label: "Agent" },
+        { value: "user", label: "User" }
+      );
+
+    }
+    if (user?.role === 'admin') {
+      baseRoles.unshift({ value: "admin", label: "Admin" },
+        { value: "sub-admin", label: "Sub Admin" },
+        { value: "agent", label: "Agent" },
+        { value: "user", label: "User" }
+      );
+    }
+    if (user?.role === 'sub-admin') {
+      baseRoles.unshift({ value: "sub-admin", label: "Sub Admin" },
+        { value: "agent", label: "Agent" },
+        { value: "user", label: "User" }
+      );
+    }
+    if (user?.role === 'agent') { 
+      baseRoles.unshift({ value: "agent", label: "Agent" },
+        { value: "user", label: "User" }
+      );
+    }
+    if (user?.role === 'user') {
+      baseRoles.unshift({ value: "user", label: "User" }
+      );
     }
 
     return baseRoles;
@@ -842,14 +858,14 @@ const AdminDashboard = () => {
                                  row?.role?.slice(0, 2).toUpperCase()}
                               </span>
                               <span className="text-sm font-medium text-[#1f2937]">
-                                <Link to={`/downlist/${row._id}`}>{row.phone}</Link>
+                                <Link to={`/profile/${row._id}`}>{row.phone}</Link>
                               </span>
                             </div>
                           </td>
 
                           <td className="whitespace-nowrap px-4 py-4">
                             <span className="text-sm text-[#1f2937]">
-                              <Link to={`/downlist/${row._id}`}>{row.username}</Link>
+                              <Link to={`/profile/${row._id}`}>{row.username}</Link>
                             </span>
                           </td>
                           

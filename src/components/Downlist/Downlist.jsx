@@ -160,11 +160,11 @@ const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
                               <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${roleBadge.bg} ${roleBadge.text} font-medium text-sm`}>
                                 {roleBadge.label}
                               </span>
-                              <span className="text-blue-600 font-medium">{row.phone}</span>
+                              <Link to={`/downlist/${row?._id}`} className="text-blue-600 font-medium">{row.phone}</Link>
                             </div>
                           </td>
                           <td className="border-b px-4 py-3 whitespace-nowrap text-sm text-gray-900 capitalize">
-                            {row?.username}
+                            <Link to={`/downlist/${row?._id}`} className="text-blue-600 font-medium">{row?.username}</Link>
                           </td>
                           <td className="border-b px-4 py-3 whitespace-nowrap text-sm text-red-600">
                             {row.email}

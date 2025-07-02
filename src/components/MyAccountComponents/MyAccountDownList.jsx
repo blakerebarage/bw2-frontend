@@ -128,11 +128,11 @@ const MyAccountDownList = () => {
                     <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
                       <div className="flex items-center space-x-2">
                         <RoleBadge role={row?.role} />
-                        <span className="text-blue-600 font-medium">{row?.phone}</span>
+                        <Link to={`/downlist/${row?._id}`} className="text-blue-600 font-medium">{row?.phone}</Link>
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
-                      <span className="text-blue-600 font-medium">{row?.username}</span>
+                      <Link to={`/downlist/${row?._id}`} className="text-blue-600 font-medium">{row?.username}</Link>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
                       <span className="text-red-600">{row?.email}</span>
@@ -158,7 +158,7 @@ const MyAccountDownList = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <Link
-                        to={`/accountsummary/${row?._id}`}
+                        to={`/downlist/${row?._id}`}
                         className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-600 transition-colors duration-200"
                         title="View Profile"
                       >

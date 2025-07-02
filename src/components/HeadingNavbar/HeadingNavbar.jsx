@@ -156,7 +156,6 @@ const HeadingNavbar = () => {
 
   const filteredMenuItems = menuItems.filter((item) => {
     if (!userData) return false;
-
     // Super-admin has access to everything
     if (userData.role === "super-admin") {
       return true;
@@ -166,7 +165,7 @@ const HeadingNavbar = () => {
       const subAdminMenuItems = [
         "Dashboard",
         "User",
-        "Setting",
+        
         "My Account",
         "BetList",
         "BetListLive",
@@ -196,7 +195,7 @@ const HeadingNavbar = () => {
       const subAdminMenuItems = [
         "Dashboard",
         "User",
-        "Setting",
+        
         "My Account",
         "BetList",
         "BetListLive",
@@ -212,7 +211,7 @@ const HeadingNavbar = () => {
       admin: [
         "Dashboard",
         "User",
-        "Setting",
+      
         "My Account",
         "BetList",
         "BetListLive",

@@ -1,5 +1,6 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Clock, TrendingDown, TrendingUp } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
@@ -16,6 +17,7 @@ const BetsHistory = () => {
   const limit = 50;
   const axiosSecure = useAxiosSecure();
   const { formatCurrency } = useCurrency();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (user?.username) {
@@ -65,8 +67,8 @@ const BetsHistory = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#facc15] flex items-center justify-center">
               <FaGamepad className="text-2xl text-[#1a1f24]" />
             </div>
-            <h1 className="text-lg font-medium text-gray-300 mb-2">Bets History</h1>
-            <p className="text-sm text-gray-400">Track your betting activity and results</p>
+            <h1 className="text-lg font-medium text-gray-300 mb-2">{t('betsHistory')}</h1>
+            <p className="text-sm text-gray-400">{t('trackBettingActivity')}</p>
           </div>
         </div>
 
@@ -78,7 +80,7 @@ const BetsHistory = () => {
             </div>
             <input
               type="text"
-              placeholder="Search by game name..."
+              placeholder={t('searchByGameName')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-[#22282e] border border-[#facc15]/20 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#facc15]/50 focus:border-[#facc15]/50"
@@ -91,7 +93,7 @@ const BetsHistory = () => {
           <div className="bg-[#1a1f24] rounded-lg shadow-sm border border-[#facc15]/20 p-8">
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#facc15]"></div>
-              <p className="text-gray-400 mt-2">Loading bets...</p>
+              <p className="text-gray-400 mt-2">{t('loadingBets')}</p>
             </div>
           </div>
         ) : bets.length > 0 ? (
@@ -117,7 +119,7 @@ const BetsHistory = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-400">Round</p>
+                    <p className="text-xs text-gray-400">{t('round')}</p>
                     <p className="text-sm font-medium text-gray-300">
                       {bet.data.game_round}
                     </p>
@@ -131,7 +133,7 @@ const BetsHistory = () => {
                       <FaMoneyBillWave className="w-3 h-3 text-blue-400" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-gray-400">Bet Amount</p>
+                      <p className="text-xs text-gray-400">{t('betAmount')}</p>
                       <p className="text-sm font-semibold text-white truncate">
                         {formatCurrency(bet.data.bet_amount)}
                       </p>
@@ -151,7 +153,7 @@ const BetsHistory = () => {
                       </div>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-gray-400">Win Amount</p>
+                      <p className="text-xs text-gray-400">{t('winAmount')}</p>
                       <p className={`text-sm font-semibold truncate ${getWinLossColor(bet.data.win_amount, bet.data.bet_amount)}`}>
                         {formatCurrency(bet.data.win_amount)}
                       </p>
@@ -162,8 +164,8 @@ const BetsHistory = () => {
                 {/* Additional Info */}
                 <div className="border-t border-[#facc15]/10 pt-3">
                   <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span>Serial: {bet.data.serial_number}</span>
-                    <span>Account: {bet.data.member_account}</span>
+                    <span>{t('serial')}: {bet.data.serial_number}</span>
+                    <span>{t('account')}: {bet.data.member_account}</span>
                   </div>
                 </div>
               </div>
@@ -175,8 +177,8 @@ const BetsHistory = () => {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-500/20 flex items-center justify-center">
                 <FaGamepad className="text-2xl text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-300 mb-2">No bets found</h3>
-              <p className="text-gray-400">Your betting history will appear here</p>
+              <h3 className="text-lg font-medium text-gray-300 mb-2">{t('noBetsFound')}</h3>
+              <p className="text-gray-400">{t('betsHistoryWillAppear')}</p>
             </div>
           </div>
         )}
@@ -190,12 +192,12 @@ const BetsHistory = () => {
                 disabled={currentPage === 1}
                 className="px-4 py-2 bg-[#22282e] text-gray-300 rounded-lg border border-[#facc15]/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a3138] transition-colors text-sm"
               >
-                Previous
+                {t('previous')}
               </button>
               
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-400">
-                  Page {currentPage} of {totalPages}
+                  {t('pageOf')} {currentPage} {t('of')} {totalPages}
                 </span>
               </div>
               
@@ -204,7 +206,7 @@ const BetsHistory = () => {
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 bg-[#22282e] text-gray-300 rounded-lg border border-[#facc15]/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a3138] transition-colors text-sm"
               >
-                Next
+                {t('next')}
               </button>
             </div>
             
@@ -214,7 +216,7 @@ const BetsHistory = () => {
                   onClick={() => setCurrentPage(1)}
                   className="px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-lg hover:bg-[#e6b800] transition-colors font-medium text-sm"
                 >
-                  First Page
+                  {t('firstPage')}
                 </button>
               </div>
             )}
