@@ -464,7 +464,7 @@ export function SelectCategory() {
                     <div className="flex items-center gap-2">
                       <span className="text-gray-300">{t('page')}</span>
                       <span className="font-semibold text-[#facc15]">{currentPage}</span>
-                      <span className="text-gray-300">{language.of}</span>
+                      <span className="text-gray-300">{t('of')}</span>
                       <span className="font-semibold text-[#facc15]">
                         {Math.ceil(totalGames / 45)}
                       </span>
@@ -479,7 +479,7 @@ export function SelectCategory() {
                           : 'bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800]'
                       }`}
                     >
-                      {language.next}
+                      {t('next')}
                     </button>
                   </div>
                 )
@@ -499,10 +499,10 @@ export function SelectCategory() {
                       {loading ? (
                         <div className="flex items-center gap-2">
                           <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                          {language.loading}
+                          {t('loading')}
                         </div>
                       ) : (
-                        language.loadMore
+                        t('loadMore')
                       )}
                     </button>
                   </div>
@@ -511,9 +511,9 @@ export function SelectCategory() {
             </>
           ) : (
             <div className="text-center text-gray-300 py-8">
-              <p className="text-lg">{language.noGamesFound}</p>
+              <p className="text-lg">{t('noGamesFound')}</p>
               <p className="text-sm mt-2 text-gray-400">
-                {language.tryDifferentSearchOrCategory}
+                {t('tryDifferentSearchOrCategory')}
               </p>
             </div>
           )}

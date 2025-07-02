@@ -66,7 +66,7 @@ export const translations = {
     crash: 'ক্র্যাশ',
     fishing: 'ফিশিং',
     lottery: 'লটারি',
-    arcade: 'আর্কেড',
+    arcade: 'অর্কেড',
     all: 'সব',
     popular: 'জনপ্রিয়',
     egame: 'ই-গেম',
@@ -81,7 +81,7 @@ export const translations = {
     crashGames: 'ক্র্যাশ গেমস',
     fishingGames: 'ফিশিং গেমস',
     lotteryGames: 'লটারি গেমস',
-    arcadeGames: 'আর্কেড গেমস',
+    arcadeGames: 'অর্কেড গেমস',
     allGames: 'সব গেমস',
     
     // Sidebar Menu
