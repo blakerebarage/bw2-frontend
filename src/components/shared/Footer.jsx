@@ -2,13 +2,22 @@ import eighteenPlus from "@/assets/Footer/18+.png";
 import gcGaming from "@/assets/Footer/gc_gaming.png";
 import { FaFacebook, FaTelegram, FaWhatsappSquare, FaYoutube } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../../contexts/LanguageContext";
+import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 
 const Footer = () => {
+  const { t } = useLanguage();
+  
   return (
     <footer className="w-full bg-[#1f2937] mt-auto drop-shadow-lg">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
         <div className="py-4">
+          {/* Language Switcher */}
+          <div className="flex justify-center mb-4">
+            <LanguageSwitcher variant="footer" />
+          </div>
+
           {/* App Download Section */}
           <div className="flex flex-col items-center justify-center gap-4 mb-6">
             <Link className="transform hover:scale-105 transition-transform duration-200">

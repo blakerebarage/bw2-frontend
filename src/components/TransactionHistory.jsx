@@ -1,9 +1,11 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import { useEffect, useState } from 'react';
 import { FaArrowDown, FaArrowUp, FaExchangeAlt, FaHistory } from "react-icons/fa";
 
 const TransactionHistory = () => {
+  const { t } = useLanguage();
   const axiosSecure = useAxiosSecure();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +54,7 @@ const TransactionHistory = () => {
     <div className="min-h-[60vh] mt-12 py-12 px-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Transaction History</h2>
+          <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{t('transactionHistory')}</h2>
           <p className="text-slate-600 max-w-xl mx-auto">
             View your deposit and withdrawal history
           </p>
@@ -61,7 +63,7 @@ const TransactionHistory = () => {
         {loading ? (
           <div className="flex items-center justify-center gap-3 text-indigo-600">
             <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading transactions...</span>
+            <span>{t('loading')}</span>
           </div>
         ) : transactions.length === 0 ? (
           <div className="text-center bg-white p-8 rounded-xl border border-indigo-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -77,11 +79,11 @@ const TransactionHistory = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-indigo-50">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">{t('date')}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Type</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Amount</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Description</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">{t('status')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">{t('description')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -97,7 +99,7 @@ const TransactionHistory = () => {
                         <div className="flex items-center gap-2">
                           {getTransactionIcon(transaction.type)}
                           <span className={`text-sm font-medium ${getTransactionColor(transaction.type)}`}>
-                            {transaction.type}
+                            {transaction.type === 'deposit' ? t('deposit') : transaction.type === 'withdrawal' ? t('withdraw') : transaction.type}
                           </span>
                         </div>
                       </td>

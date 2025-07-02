@@ -4,7 +4,7 @@ const urlsToCache = [
   '/static/js/bundle.js',
   '/static/css/main.css',
   '/manifest.json',
-  '/favicon.ico'
+  '/fav.png'
 ];
 
 // Install event
@@ -58,8 +58,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New notification from Play9!',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: '/fav.png',
+    badge: '/fav.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),

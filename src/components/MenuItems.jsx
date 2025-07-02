@@ -9,63 +9,63 @@ import { PiHandDepositFill, PiHandWithdrawFill } from "react-icons/pi";
 const menuItems = [
   {
     id: 1,
-    label: "Balance Overview",
+    labelKey: "balanceOverview",
     Icon: BsWallet2,
     link: "/balance-overview",
     description: "View your current balance and transactions"
   },
   {
     id: 2,
-    label: "Deposite Balance",
+    labelKey: "depositeBalance",
     Icon: PiHandDepositFill,
     link: "/balance-deposite",
     description: "Add funds to your account"
   },
   {
     id: 3,
-    label: "Withdraw Balance",
+    labelKey: "withdrawBalance",
     Icon: PiHandWithdrawFill,
     link: "/balance-withdraw",
     description: "Withdraw your funds"
   },
   {
     id: 4,
-    label: "Deposit by Chat",
+    labelKey: "depositByChat",
     Icon: BsChatDotsFill,
     link: "/deposit-chat",
     description: "Deposit through chat support"
   },
   {
     id: 5,
-    label: "Withdraw by Chat",
+    labelKey: "withdrawByChat",
     Icon: HiMiniChatBubbleLeftRight,
     link: "/withdraw-chat",
     description: "Withdraw through chat support"
   },
   {
     id: 6,
-    label: "TurnOver",
+    labelKey: "turnOver",
     Icon:  GiTurnstile,
     link: "/turn-over",
     description: "Turn Over"
   },
   { 
       id: 7, 
-    label: "Bets History", 
+    labelKey: "betsHistory", 
     Icon: FaHistory, 
     link: "/bets-history",
     description: "View your past bets"
   },
   { 
     id: 8, 
-    label: "Transaction History", 
+    labelKey: "transactionHistory", 
     Icon: GrTransaction, 
     link: "/transaction-history",
     description: "View your past transactions"
   },
   { 
     id: 9, 
-    label: "My Profile", 
+    labelKey: "myProfile", 
     Icon: ImProfile, 
     link: "/my-profile",
     description: "Manage your profile"

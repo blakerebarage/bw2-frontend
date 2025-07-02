@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/Hook/useCurrency";
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import { useState } from "react";
@@ -6,6 +7,7 @@ import { useSelector } from "react-redux";
 import Transaction from "./Transaction";
 
 const Banking = () => {
+  const { t } = useLanguage();
   const { user } = useSelector((state) => state.auth);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -103,7 +105,7 @@ const Banking = () => {
                 <tr className="bg-[#1f2937]">
                   {[
                     "Phone/Username",
-                    "Available Balance",
+                    t('availableBalance'),
                     "Balance in Downline",
                     "Exposure in Downline",
                     "Deposit/Withdraw",
@@ -176,7 +178,7 @@ const Banking = () => {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                           </svg>
-                          Login
+                          {t('login')}
                         </button>
                       </td>
                     </tr>

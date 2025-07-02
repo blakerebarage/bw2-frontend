@@ -1,18 +1,20 @@
 import Footer from "@/components/shared/Footer";
-import Marquee from "react-fast-marquee";
-import { HiOutlineMicrophone } from "react-icons/hi2";
-import { FaStar, FaSearch, FaTrophy } from "react-icons/fa";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { GiSoccerBall } from "react-icons/gi";
+import { Switch } from "@/components/ui/switch";
+import Marquee from "react-fast-marquee";
 import { BiSolidCricketBall } from "react-icons/bi";
-import { IoTennisball } from "react-icons/io5";
-import { FaAngleUp } from "react-icons/fa6";
 import { CiStar } from "react-icons/ci";
+import { FaSearch, FaStar, FaTrophy } from "react-icons/fa";
+import { FaAngleUp } from "react-icons/fa6";
+import { GiSoccerBall } from "react-icons/gi";
+import { HiOutlineMicrophone } from "react-icons/hi";
+import { IoTennisball } from "react-icons/io5";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import { TfiStatsUp } from "react-icons/tfi";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 const Sports = () => {
+  const { t } = useLanguage();
   const subcategories = [
     {
       icon: BiSolidCricketBall,
@@ -34,16 +36,10 @@ const Sports = () => {
           <HiOutlineMicrophone className="text-xl md:text-2xl" />
           <Marquee className="text-xs md:text-sm">
             <ul className="flex items-center justify-between gap-20 font-bold">
-              <li>লটারী! লটারী!! লটারী!!! জয়েন করুন www.velki.club</li>
-              <li>অফিসিয়াল এজেন্ট লিষ্ট https://allagentlist.com/ma.php</li>
-              <li>
-                Once player account found with fraudulent ticket, the respective
-                market will be voided and the player account will be locked.
-              </li>
-              <li>
-                WELCOME TO VELKI ! ENJOY BETTING IN MATCH ODDS, FANCY & LIVE
-                CASINO
-              </li>
+              <li>{t('lotteryMessage')}</li>
+              <li>{t('agentListMessage')}</li>
+              <li>{t('fraudMessage')}</li>
+              <li>{t('welcomeVmessage')}</li>
             </ul>
           </Marquee>
         </div>
@@ -51,17 +47,17 @@ const Sports = () => {
       <div className="flex items-center justify-center gap-1 bg-[#1B1F23] text-[#6F8898] text-xs sm:text-base font-bold">
         <div className="w-1/4 flex items-center justify-center gap-2 py-2">
           <Switch className=" bg-black" />
-          <Label className="text-xs font-bold">Parlay</Label>
+          <Label className="text-xs font-bold">{t('parlay')}</Label>
         </div>
         <div className="w-3/4 px-4 flex items-center justify-between gap-2 py-2 bg-black">
           <p className="border-b-2 border-transparent hover:border-white">
-            In-Play
+            {t('inPlay')}
           </p>
           <p className="border-b-2 border-transparent hover:border-white">
-            Today
+            {t('today')}
           </p>
           <p className="border-b-2 border-transparent hover:border-white">
-            Tomorrow
+            {t('tomorrow')}
           </p>
           <FaStar />
           <FaSearch />

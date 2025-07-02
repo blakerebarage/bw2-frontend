@@ -1,40 +1,43 @@
 import CasinoGamesCategory from "@/components/Home/CasinoGamesCategory/CasinoGamesCategory";
-import { useState, useRef, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useEffect, useRef, useState } from "react";
 
 const Casino = () => {
+  const { t } = useLanguage();
+  
   const categories = [
     {
-      title: "Popular",
+      title: t('popular'),
       value: "popular",
       image: "https://www.wickspin24.live/casino/nav/popular.svg",
       hoverImage: "https://www.wickspin24.live/casino/nav/hover-popular.svg",
     },
     {
-      title: "Live",
+      title: t('live'),
       value: "live",
       image: "https://www.wickspin24.live/casino/nav/live.svg",
       hoverImage: "https://www.wickspin24.live/casino/nav/hover-live.svg",
     },
     {
-      title: "Table",
+      title: t('table'),
       value: "table",
       image: "https://www.wickspin24.live/casino/nav/table.svg",
       hoverImage: "https://www.wickspin24.live/casino/nav/hover-table.svg",
     },
     {
-      title: "Slot",
+      title: t('slot'),
       value: "slot",
       image: "https://www.wickspin24.live/casino/nav/slot.svg",
       hoverImage: "https://www.wickspin24.live/casino/nav/hover-slot.svg",
     },
     {
-      title: "Fishing",
+      title: t('fishing'),
       value: "fishing",
       image: "https://www.wickspin24.live/casino/nav/fishing.svg",
       hoverImage: "https://www.wickspin24.live/casino/nav/hover-fishing.svg",
     },
     {
-      title: "Egame",
+      title: t('egame'),
       value: "egame",
       image: "https://www.wickspin24.live/casino/nav/egame.svg",
       hoverImage: "https://www.wickspin24.live/casino/nav/hover-egame.svg",

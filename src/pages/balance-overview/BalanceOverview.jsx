@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/Hook/useCurrency";
 import { Activity, ArrowRight, Clock, DollarSign, TrendingDown, TrendingUp } from "lucide-react";
 import moment from "moment";
@@ -9,6 +10,7 @@ import { Link } from "react-router-dom";
 import useAxiosSecure from "../../Hook/useAxiosSecure";
 
 const BalanceOverview = () => {
+  const { t } = useLanguage();
   const { formatCurrency } = useCurrency();
 
   const { user } = useSelector((state) => state.auth);
@@ -102,13 +104,13 @@ const BalanceOverview = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#facc15] flex items-center justify-center">
               <FaWallet className="text-2xl text-[#1a1f24]" />
             </div>
-            <h1 className="text-lg font-medium text-gray-300 mb-2">Your Balance</h1>
+            <h1 className="text-lg font-medium text-gray-300 mb-2">{t('yourBalance')}</h1>
             <p className="text-4xl font-bold text-[#facc15] mb-2">
               {formatCurrency(user?.balance) || '0.00'}
             </p>
             <div className="flex items-center justify-center gap-2 text-green-400">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-sm font-medium">Active Account</span>
+              <span className="text-sm font-medium">{t('activeAccount')}</span>
             </div>
           </div>
         </div>
@@ -121,7 +123,7 @@ const BalanceOverview = () => {
                 <FaArrowUp className="text-green-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Deposits (30d)</p>
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{t('totalDeposit30Days')}</p>
                 <p className="text-lg font-semibold text-white truncate">
                   {formatCurrency(stats.totalDeposit)}
                 </p>
@@ -135,7 +137,7 @@ const BalanceOverview = () => {
                 <FaArrowDown className="text-red-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Withdrawals (30d)</p>
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{t('totalWithdraw30Days')}</p>
                 <p className="text-lg font-semibold text-white truncate">
                   {formatCurrency(stats.totalWithdraw)}
                 </p>
@@ -151,7 +153,7 @@ const BalanceOverview = () => {
               <DollarSign className="text-blue-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Net Balance (30d)</p>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{t('netBalance')} (30d)</p>
               <p className={`text-lg font-semibold truncate ${netBalance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                 {formatCurrency(netBalance)}
               </p>
@@ -166,7 +168,7 @@ const BalanceOverview = () => {
             className="flex items-center gap-2 px-4 py-3 bg-[#facc15] text-[#1a1f24] rounded-lg hover:bg-[#e6b800] transition-colors font-medium text-sm w-full justify-center"
           >
             <Clock className="w-4 h-4" />
-            {showRecentTransactions ? "Hide Recent Transactions" : "Show Recent Transactions"}
+            {showRecentTransactions ? "Hide Recent Transactions" : t('showRecentTransactions')}
           </button>
         </div>
 
@@ -194,7 +196,7 @@ const BalanceOverview = () => {
               {loading ? (
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-[#facc15]"></div>
-                  <p className="text-gray-400 mt-2 text-sm">Loading...</p>
+                  <p className="text-gray-400 mt-2 text-sm">{t('loading')}</p>
                 </div>
               ) : recentTransactions.length > 0 ? (
                 recentTransactions.map((txn) => (
@@ -210,7 +212,7 @@ const BalanceOverview = () => {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-white">
-                            {txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}
+                            {txn.type === 'deposit' ? t('deposit') : txn.type === 'withdraw' ? t('withdraw') : txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}
                           </p>
                           <p className="text-xs text-gray-400">
                             {moment(txn.createdAt).format("MMM D, h:mm A")}
@@ -248,7 +250,7 @@ const BalanceOverview = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-[#facc15] flex items-center gap-2">
                   <Activity className="w-4 h-4" />
-                  Transaction Overview
+                  {t('transactionOverview')}
                 </h3>
                 <span className="text-xs text-gray-400">
                   {stats.lastTransaction ? new Date(stats.lastTransaction.createdAt).toLocaleDateString() : 'No data'}
@@ -263,7 +265,7 @@ const BalanceOverview = () => {
                   <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-green-500/20 flex items-center justify-center">
                     <TrendingUp className="w-5 h-5 text-green-400" />
                   </div>
-                  <p className="text-xs font-medium text-gray-400">Total Deposits</p>
+                  <p className="text-xs font-medium text-gray-400">{t('totalDeposits')}</p>
                   <p className="text-sm font-semibold text-green-400 truncate">
                     {formatCurrency(stats.totalDeposit)}
                   </p>
@@ -273,7 +275,7 @@ const BalanceOverview = () => {
                   <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-red-500/20 flex items-center justify-center">
                     <TrendingDown className="w-5 h-5 text-red-400" />
                   </div>
-                  <p className="text-xs font-medium text-gray-400">Total Withdrawals</p>
+                  <p className="text-xs font-medium text-gray-400">{t('totalWithdrawals')}</p>
                   <p className="text-sm font-semibold text-red-400 truncate">
                     {formatCurrency(stats.totalWithdraw)}
                   </p>
@@ -283,7 +285,7 @@ const BalanceOverview = () => {
                   <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-[#facc15] flex items-center justify-center">
                     <DollarSign className="w-5 h-5 text-[#1a1f24]" />
                   </div>
-                  <p className="text-xs font-medium text-gray-400">Current Balance</p>
+                  <p className="text-xs font-medium text-gray-400">{t('currentBalance')}</p>
                   <p className="text-sm font-semibold text-[#facc15] truncate">
                     {formatCurrency(user?.balance) || '0.00'}
                   </p>
@@ -300,7 +302,7 @@ const BalanceOverview = () => {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Recent Transaction</p>
                       <p className="text-sm font-medium text-white truncate">
-                        {stats.lastTransaction.type.charAt(0).toUpperCase() + stats.lastTransaction.type.slice(1)} - {formatCurrency(stats.lastTransaction.amount)}
+                        {stats.lastTransaction.type === 'deposit' ? t('deposit') : stats.lastTransaction.type === 'withdraw' ? t('withdraw') : stats.lastTransaction.type.charAt(0).toUpperCase() + stats.lastTransaction.type.slice(1)} - {formatCurrency(stats.lastTransaction.amount)}
                       </p>
                     </div>
                     <div className="text-right">

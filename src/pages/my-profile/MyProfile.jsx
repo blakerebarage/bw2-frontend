@@ -1,4 +1,5 @@
 import PageHeader from "@/components/shared/PageHeader";
+import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { Activity, Calendar, Eye, EyeOff, Key, Loader2, Lock, Mail, Phone, Shield, User, X } from "lucide-react";
 import { useState } from "react";
@@ -7,6 +8,7 @@ import { useToasts } from "react-toast-notifications";
 import ActivityLog from "../activity-log/ActivityLog";
 
 const MyProfile = () => {
+  const { t } = useLanguage();
   const { user } = useSelector((state) => state.auth);
   const [showActivity, setShowActivity] = useState(false);
   const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
@@ -89,7 +91,7 @@ const MyProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f24] to-[#0f1419]">
-      <PageHeader title="My Profile" />
+      <PageHeader title={t('profile')} />
       
       <div className="px-4 py-6 max-w-lg mx-auto space-y-4">
         {/* Profile Header Card */}
@@ -106,14 +108,14 @@ const MyProfile = () => {
                 {user?.fullName || user?.username || "User"}
               </h1>
               <p className="text-sm text-gray-300 truncate">
-                {user?.email || "No email provided"}
+                {user?.email || t('noEmailProvided')}
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#facc15] text-[#1a1f24]">
                   {user?.role || "User"}
                 </span>
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-                  Active
+                  {t('active')}
                 </span>
               </div>
             </div>
@@ -127,7 +129,7 @@ const MyProfile = () => {
             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1a1f24] text-gray-300 rounded-lg hover:bg-[#22282e] transition-colors border border-[#facc15]/20"
           >
             {showSensitiveInfo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span className="text-sm font-medium">{showSensitiveInfo ? "Hide Info" : "Show Info"}</span>
+            <span className="text-sm font-medium">{showSensitiveInfo ? "Hide Info" : t('showInfo')}</span>
           </button>
           
           <button
@@ -135,7 +137,7 @@ const MyProfile = () => {
             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1a1f24] text-gray-300 rounded-lg hover:bg-[#22282e] transition-colors border border-[#facc15]/20"
           >
             <Key className="w-4 h-4" />
-            <span className="text-sm font-medium">Change Password</span>
+            <span className="text-sm font-medium">{t('changePassword')}</span>
           </button>
 
           {user?.role !== "user" && (
@@ -144,7 +146,7 @@ const MyProfile = () => {
               className="flex items-center justify-center gap-2 px-4 py-3 bg-[#facc15] text-[#1a1f24] rounded-lg hover:bg-[#e6b800] transition-colors"
             >
               <Activity className="w-4 h-4" />
-              <span className="text-sm font-medium">{showActivity ? "Hide Activity" : "Activity"}</span>
+              <span className="text-sm font-medium">{showActivity ? "Hide Activity" : t('activity')}</span>
             </button>
           )}
         </div>
@@ -153,31 +155,31 @@ const MyProfile = () => {
         <div className="space-y-3">
           {[
             { 
-              label: "Full Name", 
+              label: t('fullName'), 
               value: user?.fullName, 
               icon: User,
               sensitive: false
             },
             { 
-              label: "Username", 
+              label: t('username'), 
               value: user?.username, 
               icon: User,
               sensitive: false
             },
             { 
-              label: "Email", 
+              label: t('email'), 
               value: user?.email, 
               icon: Mail,
               sensitive: true
             },
             { 
-              label: "Phone Number", 
+              label: t('phoneNumberField'), 
               value: user?.phone, 
               icon: Phone,
               sensitive: true
             },
             { 
-              label: "Last Login", 
+              label: t('lastLogin'), 
               value: user?.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : null, 
               icon: Calendar,
               sensitive: false
@@ -216,7 +218,7 @@ const MyProfile = () => {
             <div className="px-4 py-3 border-b border-[#facc15]/20 bg-[#22282e]">
               <h3 className="text-sm font-medium text-[#facc15] flex items-center gap-2">
                 <Activity className="w-4 h-4" />
-                Activity Log
+                {t('activity')} Log
               </h3>
             </div>
             <div className="p-4">
@@ -235,7 +237,7 @@ const MyProfile = () => {
                 <div className="w-8 h-8 bg-[#facc15] rounded-lg flex items-center justify-center">
                   <Lock className="w-4 h-4 text-[#1a1f24]" />
                 </div>
-                <h3 className="text-lg font-semibold text-[#facc15]">Change Password</h3>
+                <h3 className="text-lg font-semibold text-[#facc15]">{t('changePassword')}</h3>
               </div>
               <button
                 onClick={() => setShowPasswordModal(false)}
@@ -297,7 +299,7 @@ const MyProfile = () => {
                   onClick={() => setShowPasswordModal(false)}
                   className="flex-1 px-4 py-2 text-gray-300 bg-[#22282e] rounded-lg hover:bg-[#2a3036] transition-colors"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"

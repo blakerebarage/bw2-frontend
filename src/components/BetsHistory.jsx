@@ -1,9 +1,11 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import { useEffect, useState } from 'react';
 import { FaHistory, FaSpinner, FaTimes, FaTrophy } from "react-icons/fa";
 
 const BetsHistory = () => {
+  const { t } = useLanguage();
   const axiosSecure = useAxiosSecure();
   const [bets, setBets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,16 +45,16 @@ const BetsHistory = () => {
     <div className="min-h-[60vh] mt-12 py-12 px-4 bg-[#1a1f24]">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-3 text-[#facc15]">Bets History</h2>
+          <h2 className="text-3xl font-bold mb-3 text-[#facc15]">{t('betsHistory')}</h2>
           <p className="text-gray-300 max-w-xl mx-auto">
-            Track your betting activity and results
+            {t('trackBettingActivity')}
           </p>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center gap-3 text-[#facc15]">
             <div className="w-5 h-5 border-2 border-[#facc15] border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading bets history...</span>
+            <span>{t('loading')}</span>
           </div>
         ) : bets.length === 0 ? (
           <div className="text-center bg-[#1a1f24] p-8 rounded-xl border border-[#facc15]/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -68,11 +70,11 @@ const BetsHistory = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#facc15]/20">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-[#facc15] uppercase tracking-wider">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-[#facc15] uppercase tracking-wider">{t('date')}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-[#facc15] uppercase tracking-wider">Game</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-[#facc15] uppercase tracking-wider">Bet Amount</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-[#facc15] uppercase tracking-wider">{t('betAmount')}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-[#facc15] uppercase tracking-wider">Result</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-[#facc15] uppercase tracking-wider">Status</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-[#facc15] uppercase tracking-wider">{t('status')}</th>
                   </tr>
                 </thead>
                 <tbody>

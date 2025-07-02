@@ -1,4 +1,6 @@
-import { FaHeart } from "react-icons/fa";
+import { useState } from 'react';
+import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 export const GameCard = ({ 
   game, 
@@ -7,31 +9,49 @@ export const GameCard = ({
   isFavorite, 
   user
 }) => {
+  const { t } = useLanguage();
+  const [imageError, setImageError] = useState(false);
+
+  const handleGameLaunch = () => {
+    if (onGameLaunch) {
+      onGameLaunch(game.gameId);
+    }
+  };
+
+  const handleFavoriteToggle = (e) => {
+    e.stopPropagation();
+    if (onFavoriteToggle && user) {
+      onFavoriteToggle(game.gameId);
+    }
+  };
+
   return (
     <div
-      onClick={() => onGameLaunch(game.gameId)}
+      onClick={handleGameLaunch}
       className="relative rounded-lg overflow-hidden group bg-[#1a1f24] border border-[#facc15]/20 shadow-sm hover:shadow-lg hover:shadow-[#facc15]/20 hover:scale-[1.02] hover:border-[#facc15]/40 transition-all duration-300 cursor-pointer"
     >
       <img
         src={game.img}  
         alt={game.name}
         className="w-full h-40 object-cover group-hover:brightness-90 transition-all duration-300"
+        onError={() => setImageError(true)}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-[#1a1f24]/90 via-[#1a1f24]/40 to-transparent opacity-100 transition-all duration-300"></div>
       
       {user && (
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onFavoriteToggle(game);
-          }}
+          onClick={handleFavoriteToggle}
           className={`absolute top-3 right-3 p-2 rounded-full shadow-md transition-all duration-200 z-10 ${
             isFavorite
               ? "bg-[#ef4444] text-[#ffffff] hover:bg-[#ef4444]/80"
               : "bg-white text-[#ef4444] hover:bg-[#ef4444]/80 hover:text-[#ffffff] border border-[#facc15]/30"
           }`}
         >  
-          <FaHeart size={12} />
+          {isFavorite ? (
+            <FaHeart size={12} className="text-red-500" />
+          ) : (
+            <FaRegHeart size={12} className="text-gray-500 hover:text-red-500" />
+          )}
         </button>
       )}
   
@@ -47,7 +67,7 @@ export const GameCard = ({
       {/* Hover Play Button */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-300">
         <div className="bg-[#facc15] text-[#1a1f24] px-4 py-2 rounded-lg font-semibold text-sm shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-          Play Now
+          {t('playNow')}
         </div>
       </div>
     </div>

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { IoClose, IoDownload } from 'react-icons/io5';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const InstallPrompt = () => {
+  const { t } = useLanguage();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -82,10 +84,18 @@ const InstallPrompt = () => {
       // Show install prompt after a delay on mobile (even without beforeinstallprompt)
       const timer = setTimeout(() => {
         const wasDismissed = localStorage.getItem('installPromptDismissed');
+        const dismissedTime = localStorage.getItem('installPromptDismissedTime');
         const isCurrentlyInstalled = checkIfInstalled(); // Check again after delay
         
-        if (!wasDismissed && !isCurrentlyInstalled) {
+        // Allow showing prompt again after 24 hours
+        const shouldShowAgain = dismissedTime && (Date.now() - parseInt(dismissedTime)) > 24 * 60 * 60 * 1000;
+        
+        if ((!wasDismissed || shouldShowAgain) && !isCurrentlyInstalled) {
           setShowInstallPrompt(true);
+          if (shouldShowAgain) {
+            localStorage.removeItem('installPromptDismissed');
+            localStorage.removeItem('installPromptDismissedTime');
+          }
         }
       }, 3000); // Show after 3 seconds on mobile
 
@@ -109,34 +119,69 @@ const InstallPrompt = () => {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-      // Simple guide for manual installation
+      // Enhanced guide for manual installation
       if (isIOS) {
-        alert('📱 Safari: Tap Share (⇧) → Add to Home Screen');
+        // Create a custom modal instead of alert
+        const modalHtml = `
+          <div style="text-align: left; font-size: 14px; line-height: 1.5;">
+            <p style="margin-bottom: 10px;"><strong>📱 To install Play9 on iOS:</strong></p>
+            <ol style="margin: 0; padding-left: 20px;">
+              <li>Tap the <strong>Share</strong> button (⇧) at the bottom of Safari</li>
+              <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+              <li>Tap <strong>"Add"</strong> to confirm</li>
+            </ol>
+            <p style="margin-top: 10px; font-style: italic;">The app will appear on your home screen!</p>
+          </div>
+        `;
+        
+        // For now, use alert but with better text
+        alert(`📱 ${t('iosInstallStep1')} → ${t('iosInstallStep2')} → ${t('iosInstallStep3')}`);
       } else {
-        alert('📱 Look for install icon (⊕) in your browser address bar, or check browser menu for "Install Play9"');
+        // Enhanced instructions for Android/other browsers
+        const instructions = `
+🔧 ${t('androidInstallTitle')}
+
+1. ${t('androidInstallStep1')}
+2. ${t('androidInstallStep2')}
+3. ${t('androidInstallStep3')}
+
+${t('androidInstallFooter')}
+        `.trim();
+        
+        alert(instructions);
       }
       return;
     }
 
-    // Show the install prompt
-    deferredPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      localStorage.setItem('pwaInstalled', 'true');
-      localStorage.removeItem('installPromptDismissed');
+    try {
+      // Show the install prompt
+      deferredPrompt.prompt();
+      
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+        localStorage.setItem('pwaInstalled', 'true');
+        localStorage.removeItem('installPromptDismissed');
+        localStorage.removeItem('installPromptDismissedTime');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      
+      setDeferredPrompt(null);
+      setShowInstallPrompt(false);
+    } catch (error) {
+      console.error('Error during install prompt:', error);
+      setShowInstallPrompt(false);
     }
-    
-    setDeferredPrompt(null);
-    setShowInstallPrompt(false);
   };
 
   const handleDismiss = () => {
     setShowInstallPrompt(false);
-    // Remember user dismissed (you can use localStorage if needed)
+    // Remember user dismissed with timestamp
     localStorage.setItem('installPromptDismissed', 'true');
+    localStorage.setItem('installPromptDismissedTime', Date.now().toString());
     console.log('User dismissed install prompt');
   };
 
@@ -152,7 +197,7 @@ const InstallPrompt = () => {
           <div className="flex items-center gap-2 sm:gap-3 flex-1">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 p-1">
               <img 
-                src="/favicon.ico" 
+                src="/fav.png" 
                 alt="Play9 Logo" 
                 className="w-full h-full object-contain"
                 draggable="false"
@@ -160,8 +205,8 @@ const InstallPrompt = () => {
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-white font-semibold text-base sm:text-lg leading-tight">Install Play9</h3>
-              <p className="text-gray-300 text-xs sm:text-sm leading-tight">Quick access from home screen</p>
+              <h3 className="text-white font-semibold text-base sm:text-lg leading-tight">{t('installApp')}</h3>
+              <p className="text-gray-300 text-xs sm:text-sm leading-tight">{t('quickAccess')}</p>
             </div>
           </div>
           <button
@@ -177,12 +222,12 @@ const InstallPrompt = () => {
           className="w-full bg-gradient-to-r from-[#facc15] to-yellow-500 hover:from-yellow-500 hover:to-[#facc15] text-[#1b1f23] font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg text-sm sm:text-base"
         >
           <IoDownload className="text-lg" />
-          <span>Install Now</span>
+          <span>{t('installNow')}</span>
         </button>
 
         <div className="flex items-center justify-center gap-4 mt-3 text-xs text-gray-400">
-          <span>✓ Fast & Secure</span>
-          <span>✓ Works Offline</span>
+          <span>✓ {t('fastSecure')}</span>
+          <span>✓ {t('worksOffline')}</span>
         </div>
       </div>
     </div>

@@ -5,9 +5,11 @@ import { FaHeadset, FaMoneyBillWave, FaTrophy } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 import { useLocation } from 'react-router-dom';
 import { useWelcome } from '../../UserContext/WelcomeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 const WelcomeMessage = () => {
   const { showWelcome, setShowWelcome } = useWelcome();
   const {logo} = useMedia();
+  const { t } = useLanguage();
   
   const pathname = useLocation();
   useEffect(() => {
@@ -30,15 +32,15 @@ const WelcomeMessage = () => {
   const features = [
     {
       icon: <FaTrophy className="text-xl sm:text-2xl text-yellow-500" />,
-      text: "📊 প্রতিটি গেমে ট্রান্সপারেন্ট অডস ও হিস্ট্রি দেখা যায়"
+      text: t('transparentOdds')
     },
     {
       icon: <FaMoneyBillWave className="text-xl sm:text-2xl text-green-500" />,
-      text: "$ দ্রুত এবং ঝামেলামুক্ত পেআউট গ্যারান্টি"
+      text: t('fastPayout')
     },
     {
       icon: <FaHeadset className="text-xl sm:text-2xl text-blue-500" />,
-      text: "২৪/৭ ফোন কলের মাধ্যমে কাস্টমার সাপোর্ট"
+      text: t('support247')
     }
   ];
 
@@ -80,19 +82,18 @@ const WelcomeMessage = () => {
             <div className="text-center mb-4 sm:mb-6">
               <div className='flex items-center justify-center gap-2'>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-500 mb-1 sm:mb-2">
-                Welcome to 
+                {t('welcomeTo')} 
               </h1>
               <img src={`${import.meta.env.VITE_BASE_API_URL}/${logo?.url}`} alt="logo" className=" bg-cover h-8 mt-[5px]" />
               </div>
              
               <p className="text-gray-300 text-base sm:text-lg md:text-xl">
-                যেখানে ভাগ্য বদলায় এক ক্লিকে
+                {t('slogan')}
               </p>
             </div>
             <div className="bg-gray-800/50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
               <p className="text-gray-200 text-sm sm:text-base text-center">
-                আপনার {pathname.pathname === "/login" ? "রেজিস্ট্রেশন " : "লগইন "}
-                 সম্পূর্ণ হয়েছে এবং গেমের রোমাঞ্চ উপভোগ করতে প্রস্তুত হোন! স্পোর্টস বেটিং এর বিশ্ব এখন আপনার হাতের নাগালে। আপনার বেটের জন্য শুভকামনা!
+                {pathname.pathname === "/login" ? t('registrationComplete') : t('loginComplete')}
               </p>
             </div>
             <div className="space-y-2 sm:space-y-3 md:space-y-4">
@@ -111,7 +112,7 @@ const WelcomeMessage = () => {
               className="mt-4 sm:mt-6 w-full bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg hover:bg-yellow-400 transition-colors duration-300 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
               style={{ touchAction: 'manipulation' }}
             >
-              Let's Play!
+              {t('letsPlay')}
             </button>
           </motion.div>
         </motion.div>

@@ -5,6 +5,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import "./App.css";
 import InstallPrompt from './components/InstallPrompt';
 import WelcomeMessage from './components/WelcomeMessage/WelcomeMessage';
+import { LanguageProvider } from './contexts/LanguageContext';
 import usePendingRequests from './Hook/usePendingRequests';
 import { fetchSystemSettings } from "./redux/slices/systemSettingsSlice";
 import { WelcomeProvider } from './UserContext/WelcomeContext';
@@ -24,13 +25,15 @@ function App() {
   }, [reloadUserData, dispatch, user?.role, pathname]);
 
   return (
-    <WelcomeProvider>
-      <div className="bg-gray-900">
-        <WelcomeMessage />
-        <Outlet />
-        <InstallPrompt />
-      </div>
-    </WelcomeProvider>
+    <LanguageProvider>
+      <WelcomeProvider>
+        <div className="bg-gray-900">
+          <WelcomeMessage />
+          <Outlet />
+          <InstallPrompt />
+        </div>
+      </WelcomeProvider>
+    </LanguageProvider>
   );
 }
 

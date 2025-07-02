@@ -10,12 +10,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import menuItems from "../components/MenuItems";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch(); 
   const navigate = useNavigate();
   const { addToast } = useToasts();
   const { user } = useSelector((state) => state.auth);
+  const { t } = useLanguage();
   const [timezone, setTimezone] = useState('');
   const [currentTime, setCurrentTime] = useState('');
 
@@ -71,7 +73,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm border-b border-gray-200/50">
-        <h1 className="text-xl font-semibold text-gray-800 pl-2">Menu</h1>
+        <h1 className="text-xl font-semibold text-gray-800 pl-2">{t('menu')}</h1>
         <button
           onClick={toggleSidebar}
           className="p-2 hover:bg-gray-100 rounded-full transition-all duration-200 active:scale-95"
@@ -84,10 +86,10 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 scrollbar-hide">
         {/* Main Menu Items */}
         <ul className="bg-white/80 backdrop-blur-sm mx-4 rounded-2xl shadow-sm">
-          {menuItems.map(({ id, label, Icon, link, count }, index) => {
+          {menuItems.map(({ id, labelKey, Icon, link, count }, index) => {
             // Define colors for specific menu items
-            const isDeposit = label === "Deposite Balance";
-            const isWithdraw = label === "Withdraw Balance";
+            const isDeposit = labelKey === "depositeBalance";
+            const isWithdraw = labelKey === "withdrawBalance";
             
             const getItemClasses = () => {
               if (isDeposit) {
@@ -119,7 +121,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
                 >
                   <div className="flex items-center gap-3">
                     <Icon className={getIconClasses()} />
-                    <span className="text-base font-medium">{label}</span>
+                    <span className="text-base font-medium">{t(labelKey)}</span>
                     {count !== undefined && (
                       <span className="ml-2 px-2.5 py-0.5 text-sm font-semibold bg-yellow-500/90 text-gray-900 rounded-md">
                         {count}
@@ -142,7 +144,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
           >
             <div className="flex items-center gap-3">
               <FaGear className="text-xl text-gray-600" />
-              <span className="text-base font-medium">Setting</span>
+              <span className="text-base font-medium">{t('setting')}</span>
             </div>
             <IoIosArrowForward className="text-xl text-gray-400" />
           </Link>
@@ -155,7 +157,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
             >
               <div className="flex items-center gap-3">
                 <MdDashboard className="text-xl text-gray-600" />
-                <span className="text-base font-medium">Dashboard</span>
+                <span className="text-base font-medium">{t('dashboard')}</span>
               </div>
               <IoIosArrowForward className="text-xl text-gray-400" />
             </Link>
@@ -167,7 +169,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
           >
             <div className="flex items-center gap-3">
               <RiLogoutCircleLine className="text-xl text-gray-600" />
-              <span className="text-base font-medium">Logout</span>
+              <span className="text-base font-medium">{t('logout')}</span>
             </div>
             <IoIosArrowForward className="text-xl text-gray-400" />
           </button>
@@ -179,7 +181,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
         <div className="flex flex-col items-center gap-1 text-gray-600">
           <div className="flex items-center gap-2">
             <BsGlobe2 className="text-lg" />
-            <span className="text-sm font-medium">Time Zone: {timezone}</span>
+            <span className="text-sm font-medium">{t('timeZone')}: {timezone}</span>
           </div>
           <div className="text-sm font-medium">
             {currentTime}

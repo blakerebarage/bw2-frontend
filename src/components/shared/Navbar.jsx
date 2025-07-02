@@ -1,6 +1,7 @@
 import { useCurrency } from "@/Hook/useCurrency";
 import usePendingRequests from "@/Hook/usePendingRequests";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import useMedia from "@/Hook/useMedia";
 import { useEffect, useState } from "react";
 import { FiPlusCircle } from "react-icons/fi";
@@ -12,7 +13,7 @@ import { Link } from "react-router-dom";
 import Sidebar from "../Sidebar";
 
 const Navbar = () => {
-   
+  const { t } = useLanguage();
   const { token, user } = useSelector((state) => state.auth);
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -80,7 +81,7 @@ const Navbar = () => {
           <Link to="/balance-deposite" className="transition group relative">
              <button className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl border border-green-400/30">
              <PiHandDepositFill className="text-lg text-white"/>
-               <span className="text-sm font-medium">Deposit</span>
+               <span className="text-sm font-medium">{t('deposit')}</span>
              </button>
              
           </Link>
@@ -145,13 +146,13 @@ const Navbar = () => {
               >
                 <button className="bg-yellow-500 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-yellow-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
                   <FiPlusCircle className="text-xl text-white"/>
-                  SignUp
+                  {t('signUp')}
                 </button>
               </Link>
               <Link to="/login">
                 <button className="bg-red-500 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-red-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
                   <IoMdLogIn className="text-xl text-white"/>
-                  Login
+                  {t('login')}
                 </button>
               </Link>
             </div>

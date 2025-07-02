@@ -8,12 +8,14 @@ import { useToasts } from "react-toast-notifications";
 import Loading from "@/components/shared/Loading";
 import { SkeletonCard } from "@/components/shared/SkeletonCard";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { CategoryCards } from "./CategoryCards";
 import { GameCard } from "./GameCard";
 import { MostPlayedGames } from "./MostPlayedGames";
 import { SearchBar } from "./SearchBar";
 
 export function SelectCategory() {
+  const { t } = useLanguage();
   
   const [displayGames, setDisplayGames] = useState([]);
   const [mostPlayedGames, setMostPlayedGames] = useState([]);
@@ -24,14 +26,13 @@ export function SelectCategory() {
   const [loading, setLoading] = useState(true);
   const [gameLoading, setGameLoading] = useState(false);
   const [favoriteGames, setFavoriteGames] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState({ value: "favourite", title: "Favourite Games" });
+  const [selectedCategory, setSelectedCategory] = useState({ value: "favourite", title: t('favourite') });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalGames, setTotalGames] = useState(0);
   const [popularPage, setPopularPage] = useState(1);
   const [popularTotalPages, setPopularTotalPages] = useState(1);
   const [categoryReloadKey, setCategoryReloadKey] = useState(0);
 
- 
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
   const navigate = useNavigate();
@@ -48,8 +49,6 @@ export function SelectCategory() {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
- 
 
   // Fetch all games data (consolidated with search functionality)
   useEffect(() => {
@@ -179,7 +178,22 @@ export function SelectCategory() {
     fetchMostPlayedGames();
   }, [popularPage]);
 
-
+  // Function to get translated category title
+  const getCategoryTitle = (categoryValue) => {
+    const categoryTitleMap = {
+      favourite: t('favouriteGames'),
+      sports: t('sportsGames'),
+      live: t('liveGames'),
+      table: t('tableGames'),
+      slot: t('slotGames'),
+      crash: t('crashGames'),
+      fishing: t('fishingGames'),
+      lottery: t('lotteryGames'),
+      arcade: t('arcadeGames'),
+      allgames: t('allGames'),
+    };
+    return categoryTitleMap[categoryValue] || `${categoryValue} Games`;
+  };
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
@@ -319,7 +333,7 @@ export function SelectCategory() {
           {user?.username && favoriteGames?.length > 0 && (
             <div className="flex justify-between items-center">
               <h3 className="text-2xl font-bold text-white drop-shadow">
-                Favourite Games
+                {t('favouriteGames')}
               </h3>
               <SearchBar
                 searchQuery={searchQuery}
@@ -376,7 +390,7 @@ export function SelectCategory() {
           { mostPlayedGames.length > 0 && (
             <div className="mt-8">
               <h3 className="text-2xl font-bold text-white drop-shadow mb-4">
-                Popular Games
+                {t('popularGames')}
               </h3>
               <MostPlayedGames
                 games={mostPlayedGames}
@@ -395,7 +409,7 @@ export function SelectCategory() {
         <div className="space-y-4 px-3 pb-8">
           <div className="flex justify-between items-center">
             <h3 className="text-2xl font-bold text-white drop-shadow">
-              {selectedCategory.title} Games
+              {getCategoryTitle(selectedCategory.value)}
             </h3>
             <SearchBar
               searchQuery={searchQuery}
@@ -444,13 +458,13 @@ export function SelectCategory() {
                           : 'bg-[#1a1f24] text-gray-300 hover:bg-[#22282e] border border-[#facc15]/20'
                       }`}
                     >
-                      Previous
+                      {t('previous')}
                     </button>
                     
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-300">Page</span>
+                      <span className="text-gray-300">{t('page')}</span>
                       <span className="font-semibold text-[#facc15]">{currentPage}</span>
-                      <span className="text-gray-300">of</span>
+                      <span className="text-gray-300">{language.of}</span>
                       <span className="font-semibold text-[#facc15]">
                         {Math.ceil(totalGames / 45)}
                       </span>
@@ -465,7 +479,7 @@ export function SelectCategory() {
                           : 'bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800]'
                       }`}
                     >
-                      Next
+                      {language.next}
                     </button>
                   </div>
                 )
@@ -485,10 +499,10 @@ export function SelectCategory() {
                       {loading ? (
                         <div className="flex items-center gap-2">
                           <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                          Loading...
+                          {language.loading}
                         </div>
                       ) : (
-                        'Load More'
+                        language.loadMore
                       )}
                     </button>
                   </div>
@@ -497,9 +511,9 @@ export function SelectCategory() {
             </>
           ) : (
             <div className="text-center text-gray-300 py-8">
-              <p className="text-lg">No games found</p>
+              <p className="text-lg">{language.noGamesFound}</p>
               <p className="text-sm mt-2 text-gray-400">
-                Try a different search or category
+                {language.tryDifferentSearchOrCategory}
               </p>
             </div>
           )}

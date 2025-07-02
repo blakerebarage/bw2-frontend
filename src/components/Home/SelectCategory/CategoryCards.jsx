@@ -5,23 +5,24 @@ import { IoDiamondOutline } from "react-icons/io5";
 import { MdOutlineSportsCricket } from "react-icons/md";
 import { PiJoystick } from 'react-icons/pi';
 import { RiGalleryView2 } from "react-icons/ri";
-
-const categories = [
-  
-  { title: "Favourite", image: <FaHeart size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "favourite" },
-  { title: "Sports", image: <MdOutlineSportsCricket size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "sports" },
-  { title: "Live", image: <FaUserTie size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "live" },
-  { title: "Table", image: <GiCardQueenSpades size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "table" },
-  { title: "Slot", image: <IoDiamondOutline size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "slot" },
-  { title: "Crash", image: <GiGroundbreaker size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "crash" },
-  { title: "Fishing", image: <GiFishing  size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "fishing" },
-  { title: "Lottery", image: <GiLuckyFisherman size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "Lottery" },
-   {title:'Arcade',image:<PiJoystick size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />,value:'arcade'},
-    { title: "All", image: <RiGalleryView2 size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "allgames" },
-
-];
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
+  const { t } = useLanguage();
+  
+  const categories = [
+    { title: t('favourite'), titleKey: 'favourite', image: <FaHeart size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "favourite" },
+    { title: t('sports'), titleKey: 'sports', image: <MdOutlineSportsCricket size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "sports" },
+    { title: t('live'), titleKey: 'live', image: <FaUserTie size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "live" },
+    { title: t('table'), titleKey: 'table', image: <GiCardQueenSpades size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "table" },
+    { title: t('slot'), titleKey: 'slot', image: <IoDiamondOutline size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "slot" },
+    { title: t('crash'), titleKey: 'crash', image: <GiGroundbreaker size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "crash" },
+    { title: t('fishing'), titleKey: 'fishing', image: <GiFishing  size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "fishing" },
+    { title: t('lottery'), titleKey: 'lottery', image: <GiLuckyFisherman size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "Lottery" },
+    { title: t('arcade'), titleKey: 'arcade', image: <PiJoystick size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: 'arcade' },
+    { title: t('all'), titleKey: 'all', image: <RiGalleryView2 size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "allgames" },
+  ];
+
   const [currentPage, setCurrentPage] = useState(0);
   const [highlightIndex, setHighlightIndex] = useState(0);
   const categoryContainerRef = useRef(null);
@@ -79,6 +80,29 @@ export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
     setCurrentPage(page);
   };
 
+  const scrollToCategory = (index) => {
+    const container = categoryContainerRef.current;
+    const card = cardRefs.current[index];
+    
+    if (container && card) {
+      const containerRect = container.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      
+      const targetScrollLeft = card.offsetLeft - (container.clientWidth / 2) + (card.clientWidth / 2);
+      
+      container.scrollTo({
+        left: targetScrollLeft,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleCategoryClick = (category, index) => {
+    onCategorySelect(category);
+    updateHighlightPosition(index);
+    scrollToCategory(index);
+  };
+
   return (
     <div className="relative">
       <div
@@ -93,7 +117,7 @@ export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
         {categories.map((category, index) => (
           <button
             key={category.value}
-            onClick={() => onCategorySelect(category)}
+            onClick={() => handleCategoryClick(category, index)}
             onMouseEnter={() => handleHover(index)}
             ref={el => cardRefs.current[index] = el}
             className={`relative w-20 h-20 flex flex-col items-center justify-center p-2 rounded-[8px] group z-10 transition-all active:scale-95`}

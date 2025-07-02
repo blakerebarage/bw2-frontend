@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
@@ -8,9 +9,9 @@ import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
 // Payment Method Selector Component
-const PaymentMethodSelector = ({ bankTypes, paymentMethods, selectedMethod, onSelect }) => (
+const PaymentMethodSelector = ({ bankTypes, paymentMethods, selectedMethod, onSelect, t }) => (
   <div className="space-y-3">
-    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Select Payment Method</h3>
+    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">{t('selectPaymentMethod')}</h3>
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {bankTypes.map((bankType) => {
         const methodInfo = paymentMethods.find(m => m.name === bankType);
@@ -155,6 +156,7 @@ const BankCard = ({ bankDetails, type }) => {
 };
 
 export default function Withdraw() {
+  const { t } = useLanguage();
   const { user } = useSelector((state) => state.auth);
   const { formatCurrency } = useCurrency();
   const axiosSecure = useAxiosSecure();
@@ -332,8 +334,8 @@ export default function Withdraw() {
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#facc15] flex items-center justify-center">
             <Send className="w-8 h-8 text-[#1a1f24]" />
           </div>
-          <h1 className="text-2xl font-bold text-[#facc15] mb-2">Withdraw</h1>
-          <p className="text-gray-300">Request a withdrawal from your account</p>
+          <h1 className="text-2xl font-bold text-[#facc15] mb-2">{t('withdraw')}</h1>
+          <p className="text-gray-300">{t('requestWithdrawal')}</p>
         </div>
 
         {/* Wallet Balance Card */}
@@ -343,7 +345,7 @@ export default function Withdraw() {
               <Wallet className="w-6 h-6 text-[#1a1f24]" />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Available Balance</p>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{t('availableBalance')}</p>
               <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(user?.balance)}</p>
             </div>
             <Link 
@@ -363,6 +365,7 @@ export default function Withdraw() {
             paymentMethods={paymentMethods}
             selectedMethod={bank}
             onSelect={setBank}
+            t={t}
           />
 
           {/* Selected Method Indicator */}

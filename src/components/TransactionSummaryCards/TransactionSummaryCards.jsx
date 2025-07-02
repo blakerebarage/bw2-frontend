@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import { useEffect, useState } from "react";
@@ -5,6 +6,7 @@ import { FaArrowDown, FaArrowUp, FaWallet } from "react-icons/fa";
 import { useSelector } from "react-redux";
 
 const TransactionSummaryCards = ({ username = null }) => {
+  const { t } = useLanguage();
   const { user } = useSelector((state) => state.auth);
   const { formatCurrency } = useCurrency();
   const axiosSecure = useAxiosSecure();
@@ -94,7 +96,7 @@ const TransactionSummaryCards = ({ username = null }) => {
             <FaArrowUp className="text-green-600" />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500 uppercase">Deposits (30d)</p>
+            <p className="text-xs font-medium text-gray-500 uppercase">{t('totalDeposit30Days')}</p>
             <p className="text-lg font-semibold text-gray-800">
               {formatCurrency(stats.totalDeposit)}
             </p>
@@ -109,7 +111,7 @@ const TransactionSummaryCards = ({ username = null }) => {
             <FaArrowDown className="text-red-600" />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500 uppercase">Withdrawals (30d)</p>
+            <p className="text-xs font-medium text-gray-500 uppercase">{t('totalWithdraw30Days')}</p>
             <p className="text-lg font-semibold text-gray-800">
               {formatCurrency(stats.totalWithdraw)}
             </p>
@@ -124,7 +126,7 @@ const TransactionSummaryCards = ({ username = null }) => {
             <FaWallet className="text-blue-600" />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500 uppercase">Net Balance (30d)</p>
+            <p className="text-xs font-medium text-gray-500 uppercase">{t('netBalance')} (30d)</p>
             <p className={`text-lg font-semibold ${stats.netBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatCurrency(stats.netBalance)}
             </p>

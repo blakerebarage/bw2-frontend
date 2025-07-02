@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useEffect, useState } from 'react';
 import { FaFacebookMessenger, FaLink, FaTelegram, FaWhatsapp } from "react-icons/fa";
@@ -16,6 +17,7 @@ const iconForProvider = (providerName) => {
 };
 
 const DepositByChat = () => {
+  const { t } = useLanguage();
   const axiosSecure = useAxiosSecure();
   const [depositWithdrawNumbers, setDepositWithdrawNumbers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,17 +43,17 @@ const DepositByChat = () => {
     <div className="min-h-[50vh] sm:min-h-[60vh] mt-8 sm:mt-12 flex flex-col items-center justify-center py-6 sm:py-8 md:py-12 px-3 sm:px-4 md:px-6 bg-[#1a1f24]">
       <div className="text-center mb-6 sm:mb-8 w-full max-w-4xl">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 text-[#facc15] px-2">
-          Deposit by Chat Support
+          {t('depositByChatSupport')}
         </h2>
         <p className="text-sm sm:text-base text-gray-300 max-w-sm sm:max-w-md md:max-w-xl mx-auto leading-relaxed px-2">
-          Get instant assistance with your deposits through our dedicated support channels
+          {t('getInstantAssistanceDeposits')}
         </p>
       </div>
 
       {loading ? (
         <div className="flex items-center gap-2 sm:gap-3 text-[#facc15] px-4">
           <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-[#facc15] border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm sm:text-base">Loading support contacts...</span>
+          <span className="text-sm sm:text-base">{t('loading')}</span>
         </div>
       ) : depositWithdrawNumbers.length === 0 ? (
         <div className="text-gray-300 text-center bg-[#1a1f24] p-4 sm:p-6 md:p-8 rounded-xl border border-[#facc15]/20 w-full max-w-sm sm:max-w-md md:max-w-lg mx-2">
@@ -70,9 +72,9 @@ const DepositByChat = () => {
               </div>
               <div className="flex-grow min-w-0">
                 <div className="font-bold text-base sm:text-lg md:text-xl text-[#facc15] mb-1 sm:mb-2 flex items-center gap-2 flex-wrap">
-                  <span className="truncate">{item.method}</span>
+                  <span className="truncate">{item.method === 'Whatsapp' ? t('whatsapp') : item.method === 'Messenger' ? t('messenger') : item.method === 'Signal' ? t('signal') : item.method}</span>
                   <span className="text-xs px-2 py-1 rounded-full bg-[#facc15]/20 text-[#facc15] whitespace-nowrap">
-                    Account
+                    {t('account')}
                   </span>
                 </div>
                 <a
@@ -80,7 +82,7 @@ const DepositByChat = () => {
                   className="flex items-start sm:items-center gap-2 text-gray-300 hover:text-[#facc15] transition-colors group/link"
                 >
                   <span className="font-semibold text-gray-400 text-xs sm:text-sm whitespace-nowrap">
-                    Number:
+                    {t('number')}:
                   </span>
                   <span className="group-hover/link:underline text-xs sm:text-sm break-all">
                     {item.number}
@@ -94,10 +96,10 @@ const DepositByChat = () => {
 
       <div className="mt-8 sm:mt-10 md:mt-12 text-center text-gray-300 text-xs sm:text-sm w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto bg-[#1a1f24] p-4 sm:p-5 md:p-6 rounded-lg sm:rounded-xl border border-[#facc15]/20">
         <p className="mb-2 leading-relaxed">
-          For instant deposit help, contact our support team via your preferred method above.
+          {t('forInstantDepositHelp')}
         </p>
         <p className="text-gray-400 leading-relaxed">
-          Our agents are available 24/7 to assist you!
+          {t('ourAgentsAvailable')}
         </p>
       </div>
     </div>

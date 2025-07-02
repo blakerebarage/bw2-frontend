@@ -24,9 +24,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 
 import logo from "../../../../public/logoBlack.png";
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { useWelcome } from '../../../UserContext/WelcomeContext';
 
 const Login = () => {
+  const { t } = useLanguage();
   const [loginUser, { isLoading }] = useLoginUserMutation();
   const [getUser] = useLazyGetAuthenticatedUserQuery();
   const dispatch = useDispatch();
@@ -134,9 +136,9 @@ const Login = () => {
           </div>
           <div className="space-y-2">
             <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Welcome Back
+              {t('welcomeBack')}
             </h1>
-            <p className="text-gray-400 text-lg">Sign in to your account to continue</p>
+            <p className="text-gray-400 text-lg">{t('signInToContinue')}</p>
             <div className="w-16 h-1 bg-gradient-to-r from-transparent via-[#facc15] to-transparent mx-auto rounded-full"></div>
           </div>
         </div>
@@ -147,17 +149,17 @@ const Login = () => {
             {/* Phone/Username Input */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Phone/Username
+                {t('phoneUsername')}
               </label>
               <div className="relative group">
                 <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-lg" />
                 <Input
                   type="text"
                   {...register("phoneOrUserName", {
-                    required: "Phone/Username is required",
+                    required: `${t('phoneUsername')} is required`,
                     minLength: { value: 4, message: "Minimum 4 characters"}
                   })}
-                  placeholder="Enter your phone or username"
+                  placeholder={`Enter your ${t('phoneUsername').toLowerCase()}`}
                   className="pl-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   aria-invalid={errors.phoneOrUserName ? "true" : "false"}
                 />
@@ -173,7 +175,7 @@ const Login = () => {
             {/* Password Input */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Password
+                {t('password')}
               </label>
               <div className="relative group">
                 <IoIosUnlock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-xl" />
@@ -182,11 +184,11 @@ const Login = () => {
                   {...register("password", {
                     required: {
                       value: true,
-                      message: "Password is required"
+                      message: `${t('password')} is required`
                     },
                     minLength: { value: 3, message: "Minimum 3 characters" }
                   })}
-                  placeholder="Enter your password"
+                  placeholder={`Enter your ${t('password').toLowerCase()}`}
                   className="pl-12 pr-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   aria-invalid={errors.password ? "true" : "false"}
                 />
@@ -210,17 +212,17 @@ const Login = () => {
             {/* Verification Code Input */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Verification Code
+                {t('verificationCode')}
               </label>
               <div className="relative group">
                 <FaShield className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-lg" />
                 <Input
                   type="text"
                   {...register("inputCode", {
-                    required: "Validation code is required",
+                    required: `${t('verificationCode')} is required`,
                     validate: value => value === verificationCode || "Invalid verification code"
                   })}
-                  placeholder="Enter verification code"
+                  placeholder={t('enterVerificationCode')}
                   className="pl-12 pr-24 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   aria-invalid={errors.inputCode ? "true" : "false"}
                 />
@@ -262,10 +264,10 @@ const Login = () => {
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <SpinLoader />
-                  <span>Signing in...</span>
+                  <span>{t('loading')}</span>
                 </div>
               ) : (
-                "Sign In"
+                t('signIn')
               )}
             </Button>
 
@@ -275,7 +277,7 @@ const Login = () => {
                 <div className="w-full border-t border-[#facc15]/20"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#1a1f24] text-gray-400">Don't have an account?</span>
+                <span className="px-2 bg-[#1a1f24] text-gray-400">{t('dontHaveAccount')}</span>
               </div>
             </div>
 
@@ -284,7 +286,7 @@ const Login = () => {
               to="/signup"
               className="w-full h-12 bg-transparent border-2 border-[#facc15] text-[#facc15] hover:bg-[#facc15] hover:text-[#1a1f24] font-semibold rounded-lg transition-all transform hover:scale-[1.02] flex items-center justify-center"
             >
-              Create New Account
+              {t('createAccount')}
             </Link>
           </form>
         </div>

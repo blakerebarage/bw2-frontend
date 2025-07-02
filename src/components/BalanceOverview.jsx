@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/Hook/useCurrency";
 import { useEffect, useState } from "react";
 import { FaExchangeAlt, FaWallet } from "react-icons/fa";
@@ -7,6 +8,7 @@ import PageHeader from "../../components/shared/PageHeader";
 import useAxiosSecure from "../../Hook/useAxiosSecure";
 
 const BalanceOverview = () => {
+  const { t } = useLanguage();
   const { formatCurrency } = useCurrency();
 
   const { user } = useSelector((state) => state.auth);
@@ -62,12 +64,12 @@ const BalanceOverview = () => {
 
   return (
     <div className="mt-16">
-      <PageHeader title="Balance Overview" />
+      <PageHeader title={t('balance')} />
       <div className="m-4 space-y-6">
         {/* Main Balance Card */}
         <div className="bg-gradient-to-r from-[#262c32] to-[#1a1f24] p-6 rounded-2xl shadow-lg">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-white">Your Balances</h1>
+            <h1 className="text-2xl font-bold text-white">{t('yourBalance')}</h1>
           </div>
           <div className="flex flex-row items-center gap-4">
             <div className="bg-yellow-500/20 backdrop-blur-sm py-2 px-4 rounded-xl">
@@ -89,7 +91,7 @@ const BalanceOverview = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Transaction Details</h2>
+              <h2 className="text-lg font-semibold text-white">{t('transactionHistory')}</h2>
               <span className="text-sm text-blue-100">
                 {stats.lastTransaction ? new Date(stats.lastTransaction.createdAt).toLocaleString() : 'No transactions'}
               </span>
@@ -103,7 +105,7 @@ const BalanceOverview = () => {
                 <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                   <FaExchangeAlt className="text-xl text-green-600" />
                 </div>
-                <p className="text-sm text-gray-500">Total Deposit</p>
+                <p className="text-sm text-gray-500">{t('totalDeposits')}</p>
                 <h3 className="text-xl font-semibold text-gray-800">
                   {stats.totalDeposit.toLocaleString()}
                 </h3>
@@ -114,7 +116,7 @@ const BalanceOverview = () => {
                 <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
                   <FaExchangeAlt className="text-xl text-red-600 transform rotate-180" />
                 </div>
-                <p className="text-sm text-gray-500">Total Withdraw</p>
+                <p className="text-sm text-gray-500">{t('totalWithdrawals')}</p>
                 <h3 className="text-xl font-semibold text-red-500">
                   {stats.totalWithdraw.toLocaleString()}
                 </h3>
@@ -125,7 +127,7 @@ const BalanceOverview = () => {
                 <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                   <FaWallet className="text-xl text-blue-600" />
                 </div>
-                <p className="text-sm text-gray-500">Your Balance</p>
+                <p className="text-sm text-gray-500">{t('yourBalance')}</p>
                 <h3 className="text-xl font-semibold text-gray-800">
                   {user?.balance?.toLocaleString() || '0.00'}
                 </h3>

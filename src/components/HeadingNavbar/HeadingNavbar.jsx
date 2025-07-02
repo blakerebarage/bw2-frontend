@@ -5,7 +5,9 @@ import { IoNotifications } from "react-icons/io5";
 import { PiHandDepositFill } from "react-icons/pi";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLanguage } from "../../contexts/LanguageContext";
 import { logout } from "../../redux/slices/authSlice";
+import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 import MenuItem from "./MenuItem";
 
 const HeadingNavbar = () => {
@@ -13,6 +15,7 @@ const HeadingNavbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(location.pathname);
   const [openSubmenu, setOpenSubmenu] = useState(null); // Track which submenu is open
@@ -290,6 +293,9 @@ const HeadingNavbar = () => {
         </div>
         {/* User Info */}
         <div className="flex items-center gap-2">
+          {/* Language Switcher */}
+          <LanguageSwitcher variant="navbar" className="mr-2" />
+          
           {/* Withdraw Request Icon */}
           {userData?.role && ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"].includes(userData.role) && (
             <div className="relative">
@@ -319,7 +325,7 @@ const HeadingNavbar = () => {
 
           <span className="text-white text-base md:text-lg font-medium flex items-center gap-2">
             {user?.username}
-            <span className="text-yellow-400 font-normal ml-2">Balance:</span>
+            <span className="text-yellow-400 font-normal ml-2">{t('balance')}:</span>
             <span className="text-yellow-300 font-bold ml-1 flex items-center gap-1">
               {user?.balance?.toFixed(2).toLocaleString() || "0.00"}
               <span className="text-lg">৳</span>

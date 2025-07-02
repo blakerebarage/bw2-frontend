@@ -25,9 +25,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import logo from "../../../../public/logoBlack.png";
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { useWelcome } from '../../../UserContext/WelcomeContext';
 
 const Register = () => {
+  const { t } = useLanguage();
   const [addUser] = useAddUserMutation();
   const [getUser] = useLazyGetAuthenticatedUserQuery();
   const dispatch = useDispatch();
@@ -188,9 +190,9 @@ const Register = () => {
           </div>
           <div className="space-y-2">
             <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Create Account
+              {t('createAccount')}
             </h1>
-            <p className="text-gray-400 text-lg">Join us and start your betting journey</p>
+            <p className="text-gray-400 text-lg">{t('joinBettingJourney')}</p>
             <div className="w-16 h-1 bg-gradient-to-r from-transparent via-[#facc15] to-transparent mx-auto rounded-full"></div>
           </div>
         </div>
@@ -201,16 +203,16 @@ const Register = () => {
             {/* Phone Input */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Phone Number <span className="text-red-400">*</span>
+                {t('phoneNumber')} <span className="text-red-400">*</span>
               </label>
               <div className="relative group">
                 <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-lg" />
                 <Input
                   type="text"
-                  placeholder="Enter your phone number"
+                  placeholder={t('enterPhoneNumber')}
                   className="pl-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   {...register("phone", {
-                    required: "Mobile number is required.",
+                    required: `${t('phoneNumber')} is required.`,
                     minLength: { value: 11, message: "Minimum 11 characters." },
                   })}
                   aria-invalid={errors.phone ? "true" : "false"}
@@ -227,13 +229,13 @@ const Register = () => {
             {/* Full Name Input */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Full Name
+                {t('fullName')}
               </label>
               <div className="relative group">
                 <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-lg" />
                 <Input
                   type="text"
-                  placeholder="Enter your full name (optional)"
+                  placeholder={`${t('fullName')} (optional)`}
                   className="pl-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   {...register("fullName")}
                 />
@@ -245,16 +247,16 @@ const Register = () => {
             {/* Password */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Password <span className="text-red-400">*</span>
+                {t('password')} <span className="text-red-400">*</span>
               </label>
               <div className="relative group">
                 <IoIosUnlock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-xl" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
+                  placeholder={`Create a strong ${t('password').toLowerCase()}`}
                   className="pl-12 pr-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   {...register("password", {
-                    required: "Password is required.",
+                    required: `${t('password')} is required.`,
                     minLength: { value: 3, message: "Minimum 3 characters." },
                   })}
                   aria-invalid={errors.password ? "true" : "false"}
@@ -280,16 +282,16 @@ const Register = () => {
             {/* Confirm Password */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Confirm Password <span className="text-red-400">*</span>
+                {t('confirmPassword')} <span className="text-red-400">*</span>
               </label>
               <div className="relative group">
                 <IoIosUnlock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-xl" />
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
+                  placeholder={t('confirmYourPassword')}
                   className="pl-12 pr-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   {...register("confirmPassword", {
-                    required: "Please confirm your password.",
+                    required: `Please confirm your ${t('password').toLowerCase()}.`,
                     validate: (value) =>
                       value === watch("password") || "Passwords do not match.",
                   })}
@@ -321,7 +323,7 @@ const Register = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-[#facc15]/10 border border-[#facc15]/30 text-[#facc15] hover:bg-[#facc15]/20 rounded-lg transition-all text-sm font-medium"
               >
                 {showReferralCode ? <FaMinus className="text-sm" /> : <FaPlus className="text-sm" />}
-                {showReferralCode ? "Hide Referral Code" : "Have a Referral Code?"}
+                {showReferralCode ? "Hide Referral Code" : t('haveReferralCode')}
               </button>
             </div>
 
@@ -349,16 +351,16 @@ const Register = () => {
             {/* Validation Code */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Verification Code <span className="text-red-400">*</span>
+                {t('verificationCode')} <span className="text-red-400">*</span>
               </label>
               <div className="relative group">
                 <FaShield className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-lg" />
                 <Input
                   type="text"
-                  placeholder="Enter verification code"
+                  placeholder={t('enterVerificationCode')}
                   className="pl-12 pr-24 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   {...register("validationCode", {
-                    required: "Validation code is required.",
+                    required: `${t('verificationCode')} is required.`,
                     validate: value => value === verificationCode || "Invalid verification code"
                   })}
                   aria-invalid={errors.validationCode ? "true" : "false"}
@@ -393,10 +395,10 @@ const Register = () => {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <SpinLoader />
-                  <span>Creating account...</span>
+                  <span>{t('loading')}</span>
                 </div>
               ) : (
-                "Create Account"
+                t('createAccount')
               )}
             </Button>
 
@@ -406,7 +408,7 @@ const Register = () => {
                 <div className="w-full border-t border-[#facc15]/20"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#1a1f24] text-gray-400">Already have an account?</span>
+                <span className="px-2 bg-[#1a1f24] text-gray-400">{t('alreadyHaveAccount')}</span>
               </div>
             </div>
 
@@ -415,7 +417,7 @@ const Register = () => {
               to="/login"
               className="w-full h-12 bg-transparent border-2 border-[#facc15] text-[#facc15] hover:bg-[#facc15] hover:text-[#1a1f24] font-semibold rounded-lg transition-all transform hover:scale-[1.02] flex items-center justify-center"
             >
-              Sign In to Your Account
+              {t('signIn')}
             </Link>
           </form>
         </div>

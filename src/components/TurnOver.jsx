@@ -1,8 +1,10 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useEffect, useState } from "react";
 import { FaChartLine } from "react-icons/fa";
 import useAxiosSecure from "../Hook/useAxiosSecure";
 
 const TurnOver = () => {
+  const { t } = useLanguage();
   const [turnover, setTurnover] = useState(null);
   const [loading, setLoading] = useState(true);
   const axiosSecure = useAxiosSecure();
@@ -34,14 +36,14 @@ const TurnOver = () => {
     return (
       <div className="mt-16">
         <div className="mb-6 px-6">
-          <h1 className="text-3xl font-bold text-[#facc15] mb-2">Turnover Analytics</h1>
-          <p className="text-gray-300">Track your turnover progress and status</p>
+          <h1 className="text-3xl font-bold text-[#facc15] mb-2">{t('turnoverAnalytics')}</h1>
+          <p className="text-gray-300">{t('trackTurnoverProgress')}</p>
         </div>
         <div className="bg-[#1a1f24] rounded-2xl shadow-xl overflow-hidden border border-[#facc15]/20">
           <div className="p-8">
             <div className="flex items-center justify-center">
               <div className="w-8 h-8 border-4 border-[#facc15] border-t-transparent rounded-full animate-spin"></div>
-              <span className="ml-3 text-[#facc15]">Loading turnover data...</span>
+              <span className="ml-3 text-[#facc15]">{t('loading')}</span>
             </div>
           </div>
         </div>
@@ -53,8 +55,8 @@ const TurnOver = () => {
     return (
       <div className="mt-16">
         <div className="mb-6 px-6">
-          <h1 className="text-3xl font-bold text-[#facc15] mb-2">Turnover Analytics</h1>
-          <p className="text-gray-300">Track your turnover progress and status</p>
+          <h1 className="text-3xl font-bold text-[#facc15] mb-2">{t('turnoverAnalytics')}</h1>
+          <p className="text-gray-300">{t('trackTurnoverProgress')}</p>
         </div>
         <div className="bg-[#1a1f24] rounded-2xl shadow-xl overflow-hidden border border-[#facc15]/20">
           <div className="p-6">
@@ -74,8 +76,8 @@ const TurnOver = () => {
   return (
     <div className="mt-16">
       <div className="mb-6 px-6">
-        <h1 className="text-3xl font-bold text-[#facc15] mb-2">Turnover Analytics</h1>
-        <p className="text-gray-300">Track your turnover progress and status</p>
+        <h1 className="text-3xl font-bold text-[#facc15] mb-2">{t('turnoverAnalytics')}</h1>
+        <p className="text-gray-300">{t('trackTurnoverProgress')}</p>
       </div>
 
       <div className="bg-[#1a1f24] rounded-2xl shadow-xl overflow-hidden border border-[#facc15]/20">
@@ -87,7 +89,7 @@ const TurnOver = () => {
                 <div className="w-10 h-10 rounded-full bg-[#facc15]/10 flex items-center justify-center">
                   <FaChartLine className="text-lg text-[#facc15]" />
                 </div>
-                <span className="text-gray-300">Turnover Limit</span>
+                <span className="text-gray-300">{t('turnoverLimit')}</span>
               </div>
               <span className="font-semibold text-[#facc15]">{turnover.turnoverLimit.toLocaleString()}</span>
             </div>
@@ -98,27 +100,27 @@ const TurnOver = () => {
                 <div className="w-10 h-10 rounded-full bg-[#facc15]/10 flex items-center justify-center">
                   <FaChartLine className="text-lg text-[#facc15]" />
                 </div>
-                <span className="text-gray-300">Completed Turnover</span>
+                <span className="text-gray-300">{t('completedTurnover')}</span>
               </div>
               <span className="font-semibold text-[#facc15]">{turnover.currentTurnover.toLocaleString()}</span>
             </div>
             
             {/* Status */}
             <div className="flex justify-between items-center p-4 bg-[#1a1f24] rounded-xl border border-[#facc15]/20 hover:border-[#facc15]/40 transition-all duration-300">
-              <span className="text-gray-300">Status</span>
+              <span className="text-gray-300">{t('status')}</span>
               <span className={`px-4 py-2 rounded-full text-sm font-medium ${
                 turnover.status === 'active' 
                   ? 'bg-[#facc15]/10 text-[#facc15] border border-[#facc15]/20' 
                   : 'bg-red-500/10 text-red-500 border border-red-500/20'
               }`}>
-                {turnover.status.charAt(0).toUpperCase() + turnover.status.slice(1)}
+                {turnover.status === 'active' ? t('active') : turnover.status.charAt(0).toUpperCase() + turnover.status.slice(1)}
               </span>
             </div>
 
             {/* Progress Bar */}
             <div className="p-4 bg-[#1a1f24] rounded-xl border border-[#facc15]/20 hover:border-[#facc15]/40 transition-all duration-300">
               <div className="flex justify-between mb-3">
-                <span className="text-gray-300">Progress</span>
+                <span className="text-gray-300">{t('progress')}</span>
                 <span className="text-[#facc15] font-medium">{calculateTurnoverPercentage().toFixed(1)}%</span>
               </div>
               <div className="w-full bg-[#1a1f24] rounded-full h-3 border border-[#facc15]/20">
