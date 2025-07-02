@@ -53,6 +53,14 @@ export const translations = {
     haveReferralCode: 'রেফারেল কোড আছে?',
     dontHaveAccount: 'অ্যাকাউন্ট নেই?',
     alreadyHaveAccount: 'ইতিমধ্যে অ্যাকাউন্ট আছে?',
+    loginSuccess: 'সফলভাবে লগইন হয়েছে',
+    sessionExpired: 'আপনার সেশনের মেয়াদ শেষ হয়েছে। অনুগ্রহ করে আবার লগইন করুন।',
+    invalidCredentials: 'বৈধ ফোন/ইউজারনেম এবং পাসওয়ার্ড প্রদান করুন',
+    isRequired: 'আবশ্যক',
+    minimumCharacters: 'কমপক্ষে {count} অক্ষর',
+    enterYour: 'আপনার',
+    showPassword: 'পাসওয়ার্ড দেখান',
+    hidePassword: 'পাসওয়ার্ড লুকান',
     
     // Navigation
     home: 'হোম',
@@ -89,8 +97,8 @@ export const translations = {
     balanceOverview: 'ব্যালেন্স ওভারভিউ',
     depositeBalance: 'ডিপোজিট ব্যালেন্স',
     withdrawBalance: 'উইথড্র ব্যালেন্স',
-    depositByChat: 'চ্যাটের মাধ্যমে ডিপোজিট',
-    withdrawByChat: 'চ্যাটের মাধ্যমে উইথড্র',
+    depositByChat: 'কথোপকথন এর মাধ্যমে ডিপোজিট',
+    withdrawByChat: 'কথোপকথন এর মাধ্যমে উইথড্র',
     turnOver: 'টার্নওভার',
     myProfile: 'প্রোফাইল',
     setting: 'সেটিং',
@@ -117,8 +125,8 @@ export const translations = {
     confirmDeposit: 'জমা নিশ্চিত করুন',
     
     // Chat Support
-    depositByChatSupport: 'চ্যাট সাপোর্টের মাধ্যমে ডিপোজিট',
-    withdrawByChatSupport: 'চ্যাট সাপোর্টের মাধ্যমে উইথড্র',
+    depositByChatSupport: 'কথোপকথন এর মাধ্যমে ডিপোজিট',
+    withdrawByChatSupport: 'কথোপকথন এর মাধ্যমে উইথড্র',
     getInstantAssistanceDeposits: 'আমাদের ডেডিকেটেড সাপোর্ট চ্যানেলের মাধ্যমে আপনার ডিপোজিট তাৎক্ষণিক সহায়তা পান',
     getInstantAssistanceWithdrawals: 'আমাদের ডেডিকেটেড সাপোর্ট চ্যানেলের মাধ্যমে আপনার উইথড্র তাৎক্ষণিক সহায়তা পান',
     whatsapp: 'হোয়াটসঅ্যাপ',
@@ -310,6 +318,14 @@ export const translations = {
     haveReferralCode: 'Have a Referral Code?',
     dontHaveAccount: "Don't have an account?",
     alreadyHaveAccount: 'Already have an account?',
+    loginSuccess: 'Login successful',
+    sessionExpired: 'Your session has expired. Please log in again.',
+    invalidCredentials: 'Provide valid Phone Or UserName and password',
+    isRequired: 'is required',
+    minimumCharacters: 'Minimum {count} characters',
+    enterYour: 'Enter your',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     
     // Navigation
     home: 'Home',

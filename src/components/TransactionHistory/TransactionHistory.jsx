@@ -6,7 +6,7 @@ import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import { FaArrowDown, FaArrowUp, FaList, FaTable } from "react-icons/fa";
+import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 
@@ -21,7 +21,6 @@ const TransactionHistory = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [viewMode, setViewMode] = useState("table");
   const itemsPerPage = 10;
 
   const axiosSecure = useAxiosSecure();
@@ -29,6 +28,9 @@ const TransactionHistory = () => {
   const { addToast } = useToasts();
   const { formatCurrency } = useCurrency();
   const { t } = useLanguage();
+
+  // Check if user is admin (not regular user)
+  const isAdminUser = user?.role && user.role !== "user";
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -52,20 +54,21 @@ const TransactionHistory = () => {
           setTransactions(filteredTransactions);
           setTotalPages(Math.ceil(response.data.data.totalItems / itemsPerPage));
 
-          // Calculate totals
-          const totals = filteredTransactions.reduce(
-            (acc, txn) => {
-              if (txn.type === "deposit") {
-                acc.totalDeposit += txn.amount;
-              } else if (txn.type === "withdraw" || txn.type === "transfer") {
-                acc.totalWithdraw += txn.amount;
-              }
-              return acc;
-            },
-            { totalDeposit: 0, totalWithdraw: 0 }
-          );
-
-          setStats(totals);
+          // Calculate totals (only for admin users)
+          if (isAdminUser) {
+            const totals = filteredTransactions.reduce(
+              (acc, txn) => {
+                if (txn.type === "deposit") {
+                  acc.totalDeposit += txn.amount;
+                } else if (txn.type === "withdraw" || txn.type === "transfer") {
+                  acc.totalWithdraw += txn.amount;
+                }
+                return acc;
+              },
+              { totalDeposit: 0, totalWithdraw: 0 }
+            );
+            setStats(totals);
+          }
         } else {
           setError(response.data.message || "Failed to fetch transactions");
           addToast(response.data.message || "Failed to fetch transactions", {
@@ -85,7 +88,7 @@ const TransactionHistory = () => {
     };
 
     fetchTransactions();
-  }, [user?.username, axiosSecure, addToast, currentPage]);
+  }, [user?.username, axiosSecure, addToast, currentPage, isAdminUser]);
 
   const filteredTransactions = activeTab === "all" 
     ? transactions 
@@ -163,117 +166,57 @@ const TransactionHistory = () => {
     </p>
   );
 
-  const ListView = () => (
-    <div className="space-y-4">
-      {filteredTransactions.map((txn) => (
-        <div
-          key={txn._id}
-          className={`p-4 rounded-lg border bg-[#1a1f24] ${getStatusColor(txn.status)} hover:shadow-lg transition-all duration-300 group`}
-        >
-          <div className="flex justify-between items-start mb-3">
-            <div className="flex items-center gap-3">
-              <TransactionIcon type={txn.type} />
-              <div>
-                <h3 className="text-lg font-semibold text-[#facc15] group-hover:text-[#facc15]/90">
-                  {getTransactionTypeName(txn.type)}
-                </h3>
-                <p className="text-sm text-gray-300">{t('ref')}: {txn.txnRef}</p>
-              </div>
-            </div>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusTextColor(txn.status)}`}>
-              {getStatusName(txn.status)}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-gray-300">{t('amount')}</p>
-                <TransactionAmount type={txn.type} amount={txn.amount} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-gray-300">{t('balance')}</p>
-                <p className="font-medium text-[#facc15]">
-                  {formatCurrency(txn.balanceAfter)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-3 pt-3 border-t border-[#facc15]/20">
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-gray-300">
-                {moment(txn.createdAt).format("MMM D, YYYY h:mm A")}
-              </p>
-              <p className="text-sm text-gray-300">
-                {txn.description}
-              </p>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const TableView = () => (
+  const TransactionCards = () => (
     <div className="space-y-4">
       {filteredTransactions.length === 0 ? (
         <p className="text-center text-gray-300 py-8">{t('noTransactionsFound')}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-[#facc15]/20">
-            <thead className="bg-[#1a1f24]">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  {t('description')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  {t('dateTime')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  {t('amount')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  {t('balance')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  {t('status')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#facc15]/20">
-              {filteredTransactions.map((txn) => (
-                <tr key={txn._id} className="hover:bg-[#facc15]/5 transition-all duration-300">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <TransactionIcon type={txn.type} />
-                      <div>
-                        <p className="text-sm font-medium text-gray-300">{txn.description}</p>
-                        <p className="text-xs text-gray-400">{t('ref')}: {txn.txnRef}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {moment(txn.createdAt).format("MMM D, YYYY h:mm A")}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <TransactionAmount type={txn.type} amount={txn.amount} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#facc15]">
+        filteredTransactions.map((txn) => (
+          <div
+            key={txn._id}
+            className={`p-4 rounded-lg border bg-[#1a1f24] ${getStatusColor(txn.status)} hover:shadow-lg transition-all duration-300 group`}
+          >
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center gap-3">
+                <TransactionIcon type={txn.type} />
+                <div>
+                  <h3 className="text-lg font-semibold text-[#facc15] group-hover:text-[#facc15]/90">
+                    {getTransactionTypeName(txn.type)}
+                  </h3>
+                  <p className="text-sm text-gray-300">{t('ref')}: {txn.txnRef}</p>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusTextColor(txn.status)}`}>
+                {getStatusName(txn.status)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm text-gray-300">{t('amount')}</p>
+                  <TransactionAmount type={txn.type} amount={txn.amount} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm text-gray-300">{t('balance')}</p>
+                  <p className="font-medium text-[#facc15]">
                     {formatCurrency(txn.balanceAfter)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusTextColor(txn.status)}`}>
-                      {getStatusName(txn.status)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-[#facc15]/20">
+              <div className="flex justify-center">
+                <p className="text-sm text-gray-300">
+                  {moment(txn.createdAt).format("MMM D, YYYY h:mm A")}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))
       )}
     </div>
   );
@@ -297,25 +240,31 @@ const TransactionHistory = () => {
           <CardTitle className="text-2xl font-bold text-[#facc15] text-center">
             {t('transactionHistory')}
           </CardTitle>
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <div className="bg-[#1a1f24] p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
-              <div className="flex items-center gap-2 mb-2">
-                <FaArrowUp className="text-[#facc15]" />
-                <h3 className="text-sm font-medium text-gray-300">{t('totalDeposit30Days')}</h3>
+          
+          {/* Summary Cards - Only show for admin users */}
+          {isAdminUser && (
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="bg-[#1a1f24] p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
+                <div className="flex items-center gap-2 mb-2">
+                  <FaArrowUp className="text-[#facc15]" />
+                  <h3 className="text-sm font-medium text-gray-300">{t('totalDeposit30Days')}</h3>
+                </div>
+                <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(stats.totalDeposit)}</p>
               </div>
-              <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(stats.totalDeposit)}</p>
-            </div>
-            <div className="bg-[#1a1f24] p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
-              <div className="flex items-center gap-2 mb-2">
-                <FaArrowDown className="text-[#facc15]" />
-                <h3 className="text-sm font-medium text-gray-300">{t('totalWithdraw30Days')}</h3>
+              <div className="bg-[#1a1f24] p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
+                <div className="flex items-center gap-2 mb-2">
+                  <FaArrowDown className="text-[#facc15]" />
+                  <h3 className="text-sm font-medium text-gray-300">{t('totalWithdraw30Days')}</h3>
+                </div>
+                <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(stats.totalWithdraw)}</p>
               </div>
-              <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(stats.totalWithdraw)}</p>
             </div>
-          </div>
+          )}
         </CardHeader>
+        
         <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-6">
+          {/* Filter Tabs */}
+          <div className="flex justify-center mb-6">
             <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3 bg-[#1a1f24] border border-[#facc15]/20">
                 <TabsTrigger 
@@ -338,33 +287,10 @@ const TransactionHistory = () => {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <div className="flex items-center gap-2 bg-[#1a1f24] p-1 rounded-lg border border-[#facc15]/20">
-              <button
-                onClick={() => setViewMode("table")}
-                className={`p-2 rounded-md transition-all duration-300 ${
-                  viewMode === "table"
-                    ? "bg-[#facc15] text-[#1a1f24]"
-                    : "text-gray-300 hover:bg-[#facc15]/10"
-                }`}
-                title={t('tableView')}
-              >
-                <FaTable className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 rounded-md transition-all duration-300 ${
-                  viewMode === "list"
-                    ? "bg-[#facc15] text-[#1a1f24]"
-                    : "text-gray-300 hover:bg-[#facc15]/10"
-                }`}
-                title={t('listView')}
-              >
-                <FaList className="w-5 h-5" />
-              </button>
-            </div>
           </div>
 
-          {viewMode === "table" ? <TableView /> : <ListView />}
+          {/* Transaction Cards */}
+          <TransactionCards />
 
           {/* Pagination */}
           {totalPages > 1 && (

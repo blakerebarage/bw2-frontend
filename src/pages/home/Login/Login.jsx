@@ -8,16 +8,14 @@ import {
   useLoginUserMutation,
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { setCredentials } from "@/redux/slices/authSlice";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   FaEye,
   FaEyeSlash,
   FaInfoCircle,
-  FaRedo,
   FaUser
 } from "react-icons/fa";
-import { FaShield } from "react-icons/fa6";
 import { IoIosUnlock } from "react-icons/io";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -33,7 +31,6 @@ const Login = () => {
   const [getUser] = useLazyGetAuthenticatedUserQuery();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
-  const [verificationCode, setVerificationCode] = useState("");
 
   const navigate = useNavigate();
   const { addToast } = useToasts();
@@ -44,27 +41,12 @@ const Login = () => {
   const {
     register,
     handleSubmit,
-    watch,
-    reset,
-    formState: { errors, isDirty, isValid },
+    formState: { errors, isValid },
   } = useForm({
     mode: "onChange"
   });
 
-  const watchInputCode = watch("inputCode", "");
-
-  const generateVerificationCode = () => {
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
-    setVerificationCode(code);
-    reset({ inputCode: "" });
-  };
-
-  useEffect(() => {
-    generateVerificationCode();
-  }, []);
-
   const onSubmit = async (data) => {
-    
     const { phoneOrUserName, password } = data;
     try {
       const { data: loginData } = await loginUser({ 
@@ -74,7 +56,6 @@ const Login = () => {
         deviceInfo
       });
     
-      
       if (loginData.token) {
         const { data: userData } = await getUser(loginData.token);
         dispatch(setCredentials({ 
@@ -85,7 +66,7 @@ const Login = () => {
           deviceInfo
         }));
 
-        addToast("Login successful", {
+        addToast(t('loginSuccess'), {
           appearance: "success",
           autoDismiss: true,
         });
@@ -100,12 +81,12 @@ const Login = () => {
     } catch (error) {
       if (error.response?.status === 401 && 
           error.response?.data?.message === "Session expired. Please log in again.") {
-        addToast("Your session has expired. Please log in again.", {
+        addToast(t('sessionExpired'), {
           appearance: "error",
           autoDismiss: true,
         });
       } else {
-        addToast("Provide valid Phone Or UserName and password", {
+        addToast(t('invalidCredentials'), {
           appearance: "error",
           autoDismiss: true,
         });
@@ -113,10 +94,7 @@ const Login = () => {
     }
   };
 
-  const isLoginDisabled = !(watchInputCode === verificationCode) || !isValid || isLoading;
-
-
- 
+  const isLoginDisabled = !isValid || isLoading;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f24] to-[#0f1419] flex items-center justify-center p-4 mt-12">
@@ -129,7 +107,6 @@ const Login = () => {
                 src={logo}
                 alt="Our Bet" 
                 className="w-24 h-24 object-contain drop-shadow-md" 
-                
                 loading="lazy"
               />
             </div>
@@ -156,10 +133,10 @@ const Login = () => {
                 <Input
                   type="text"
                   {...register("phoneOrUserName", {
-                    required: `${t('phoneUsername')} is required`,
-                    minLength: { value: 4, message: "Minimum 4 characters"}
+                    required: `${t('phoneUsername')} ${t('isRequired')}`,
+                    minLength: { value: 4, message: t('minimumCharacters').replace('{count}', '4')}
                   })}
-                  placeholder={`Enter your ${t('phoneUsername').toLowerCase()}`}
+                  placeholder={`${t('enterYour')} ${t('phoneUsername').toLowerCase()}`}
                   className="pl-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   aria-invalid={errors.phoneOrUserName ? "true" : "false"}
                 />
@@ -184,11 +161,11 @@ const Login = () => {
                   {...register("password", {
                     required: {
                       value: true,
-                      message: `${t('password')} is required`
+                      message: `${t('password')} ${t('isRequired')}`
                     },
-                    minLength: { value: 3, message: "Minimum 3 characters" }
+                    minLength: { value: 3, message: t('minimumCharacters').replace('{count}', '3') }
                   })}
-                  placeholder={`Enter your ${t('password').toLowerCase()}`}
+                  placeholder={`${t('enterYour')} ${t('password').toLowerCase()}`}
                   className="pl-12 pr-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   aria-invalid={errors.password ? "true" : "false"}
                 />
@@ -196,7 +173,7 @@ const Login = () => {
                   type="button"
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#facc15] transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                 >
                   {showPassword ? <FaEyeSlash className="text-lg" /> : <FaEye className="text-lg" />}
                 </button>
@@ -209,45 +186,6 @@ const Login = () => {
               )}
             </div>
 
-            {/* Verification Code Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                {t('verificationCode')}
-              </label>
-              <div className="relative group">
-                <FaShield className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-lg" />
-                <Input
-                  type="text"
-                  {...register("inputCode", {
-                    required: `${t('verificationCode')} is required`,
-                    validate: value => value === verificationCode || "Invalid verification code"
-                  })}
-                  placeholder={t('enterVerificationCode')}
-                  className="pl-12 pr-24 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
-                  aria-invalid={errors.inputCode ? "true" : "false"}
-                />
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-3">
-                  <span className="text-lg font-bold text-[#facc15] select-none px-2 py-1 bg-[#facc15]/10 rounded border border-[#facc15]/30">
-                    {verificationCode}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={generateVerificationCode}
-                    className="text-[#facc15] hover:text-[#facc15]/80 transition-all hover:rotate-180 duration-300"
-                    aria-label="Generate new verification code"
-                  >
-                    <FaRedo className="text-lg" />
-                  </button>
-                </div>
-              </div>
-              {errors.inputCode && (
-                <p className="text-sm text-red-400 flex items-center gap-2 mt-1">
-                  <FaInfoCircle className="text-sm" />
-                  {errors.inputCode.message}
-                </p>
-              )}
-            </div>
-
             {/* Login Button */}
             <Button
               type="submit"
@@ -256,7 +194,7 @@ const Login = () => {
               style={{
                 background: isLoginDisabled ? '#facc15' : '#facc15',
                 opacity: isLoginDisabled ? '0.5' : '1',
-                WebkitTransform: 'translateZ(0)', // Hardware acceleration for better performance
+                WebkitTransform: 'translateZ(0)',
                 MozTransform: 'translateZ(0)',
                 transform: 'translateZ(0)'
               }}
@@ -290,8 +228,6 @@ const Login = () => {
             </Link>
           </form>
         </div>
-
-       
       </div>
     </div>
   );
