@@ -36,7 +36,7 @@ const MyProfile = () => {
     e.preventDefault();
     
     if (!formData.oldPassword) {
-      addToast("Current password is required!", {
+      addToast(t('currentPasswordRequired'), {
         appearance: "error",
         autoDismiss: true,
       });
@@ -44,7 +44,7 @@ const MyProfile = () => {
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      addToast("New password and confirm password do not match!", {
+      addToast(t('passwordsMustMatch'), {
         appearance: "error",
         autoDismiss: true,
       });
@@ -52,7 +52,7 @@ const MyProfile = () => {
     }
 
     if (formData.newPassword.length < 8) {
-      addToast("Password must be at least 8 characters long!", {
+      addToast(t('passwordMinLength'), {
         appearance: "error",
         autoDismiss: true,
       });
@@ -68,7 +68,7 @@ const MyProfile = () => {
       });
 
       if (response.data.success) {
-        addToast("Password changed successfully!", {
+        addToast(t('passwordChangedSuccess'), {
           appearance: "success",
           autoDismiss: true,
         });
@@ -80,7 +80,7 @@ const MyProfile = () => {
         });
       }
     } catch (error) {
-      addToast(error.response?.data?.message || "Failed to change password", {
+      addToast(error.response?.data?.message || t('failedToChangePassword'), {
         appearance: "error",
         autoDismiss: true,
       });
@@ -129,7 +129,7 @@ const MyProfile = () => {
             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1a1f24] text-gray-300 rounded-lg hover:bg-[#22282e] transition-colors border border-[#facc15]/20"
           >
             {showSensitiveInfo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span className="text-sm font-medium">{showSensitiveInfo ? "Hide Info" : t('showInfo')}</span>
+            <span className="text-sm font-medium">{showSensitiveInfo ? t('hideInfo') : t('showInfo')}</span>
           </button>
           
           <button
@@ -146,7 +146,7 @@ const MyProfile = () => {
               className="flex items-center justify-center gap-2 px-4 py-3 bg-[#facc15] text-[#1a1f24] rounded-lg hover:bg-[#e6b800] transition-colors"
             >
               <Activity className="w-4 h-4" />
-              <span className="text-sm font-medium">{showActivity ? "Hide Activity" : t('activity')}</span>
+              <span className="text-sm font-medium">{showActivity ? t('hideActivity') : t('activity')}</span>
             </button>
           )}
         </div>
@@ -185,7 +185,7 @@ const MyProfile = () => {
               sensitive: false
             },
             { 
-              label: "Role", 
+              label: t('role'), 
               value: user?.role, 
               icon: Shield,
               sensitive: false
@@ -218,7 +218,7 @@ const MyProfile = () => {
             <div className="px-4 py-3 border-b border-[#facc15]/20 bg-[#22282e]">
               <h3 className="text-sm font-medium text-[#facc15] flex items-center gap-2">
                 <Activity className="w-4 h-4" />
-                {t('activity')} Log
+                {t('activityLog')}
               </h3>
             </div>
             <div className="p-4">
@@ -250,14 +250,14 @@ const MyProfile = () => {
             <form onSubmit={handleChangePassword} className="p-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Current Password
+                  {t('currentPassword')}
                 </label>
                 <input
                   type="password"
                   name="oldPassword"
                   value={formData.oldPassword}
                   onChange={handleInputChange}
-                  placeholder="Enter current password"
+                  placeholder={t('enterCurrentPassword')}
                   className="w-full px-3 py-2 bg-[#22282e] border border-[#facc15]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#facc15] focus:border-transparent"
                   required
                 />
@@ -265,14 +265,14 @@ const MyProfile = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  New Password
+                  {t('newPassword')}
                 </label>
                 <input
                   type="password"
                   name="newPassword"
                   value={formData.newPassword}
                   onChange={handleInputChange}
-                  placeholder="Enter new password"
+                  placeholder={t('enterNewPassword')}
                   className="w-full px-3 py-2 bg-[#22282e] border border-[#facc15]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#facc15] focus:border-transparent"
                   required
                 />
@@ -280,14 +280,14 @@ const MyProfile = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Confirm New Password
+                  {t('confirmNewPassword')}
                 </label>
                 <input
                   type="password"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  placeholder="Confirm new password"
+                  placeholder={t('confirmNewPasswordPlaceholder')}
                   className="w-full px-3 py-2 bg-[#22282e] border border-[#facc15]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#facc15] focus:border-transparent"
                   required
                 />
@@ -309,10 +309,10 @@ const MyProfile = () => {
                   {loading ? (
                     <>
                       <Loader2 className="animate-spin w-4 h-4" />
-                      <span>Updating...</span>
+                      <span>{t('updating')}</span>
                     </>
                   ) : (
-                    "Update Password"
+                    t('updatePassword')
                   )}
                 </button>
               </div>

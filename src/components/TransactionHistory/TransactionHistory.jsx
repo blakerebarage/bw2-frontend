@@ -1,6 +1,7 @@
 import Loading from "@/components/shared/Loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import moment from "moment";
@@ -27,6 +28,7 @@ const TransactionHistory = () => {
   const { user } = useSelector((state) => state.auth);
   const { addToast } = useToasts();
   const { formatCurrency } = useCurrency();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -121,6 +123,34 @@ const TransactionHistory = () => {
     }
   };
 
+  const getTransactionTypeName = (type) => {
+    switch (type?.toLowerCase()) {
+      case "deposit":
+        return t('depositTransaction');
+      case "withdraw":
+        return t('withdrawTransaction');
+      case "transfer":
+        return t('transferTransaction');
+      default:
+        return type?.toUpperCase() + " Transaction";
+    }
+  };
+
+  const getStatusName = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return t('pending');
+      case "completed":
+        return t('completed');
+      case "rejected":
+        return t('rejected');
+      case "cancelled":
+        return t('cancelled');
+      default:
+        return status?.toUpperCase() || t('pending');
+    }
+  };
+
   const TransactionIcon = ({ type }) => (
     <div className={`p-2 rounded-full bg-[#facc15]/10 text-[#facc15]`}>
       {type === "deposit" ? <FaArrowUp /> : <FaArrowDown />}
@@ -145,26 +175,26 @@ const TransactionHistory = () => {
               <TransactionIcon type={txn.type} />
               <div>
                 <h3 className="text-lg font-semibold text-[#facc15] group-hover:text-[#facc15]/90">
-                  {txn.type.toUpperCase()} Transaction
+                  {getTransactionTypeName(txn.type)}
                 </h3>
-                <p className="text-sm text-gray-300">Ref: {txn.txnRef}</p>
+                <p className="text-sm text-gray-300">{t('ref')}: {txn.txnRef}</p>
               </div>
             </div>
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusTextColor(txn.status)}`}>
-              {txn.status?.toUpperCase() || "PENDING"}
+              {getStatusName(txn.status)}
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <div>
-                <p className="text-sm text-gray-300">Amount</p>
+                <p className="text-sm text-gray-300">{t('amount')}</p>
                 <TransactionAmount type={txn.type} amount={txn.amount} />
               </div>
             </div>
             <div className="space-y-2">
               <div>
-                <p className="text-sm text-gray-300">Balance</p>
+                <p className="text-sm text-gray-300">{t('balance')}</p>
                 <p className="font-medium text-[#facc15]">
                   {formatCurrency(txn.balanceAfter)}
                 </p>
@@ -190,26 +220,26 @@ const TransactionHistory = () => {
   const TableView = () => (
     <div className="space-y-4">
       {filteredTransactions.length === 0 ? (
-        <p className="text-center text-gray-300 py-8">No transactions found</p>
+        <p className="text-center text-gray-300 py-8">{t('noTransactionsFound')}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-[#facc15]/20">
             <thead className="bg-[#1a1f24]">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  Description
+                  {t('description')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  Date & Time
+                  {t('dateTime')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  Amount
+                  {t('amount')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  Balance
+                  {t('balance')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#facc15] uppercase tracking-wider">
-                  Status
+                  {t('status')}
                 </th>
               </tr>
             </thead>
@@ -221,7 +251,7 @@ const TransactionHistory = () => {
                       <TransactionIcon type={txn.type} />
                       <div>
                         <p className="text-sm font-medium text-gray-300">{txn.description}</p>
-                        <p className="text-xs text-gray-400">Ref: {txn.txnRef}</p>
+                        <p className="text-xs text-gray-400">{t('ref')}: {txn.txnRef}</p>
                       </div>
                     </div>
                   </td>
@@ -236,7 +266,7 @@ const TransactionHistory = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusTextColor(txn.status)}`}>
-                      {txn.status?.toUpperCase() || "PENDING"}
+                      {getStatusName(txn.status)}
                     </span>
                   </td>
                 </tr>
@@ -265,20 +295,20 @@ const TransactionHistory = () => {
       <Card className="w-full bg-[#1a1f24] rounded-lg shadow-xl border border-[#facc15]/20">
         <CardHeader className="border-b border-[#facc15]/20">
           <CardTitle className="text-2xl font-bold text-[#facc15] text-center">
-            Transaction History
+            {t('transactionHistory')}
           </CardTitle>
           <div className="grid grid-cols-2 gap-4 mt-4">
             <div className="bg-[#1a1f24] p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
               <div className="flex items-center gap-2 mb-2">
                 <FaArrowUp className="text-[#facc15]" />
-                <h3 className="text-sm font-medium text-gray-300">Total Deposit (30 days)</h3>
+                <h3 className="text-sm font-medium text-gray-300">{t('totalDeposit30Days')}</h3>
               </div>
               <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(stats.totalDeposit)}</p>
             </div>
             <div className="bg-[#1a1f24] p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
               <div className="flex items-center gap-2 mb-2">
                 <FaArrowDown className="text-[#facc15]" />
-                <h3 className="text-sm font-medium text-gray-300">Total Withdraw (30 days)</h3>
+                <h3 className="text-sm font-medium text-gray-300">{t('totalWithdraw30Days')}</h3>
               </div>
               <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(stats.totalWithdraw)}</p>
             </div>
@@ -292,19 +322,19 @@ const TransactionHistory = () => {
                   value="all" 
                   className="text-sm font-medium data-[state=active]:bg-[#facc15] data-[state=active]:text-[#1a1f24] text-gray-300 hover:bg-[#facc15]/10 transition-all duration-300"
                 >
-                  All
+                  {t('all')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="deposit" 
                   className="text-sm font-medium data-[state=active]:bg-[#facc15] data-[state=active]:text-[#1a1f24] text-gray-300 hover:bg-[#facc15]/10 transition-all duration-300"
                 >
-                  Deposits
+                  {t('deposits')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="withdraw" 
                   className="text-sm font-medium data-[state=active]:bg-[#facc15] data-[state=active]:text-[#1a1f24] text-gray-300 hover:bg-[#facc15]/10 transition-all duration-300"
                 >
-                  Withdrawals
+                  {t('withdrawals')}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -316,7 +346,7 @@ const TransactionHistory = () => {
                     ? "bg-[#facc15] text-[#1a1f24]"
                     : "text-gray-300 hover:bg-[#facc15]/10"
                 }`}
-                title="Table View"
+                title={t('tableView')}
               >
                 <FaTable className="w-5 h-5" />
               </button>
@@ -327,7 +357,7 @@ const TransactionHistory = () => {
                     ? "bg-[#facc15] text-[#1a1f24]"
                     : "text-gray-300 hover:bg-[#facc15]/10"
                 }`}
-                title="List View"
+                title={t('listView')}
               >
                 <FaList className="w-5 h-5" />
               </button>
@@ -348,10 +378,10 @@ const TransactionHistory = () => {
                     : "bg-[#1a1f24] text-[#facc15] border border-[#facc15] hover:bg-[#facc15]/10"
                 }`}
               >
-                Previous
+                {t('previous')}
               </button>
               <span className="text-gray-300">
-                Page {currentPage} of {totalPages}
+                {t('pageOf')} {currentPage} {t('of')} {totalPages}
               </span>
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
@@ -362,7 +392,7 @@ const TransactionHistory = () => {
                     : "bg-[#1a1f24] text-[#facc15] border border-[#facc15] hover:bg-[#facc15]/10"
                 }`}
               >
-                Next
+                {t('next')}
               </button>
             </div>
           )}
