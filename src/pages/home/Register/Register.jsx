@@ -48,7 +48,7 @@ const Register = () => {
     mode: "onChange",
     defaultValues: {
       phone: "",
-      fullName: "",
+      
       email: "",
       password: "",
       confirmPassword: "",
@@ -88,7 +88,7 @@ const Register = () => {
   const onSubmit = async (data) => {
     const userInfo = {
       phone: data.phone,
-      fullName: data.fullName,
+    
       password: data.password,
       referredBy: data.referCode ? data.referCode : "",
       role: "user",
@@ -226,21 +226,7 @@ const Register = () => {
               )}
             </div>
 
-            {/* Full Name Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                {t('fullName')}
-              </label>
-              <div className="relative group">
-                <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-lg" />
-                <Input
-                  type="text"
-                  placeholder={`${t('fullName')} (optional)`}
-                  className="pl-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
-                  {...register("fullName")}
-                />
-              </div>
-            </div>
+           
 
            
 
