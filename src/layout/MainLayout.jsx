@@ -1,9 +1,18 @@
 import ContactWidget from "@/components/ContactWidget";
 import Footer from "@/components/shared/Footer";
 import Navbar from "@/components/shared/Navbar";
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import bgimage from "../../public/bgimage.webp";
+import { trackPageView } from "../lib/facebookPixel"; // Adjust path if needed
+
 const MainLayout = () => {
+  useEffect(() => {
+    // Track a page view or a custom event
+    trackPageView("MainLayout Page");
+    // Or use trackCustomEvent('MainLayoutVisit', { ... });
+  }, []);
+
   return (
     <div
       style={{

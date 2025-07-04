@@ -4,20 +4,20 @@ import { Input } from "@/components/ui/input";
 import useDeviceInfo from "@/Hook/useDeviceInfo";
 import useDeviceManager from "@/Hook/useDeviceManager";
 import {
-  useAddUserMutation,
-  useLazyGetAuthenticatedUserQuery
+    useAddUserMutation,
+    useLazyGetAuthenticatedUserQuery
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  FaEye,
-  FaEyeSlash,
-  FaInfoCircle,
-  FaMinus,
-  FaPlus,
-  FaRedo,
-  FaUser
+    FaEye,
+    FaEyeSlash,
+    FaInfoCircle,
+    FaMinus,
+    FaPlus,
+    FaRedo,
+    FaUser
 } from "react-icons/fa";
 import { FaShield } from "react-icons/fa6";
 import { IoIosUnlock } from "react-icons/io";
@@ -26,6 +26,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import logo from "../../../../public/logoBlack.png";
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { trackRegistration } from '../../../lib/facebookPixel';
 import { useWelcome } from '../../../UserContext/WelcomeContext';
 
 const Register = () => {
@@ -107,6 +108,14 @@ const Register = () => {
         const { data: registerData, error } = await addUser(userInfo);
         
         if (registerData?.success) {
+          // Track successful registration with Facebook Pixel
+          trackRegistration({
+            user_id: registerData?.user?.id,
+            registration_method: 'phone',
+            has_referral: !!data.referCode,
+            has_email: !!data.email
+          });
+
           // Check if registration response includes session/token for auto-login
           if (registerData.session && registerData.session.token) {
             try {

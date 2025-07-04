@@ -4,17 +4,17 @@ import { Input } from "@/components/ui/input";
 import useDeviceInfo from "@/Hook/useDeviceInfo";
 import useDeviceManager from "@/Hook/useDeviceManager";
 import {
-  useLazyGetAuthenticatedUserQuery,
-  useLoginUserMutation,
+    useLazyGetAuthenticatedUserQuery,
+    useLoginUserMutation,
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  FaEye,
-  FaEyeSlash,
-  FaInfoCircle,
-  FaUser
+    FaEye,
+    FaEyeSlash,
+    FaInfoCircle,
+    FaUser
 } from "react-icons/fa";
 import { IoIosUnlock } from "react-icons/io";
 import { useDispatch } from "react-redux";
@@ -23,6 +23,7 @@ import { useToasts } from "react-toast-notifications";
 
 import logo from "../../../../public/logoBlack.png";
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { trackLogin } from '../../../lib/facebookPixel';
 import { useWelcome } from '../../../UserContext/WelcomeContext';
 
 const Login = () => {
@@ -65,6 +66,13 @@ const Login = () => {
           deviceId,
           deviceInfo
         }));
+
+        // Track successful login with Facebook Pixel
+        trackLogin({
+          user_id: userData?.data?.id,
+          user_role: userData?.data?.role,
+          login_method: 'username_password'
+        });
 
         addToast(t('loginSuccess'), {
           appearance: "success",
