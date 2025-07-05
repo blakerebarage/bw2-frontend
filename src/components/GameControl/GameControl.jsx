@@ -126,8 +126,7 @@ const GameControl = () => {
           category: category,
           page:page,
           limit:limit,
-          search:searchQuery,
-          isActive:true
+          search:searchQuery
         }
       });
       
