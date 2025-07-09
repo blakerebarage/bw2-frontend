@@ -50,7 +50,6 @@ const Register = () => {
     mode: "onChange",
     defaultValues: {
       phone: "",
-      
       email: "",
       password: "",
       confirmPassword: "",
@@ -75,8 +74,9 @@ const Register = () => {
   const [linkId, setLinkId] = useState(null);
   const [affiliateCode, setAffiliateCode] = useState(null);
 
-  // Capture affiliate params on first mount
+  // Capture affiliate params on first mount, and create verification code
   useEffect(() => {
+    generateVerificationCode();
     const params = new URLSearchParams(location.search);
     const linkIdParam = params.get("linkid");
     const affiliateCodeParam = params.get("affiliateCode");
