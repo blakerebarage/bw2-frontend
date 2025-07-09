@@ -127,7 +127,7 @@ const Register = () => {
     const userInfo = {
       phone: data.phone,
       password: data.password,
-      referredBy: affiliateCode || data.referCode || "",
+      
       role: "user",
       deviceInfo: deviceInfo,
       deviceId: deviceId,
@@ -137,7 +137,9 @@ const Register = () => {
     if (data.email && data.email.trim() !== "") {
       userInfo.email = data.email;
     }
- 
+   if(affiliateCode){
+    userInfo.affiliateBy = affiliateCode;
+   }
     if (data.validationCode === verificationCode) {
       try {
         setLoading(true);
@@ -166,6 +168,10 @@ const Register = () => {
             }
           }
 
+          // Always clear stored affiliate params once the account is created
+          localStorage.removeItem("play9_aff_link");
+          localStorage.removeItem("play9_aff_code");
+
           // Check if registration response includes session/token for auto-login
           if (registerData.session && registerData.session.token) {
             try {
@@ -185,6 +191,8 @@ const Register = () => {
                 appearance: "success",
                 autoDismiss: true,
               });
+
+              
 
               // Trigger welcome message and navigate to home
               triggerWelcome();
