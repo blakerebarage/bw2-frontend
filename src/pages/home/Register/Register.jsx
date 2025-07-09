@@ -4,25 +4,26 @@ import { Input } from "@/components/ui/input";
 import useDeviceInfo from "@/Hook/useDeviceInfo";
 import useDeviceManager from "@/Hook/useDeviceManager";
 import {
-    useAddUserMutation,
-    useLazyGetAuthenticatedUserQuery
+  useAddUserMutation,
+  useLazyGetAuthenticatedUserQuery
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { setCredentials } from "@/redux/slices/authSlice";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-    FaEye,
-    FaEyeSlash,
-    FaInfoCircle,
-    FaMinus,
-    FaPlus,
-    FaRedo,
-    FaUser
+  FaEye,
+  FaEyeSlash,
+  FaInfoCircle,
+  FaMinus,
+  FaPlus,
+  FaRedo,
+  FaUser
 } from "react-icons/fa";
 import { FaShield } from "react-icons/fa6";
 import { IoIosUnlock } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import logo from "../../../../public/logoBlack.png";
 import { useLanguage } from '../../../contexts/LanguageContext';
@@ -62,7 +63,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
   const [showReferralCode, setShowReferralCode] = useState(false);
 
   const { addToast } = useToasts();
@@ -70,8 +71,44 @@ const Register = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const deviceInfo = useDeviceInfo();
   
+  const location = useLocation();
+  const [linkId, setLinkId] = useState(null);
+  const [affiliateCode, setAffiliateCode] = useState(null);
+
+  // Capture affiliate params on first mount
   useEffect(() => {
-    generateVerificationCode();
+    const params = new URLSearchParams(location.search);
+    const linkIdParam = params.get("linkid");
+    const affiliateCodeParam = params.get("affiliateCode");
+
+    if (linkIdParam) {
+      localStorage.setItem("play9_aff_link", linkIdParam);
+      setLinkId(linkIdParam);
+    }
+
+    if (affiliateCodeParam) {
+      localStorage.setItem("play9_aff_code", affiliateCodeParam);
+      setAffiliateCode(affiliateCodeParam);
+      // pre-fill referral code and hide manual field
+      setValue("referCode", affiliateCodeParam);
+      setShowReferralCode(false);
+    }
+
+    // Fallback to stored values (when user navigated away & back)
+    if (!linkIdParam) {
+      const storedLink = localStorage.getItem("play9_aff_link");
+      if (storedLink) setLinkId(storedLink);
+    }
+
+    if (!affiliateCodeParam) {
+      const storedAff = localStorage.getItem("play9_aff_code");
+      if (storedAff) {
+        setAffiliateCode(storedAff);
+        setValue("referCode", storedAff);
+        setShowReferralCode(false);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -89,9 +126,8 @@ const Register = () => {
   const onSubmit = async (data) => {
     const userInfo = {
       phone: data.phone,
-    
       password: data.password,
-      referredBy: data.referCode ? data.referCode : "",
+      referredBy: affiliateCode || data.referCode || "",
       role: "user",
       deviceInfo: deviceInfo,
       deviceId: deviceId,
@@ -115,6 +151,20 @@ const Register = () => {
             has_referral: !!data.referCode,
             has_email: !!data.email
           });
+
+          // Notify affiliate service about conversion
+          if (linkId && registerData?.user?._id) {
+            try {
+              await axios.post(`/api/v1/affiliate/track/${linkId}/conversion`, {
+                userId: registerData.user._id,
+              });
+              // cleanup so future sign-ups aren’t double counted
+              localStorage.removeItem("play9_aff_link");
+              localStorage.removeItem("play9_aff_code");
+            } catch (convErr) {
+              console.error("Affiliate conversion tracking failed", convErr);
+            }
+          }
 
           // Check if registration response includes session/token for auto-login
           if (registerData.session && registerData.session.token) {
@@ -270,17 +320,19 @@ const Register = () => {
             </div>
 
          
-            {/* Referral Code Toggle Button */}
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={() => setShowReferralCode(!showReferralCode)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#facc15]/10 border border-[#facc15]/30 text-[#facc15] hover:bg-[#facc15]/20 rounded-lg transition-all text-sm font-medium"
-              >
-                {showReferralCode ? <FaMinus className="text-sm" /> : <FaPlus className="text-sm" />}
-                {showReferralCode ? "Hide Referral Code" : t('haveReferralCode')}
-              </button>
-            </div>
+            {/* Referral Code Toggle Button - hidden when affiliate code present */}
+            {!affiliateCode && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setShowReferralCode(!showReferralCode)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#facc15]/10 border border-[#facc15]/30 text-[#facc15] hover:bg-[#facc15]/20 rounded-lg transition-all text-sm font-medium"
+                >
+                  {showReferralCode ? <FaMinus className="text-sm" /> : <FaPlus className="text-sm" />}
+                  {showReferralCode ? "Hide Referral Code" : t('haveReferralCode')}
+                </button>
+              </div>
+            )}
 
             {/* Referral Code Input - Conditionally Rendered */}
             {showReferralCode && (
