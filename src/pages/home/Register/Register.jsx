@@ -74,41 +74,49 @@ const Register = () => {
   const [linkId, setLinkId] = useState(null);
   const [affiliateCode, setAffiliateCode] = useState(null);
 
-  // Capture affiliate params on first mount, and create verification code
+  // Handle affiliate data through state
   useEffect(() => {
     generateVerificationCode();
     const params = new URLSearchParams(location.search);
     const linkIdParam = params.get("linkid");
     const affiliateCodeParam = params.get("affiliateCode");
 
-    if (linkIdParam) {
-      localStorage.setItem("play9_aff_link", linkIdParam);
-      setLinkId(linkIdParam);
-    }
+    if (linkIdParam || affiliateCodeParam) {
+      // Store in state
+      if (linkIdParam) {
+        localStorage.setItem("play9_aff_link", linkIdParam);
+        setLinkId(linkIdParam);
+      }
 
-    if (affiliateCodeParam) {
-      localStorage.setItem("play9_aff_code", affiliateCodeParam);
-      setAffiliateCode(affiliateCodeParam);
-      // pre-fill referral code and hide manual field
-      setValue("referCode", affiliateCodeParam);
-      setShowReferralCode(false);
-    }
+      if (affiliateCodeParam) {
+        localStorage.setItem("play9_aff_code", affiliateCodeParam);
+        setAffiliateCode(affiliateCodeParam);
+        setValue("referCode", affiliateCodeParam);
+        setShowReferralCode(false);
+      }
 
-    // Fallback to stored values (when user navigated away & back)
-    if (!linkIdParam) {
+      // Clean URL immediately by replacing state
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState(
+        { 
+          linkId: linkIdParam,
+          affiliateCode: affiliateCodeParam 
+        },
+        '',
+        cleanUrl
+      );
+    } else {
+      // Fallback to stored values (when user navigated away & back)
       const storedLink = localStorage.getItem("play9_aff_link");
-      if (storedLink) setLinkId(storedLink);
-    }
-
-    if (!affiliateCodeParam) {
       const storedAff = localStorage.getItem("play9_aff_code");
+      
+      if (storedLink) setLinkId(storedLink);
       if (storedAff) {
         setAffiliateCode(storedAff);
         setValue("referCode", storedAff);
         setShowReferralCode(false);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -127,7 +135,6 @@ const Register = () => {
     const userInfo = {
       phone: data.phone,
       password: data.password,
-      
       role: "user",
       deviceInfo: deviceInfo,
       deviceId: deviceId,
@@ -148,7 +155,7 @@ const Register = () => {
         if (registerData?.success) {
           // Track successful registration with Facebook Pixel
           trackRegistration({
-            user_id: registerData?.data?.id,
+            user_id: registerData?.data?._id,
             registration_method: 'phone',
             has_referral: !!data.referCode,
             has_email: !!data.email
