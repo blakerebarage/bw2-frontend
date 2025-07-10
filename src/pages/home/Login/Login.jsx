@@ -4,17 +4,17 @@ import { Input } from "@/components/ui/input";
 import useDeviceInfo from "@/Hook/useDeviceInfo";
 import useDeviceManager from "@/Hook/useDeviceManager";
 import {
-    useLazyGetAuthenticatedUserQuery,
-    useLoginUserMutation,
+  useLazyGetAuthenticatedUserQuery,
+  useLoginUserMutation,
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-    FaEye,
-    FaEyeSlash,
-    FaInfoCircle,
-    FaUser
+  FaEye,
+  FaEyeSlash,
+  FaInfoCircle,
+  FaUser
 } from "react-icons/fa";
 import { IoIosUnlock } from "react-icons/io";
 import { useDispatch } from "react-redux";
@@ -66,10 +66,10 @@ const Login = () => {
           deviceId,
           deviceInfo
         }));
-
+        
         // Track successful login with Facebook Pixel
         trackLogin({
-          user_id: userData?.data?.id,
+          user_id: userData?.data?._id,
           user_role: userData?.data?.role,
           login_method: 'username_password'
         });
@@ -79,7 +79,7 @@ const Login = () => {
           autoDismiss: true,
         });
 
-        if (userData?.user?.role !== "admin") {
+        if (userData?.data?.role !== "admin" && userData?.data?.role !== "super-admin") {
           triggerWelcome();
           navigate("/");
         } else {
