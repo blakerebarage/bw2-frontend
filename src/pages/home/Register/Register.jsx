@@ -144,22 +144,23 @@ const Register = () => {
       try {
         setLoading(true);
         const { data: registerData, error } = await addUser(userInfo);
-        
+        console.log(registerData);  
         if (registerData?.success) {
           // Track successful registration with Facebook Pixel
           trackRegistration({
-            user_id: registerData?.user?.id,
+            user_id: registerData?.data?.id,
             registration_method: 'phone',
             has_referral: !!data.referCode,
             has_email: !!data.email
           });
 
           // Notify affiliate service about conversion
-          if (linkId && registerData?.user?._id) {
+          if (linkId && registerData?.data?._id) {
             try {
               await axios.post(`/api/v1/affiliate/track/${linkId}/conversion`, {
-                userId: registerData.user._id,
+                userId: registerData.data._id,
               });
+              
               // cleanup so future sign-ups aren’t double counted
               localStorage.removeItem("play9_aff_link");
               localStorage.removeItem("play9_aff_code");
