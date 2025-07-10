@@ -10,24 +10,44 @@ import usePendingRequests from './Hook/usePendingRequests';
 import { fetchSystemSettings } from "./redux/slices/systemSettingsSlice";
 import { WelcomeProvider } from './UserContext/WelcomeContext';
 
+// Separate component to handle route-based updates
+const RouteChangeHandler = () => {
+  const location = useLocation();
+  const { user } = useSelector((state) => state.auth);
+  const { refetch: fetchPendingRequests } = usePendingRequests();
+
+  useEffect(() => {
+    if (user?.role && user.role !== "user") {
+      fetchPendingRequests();
+    }
+  }, [location.pathname, user?.role, fetchPendingRequests]);
+
+  return null;
+};
+
 function App() {
-  const { user } = useSelector((state) => state.auth)
+  
   const { reloadUserData } = useManualUserDataReload();
   const dispatch = useDispatch();
-  const { refetch: fetchPendingRequests } = usePendingRequests();
-  const pathname = useLocation();
-  
+
+  // Initial data loading
   useEffect(() => {
-    reloadUserData();
-    dispatch(fetchSystemSettings());
-    if(user?.role === "user") return;
-    fetchPendingRequests();
-  }, [reloadUserData, dispatch, user?.role, pathname]);
+    const loadInitialData = async () => {
+      try {
+        await dispatch(fetchSystemSettings()).unwrap();
+        await reloadUserData();
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      }
+    };
+    loadInitialData();
+  }, [dispatch, reloadUserData]);
 
   return (
     <LanguageProvider>
       <WelcomeProvider>
         <div className="bg-gray-900">
+          <RouteChangeHandler />
           <WelcomeMessage />
           <Outlet />
           <InstallPrompt />

@@ -1,47 +1,54 @@
-import useAxiosSecure from "@/Hook/useAxiosSecure";
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 
 const initialState = {
-  defaultCurrency: "BDT", // Default fallback
+  defaultCurrency: "BDT",
   loading: false,
   error: null,
 };
 
+// Create async thunk for fetching system settings
+export const fetchSystemSettings = createAsyncThunk(
+  'systemSettings/fetch',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BASE_API_URL}/api/v1/system-setting`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.data.success) {
+        return response.data.data;
+      }
+      return rejectWithValue('Failed to fetch system settings');
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Network error');
+    }
+  }
+);
+
 const systemSettingsSlice = createSlice({
   name: "systemSettings",
   initialState,
-  reducers: {
-    setSystemSettings: (state, { payload }) => {
-      state.defaultCurrency = payload.defaultCurrency;
-    },
-    setLoading: (state, { payload }) => {
-      state.loading = payload;
-    },
-    setError: (state, { payload }) => {
-      state.error = payload;
-    },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchSystemSettings.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSystemSettings.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.defaultCurrency = payload.defaultCurrency;
+        state.error = null;
+      })
+      .addCase(fetchSystemSettings.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      });
   },
 });
-
-export const { setSystemSettings, setLoading, setError } = systemSettingsSlice.actions;
-
-// Thunk for fetching system settings
-export const fetchSystemSettings = () => async (dispatch) => {
-  try {
-    dispatch(setLoading(true));
-    const axiosSecure = useAxiosSecure();
-    const response = await axiosSecure.get("/api/v1/system-setting");
-    
-    if (response.data.success) {
-      dispatch(setSystemSettings(response.data.data));
-    }
-    dispatch(setError(null));
-  } catch (error) {
-    
-    dispatch(setError(error.message));
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
 
 export default systemSettingsSlice.reducer; 

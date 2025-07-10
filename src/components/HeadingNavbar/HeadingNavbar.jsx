@@ -1,6 +1,6 @@
 import Logo from "@/components/Logo/Logo";
 import usePendingRequests from "@/Hook/usePendingRequests";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IoNotifications } from "react-icons/io5";
 import { PiHandDepositFill } from "react-icons/pi";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,27 +18,26 @@ const HeadingNavbar = () => {
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(location.pathname);
-  const [openSubmenu, setOpenSubmenu] = useState(null); // Track which submenu is open
+  const [openSubmenu, setOpenSubmenu] = useState(null);
   const { pendingDeposits, pendingWithdraws } = usePendingRequests();
-  const navRef = useRef(null); // Reference to the navigation container
+  const navRef = useRef(null);
 
-  const userData = user;
-  const menuItems = [
+  const menuItems = useCallback(() => [
     {
       label: "Dashboard",
       path: "/admindashboard",
+      roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
     },
     {
       label: "Setting",
-      path: null, // No path for parent menu with sub-items
+      path: null,
+      roles: ["super-admin"],
       subItems: [
-       
         {
           label: "Admin Setting",
           path: "/admindashboard/adminsetting",
           roles: ['super-admin'],
         },
-       
         {
           label: "Home Control",
           path: "/admindashboard/homecontrol",
@@ -54,14 +53,17 @@ const HeadingNavbar = () => {
     {
       label: "My Account",
       path: "/admindashboard/myaccount/MyDashboardProfile",
+      roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
     },
     {
       label: "BetList",
       path: "admindashboard/all-bets-history",
+      roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
     },
     {
       label: "Casino",
       path: null,
+      roles: ["super-admin"],
       subItems: [
         {
           label: "Provider control",
@@ -73,35 +75,35 @@ const HeadingNavbar = () => {
     {
       label: "Finances",
       path: null,
+      roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
       subItems: [
         {
           label: "Direct Banking",
           path: "/admindashboard/banking",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
+          roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
         },
         {
           label: "Withdraw request",
           path: "/admindashboard/allwithdrawrequest",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
+          roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
           badge: pendingWithdraws > 0 ? pendingWithdraws : null,
         },
         {
           label: "Deposite Request",
           path: "/admindashboard/depositewallet",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
+          roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
           badge: pendingDeposits > 0 ? pendingDeposits : null,
         },
         {
           label: "Bank List",
           path: "/admindashboard/addBank",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
+          roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
         },
         {
           label: "Turnover Management",
           path: "/admindashboard/turnover-management",
           roles: ["admin", "sub-admin", "super-admin"],
         },
-       
         {
           label: "All Transactions",
           path: "/admindashboard/all-transactions",
@@ -112,147 +114,67 @@ const HeadingNavbar = () => {
           path: "/admindashboard/transaction-summary",
           roles: ["super-admin"],
         },
-        
       ],
     },
     {
       label: "Game Center",
-      path: null, // No path for parent menu with sub-items
+      path: null,
+      roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
       subItems: [
-        
         {
           label: "Game Category Control",
           path: "/admindashboard/gamecontrol",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
+          roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
         },
         {
           label: "Game Image Control",
           path: "/admindashboard/gameimagecontrol",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
+          roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
         },
         {
           label: "Most Played Games",
           path: "/admindashboard/mostplayedgamescontrol",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin",'super-admin'],
+          roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
         },
-       
       ],
     },
-  ];
-  
+  ], [pendingDeposits, pendingWithdraws]);
+
   useEffect(() => {
     setActiveTab(location.pathname);
-  }, [location]);
+  }, [location.pathname]);
 
-  const handleTabClick = (path) => {
+  const handleTabClick = useCallback((path) => {
     setActiveTab(path);
     navigate(path);
-  };
+  }, [navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     dispatch(logout());
     navigate("/login");
-  };
+  }, [dispatch, navigate]);
 
-  const filteredMenuItems = menuItems.filter((item) => {
-    if (!userData) return false;
-    // Super-admin has access to everything
-    if (userData.role === "super-admin") {
-      return true;
-    }
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems().filter(item => {
+    // If user has no role, show nothing
+    if (!user?.role) return false;
 
-    if (userData.role === "sub-admin") {
-      const subAdminMenuItems = [
-        "Dashboard",
-        "User",
-        
-        "My Account",
-        "BetList",
-        "BetListLive",
-        "Banking",
-        "Wallet",
-        "withdraw",
-        "Finances",
-      ];
-      return subAdminMenuItems.includes(item.label);
-    }
+    // Check if the item has roles and if user's role is included
+    if (item.roles && !item.roles.includes(user.role)) return false;
 
-    if (userData.role === "agent") {
-      const subAdminMenuItems = [
-        "Dashboard",
-        "User",
-        "My Account",
-        "BetList",
-        "BetListLive",
-        "Banking",
-        "Wallet",
-        "withdraw",
-        "Finances",
-      ];
-      return subAdminMenuItems.includes(item.label);
-    }
-    if (userData.role === "sub-agent") {
-      const subAdminMenuItems = [
-        "Dashboard",
-        "User",
-        
-        "My Account",
-        "BetList",
-        "BetListLive",
-        "Banking",
-        "Wallet",
-        "withdraw",
-        "Finances",
-      ];
-      return subAdminMenuItems.includes(item.label);
-    }
-
-    const allowedMenuForRoles = {
-      admin: [
-        "Dashboard",
-        "User",
+    // If item has subItems, filter them based on roles
+    if (item.subItems) {
+      const filteredSubItems = item.subItems.filter(subItem => 
+        subItem.roles && subItem.roles.includes(user.role)
+      );
       
-        "My Account",
-        "BetList",
-        "BetListLive",
-        "Admin Wallet",
-        "Banking",
-        "Add Bank",
-        "Casino",
-        "MM",
-        "Import",
-        "Game Center",
-        "Message",
-        "withdraw",
-        "Finances",
-      ],
-      agent: [
-        "Dashboard",
-        "User",
-        "My Account",
-        "BetList",
-        "BetListLive",
-        "Banking",
-        "withdraw",
-        "Finances",
-      ],
-      subAgent: [
-        "Dashboard",
-        "User",
-        "My Account",
-        "BetList",
-        "BetListLive",
-        "Banking",
-        "withdraw",
-        "Finances",
-      ],
-    };
+      // Only show menu items that have accessible subitems
+      return filteredSubItems.length > 0;
+    }
 
-    const allowedItemsForRole = allowedMenuForRoles[userData.role] || [];
-    return allowedItemsForRole.includes(item.label);
+    return true;
   });
 
-  // Handle click outside to close submenus
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (navRef.current && !navRef.current.contains(event.target)) {
@@ -260,25 +182,22 @@ const HeadingNavbar = () => {
       }
     };
 
-    // Add event listener when a submenu is open
     if (openSubmenu !== null) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
-    // Cleanup event listener
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [openSubmenu]);
 
-  // Close submenus when route changes
   useEffect(() => {
     setOpenSubmenu(null);
   }, [location.pathname]);
 
-  const handleSubmenuToggle = (itemIndex) => {
+  const handleSubmenuToggle = useCallback((itemIndex) => {
     setOpenSubmenu(openSubmenu === itemIndex ? null : itemIndex);
-  };
+  }, [openSubmenu]);
 
   return (
     <header className="w-full shadow-md" ref={navRef}>
@@ -296,7 +215,7 @@ const HeadingNavbar = () => {
           <LanguageSwitcher variant="navbar" className="mr-2" />
           
           {/* Withdraw Request Icon */}
-          {userData?.role && ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"].includes(userData.role) && (
+          {user?.role && ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"].includes(user.role) && (
             <div className="relative">
               <Link to="/admindashboard/allwithdrawrequest" className="text-white hover:text-yellow-400 transition">
                <IoNotifications className="text-2xl"/>
@@ -309,7 +228,7 @@ const HeadingNavbar = () => {
           )}
           
           {/* Deposit Request Icon */}
-          {userData?.role && ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"].includes(userData.role) && (
+          {user?.role && ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"].includes(user.role) && (
             <div className="relative">
               <Link to="/admindashboard/depositewallet" className="text-white hover:text-yellow-400 transition">
                 <PiHandDepositFill className="text-2xl"/>

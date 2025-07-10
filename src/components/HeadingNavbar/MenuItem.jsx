@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -21,13 +22,13 @@ const MenuItem = ({
 
   const isOpen = openSubmenu === itemIndex;
 
-  const toggleSubmenu = (e) => {
+  const toggleSubmenu = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     onSubmenuToggle(itemIndex);
-  };
+  }, [itemIndex, onSubmenuToggle]);
 
-  const handleClick = (path, e) => {
+  const handleClick = useCallback((path, e) => {
     if (path) {
       handleTabClick(path);
       // Close submenu when clicking on a submenu item
@@ -37,7 +38,7 @@ const MenuItem = ({
     } else {
       toggleSubmenu(e);
     }
-  };
+  }, [handleTabClick, onSubmenuToggle, toggleSubmenu]);
 
   const isActive = activeTab === item.path || (item.subItems && item.subItems.some(subItem => activeTab === subItem.path));
 
@@ -161,4 +162,4 @@ const MenuItem = ({
   );
 };
 
-export default MenuItem;
+export default memo(MenuItem);

@@ -144,7 +144,7 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "/admindashboard",
+        path: "admindashboard",
         element: (
           <AdminRoute>
             <DashboardLayout />
@@ -158,7 +158,7 @@ const router = createBrowserRouter([
           { path: "homecontrol", element: <HomeControl /> },
           { path: "gamecontrol", element: <GameControl /> },
           { path: "gameimagecontrol", element: <ImageControl /> },
-          { path: "gamestatuschanges", element: <GameStatusChanges   /> },
+          { path: "gamestatuschanges", element: <GameStatusChanges /> },
           { path: "mostplayedgamescontrol", element: <MostPlayedGamesMonitor /> },
           {
             path: "myaccount",
@@ -166,23 +166,23 @@ const router = createBrowserRouter([
             children: [
               {
                 path: "myAccountSummary",
-                element: <MyAccountSummary></MyAccountSummary>,
+                element: <MyAccountSummary />,
               },
               {
                 path: "myAccountStatementtabs",
-                element: <MyAccountStatementtabs></MyAccountStatementtabs>,
+                element: <MyAccountStatementtabs />,
               },
               {
                 path: "myDashboardProfile",
-                element: <MyDashboardProfile></MyDashboardProfile>,
+                element: <MyDashboardProfile />,
               },
               {
                 path: "downlist",
-                element: <MyAccountDownList></MyAccountDownList>,
+                element: <MyAccountDownList />,
               },
               {
                 path: "myActivity",
-                element: <MyActivity></MyActivity>,
+                element: <MyActivity />,
               },
             ],
           },

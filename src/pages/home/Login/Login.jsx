@@ -83,7 +83,7 @@ const Login = () => {
           triggerWelcome();
           navigate("/");
         } else {
-          navigate("/dashboard");
+          navigate("/admindashboard");
         }
       }
     } catch (error) {
