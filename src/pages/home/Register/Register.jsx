@@ -1,6 +1,7 @@
 import SpinLoader from "@/components/loaders/SpinLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useAxiosSecure from "@/Hook/useAxiosSecure";
 import useDeviceInfo from "@/Hook/useDeviceInfo";
 import useDeviceManager from "@/Hook/useDeviceManager";
 import {
@@ -8,7 +9,6 @@ import {
   useLazyGetAuthenticatedUserQuery
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { setCredentials } from "@/redux/slices/authSlice";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -73,7 +73,7 @@ const Register = () => {
   const location = useLocation();
   const [linkId, setLinkId] = useState(null);
   const [affiliateCode, setAffiliateCode] = useState(null);
-
+  const axiosSecure = useAxiosSecure();
   // Handle affiliate data through state
   useEffect(() => {
     generateVerificationCode();
@@ -164,7 +164,7 @@ const Register = () => {
           // Notify affiliate service about conversion
           if (linkId && registerData?.data?._id) {
             try {
-              await axios.post(`/api/v1/affiliate/track/${linkId}/conversion`, {
+              await axiosSecure.post(`/api/v1/affiliate/track/${linkId}/conversion`, {
                 userId: registerData.data._id,
               });
               
