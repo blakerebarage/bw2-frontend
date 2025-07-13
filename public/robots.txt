@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://play9.live/sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /dashboard/
+Disallow: /admindashboard/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow important pages
+Allow: /
+Allow: /login
+Allow: /signup
+Allow: /terms-conditions
+Allow: /privacy-policy
+Allow: /rules-regulation
+Allow: /responsible-gaming 
