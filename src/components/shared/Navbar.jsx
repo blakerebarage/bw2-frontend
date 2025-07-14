@@ -4,8 +4,6 @@ import usePendingRequests from "@/Hook/usePendingRequests";
 import { useLanguage } from "@/contexts/LanguageContext";
 import useMedia from "@/Hook/useMedia";
 import { useEffect, useState } from "react";
-import { FiPlusCircle } from "react-icons/fi";
-import { IoMdLogIn } from "react-icons/io";
 import { IoMenu, IoNotifications } from "react-icons/io5";
 import { PiHandDepositFill } from "react-icons/pi";
 import { useSelector } from "react-redux";
@@ -73,22 +71,10 @@ const Navbar = () => {
               />
             </Link>
           </div>
-          <LanguageSwitcher variant="navbar" className="mr-0" />
+          
           {token && userData && (
             <div className="flex flex-row items-center gap-2">
-               {
-          token && userData?.role === "user" &&  <div className="flex flex-row items-center gap-3">
-          
-          <Link to="/balance-deposite" className="transition group relative">
-             <button className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl border border-green-400/30">
-             <PiHandDepositFill className="text-lg text-white"/>
-               <span className="text-sm font-medium">{t('deposit')}</span>
-             </button>
-             
-          </Link>
-          
-        </div>
-         }
+               
         
               {/* Withdraw Request Icon */}
               {userData?.role && ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"].includes(userData.role) && (
@@ -120,46 +106,49 @@ const Navbar = () => {
                 </div>
               )}
              
-              <div className="flex flex-col text-white">
-                <p className="text-white text-end">
-                  {/* @****{userData?.phoneOrUserName?.slice(-4)} */}
-                  {userData?.username}
-                  
-                </p>
-
-                <div className="flex flex-row items-center gap-1 text-sm">
-                  <p className="">
-                    <u className="text-yellow-400 no-underline">
+              <div className="flex flex-col text-white ml-1">
+                
+                <button className="text-white text-sm bg-gray-700 pl-2 flex items-center">
+                  <u className="text-yellow-400 no-underline pr-2">
                       {formatCurrency(userData?.balance)}
                     </u>
-                  </p>
-                  
-                </div>
+                    <Link to="/balance-deposite">
+                    <button className=" px-2  bg-green-600  font-bold text-xl flex items-center">
+                      +
+                    </button>
+                    </Link>
+                </button>
+                
+               
               </div>
+              <LanguageSwitcher variant="navbar" className="mr-0" />
             </div>
           )}
 
           {!token && !user && (
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-2">
               <Link
                 // target="_blank"
                 rel="noreferrer noopenner"
                 to="/signup"
               >
-                <button className="bg-yellow-500 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-yellow-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
-                  <FiPlusCircle className="text-xl text-white"/>
+                <button className="bg-yellow-500 text-white px-3 py-1  flex items-center gap-1 hover:bg-yellow-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
+                  
                   {t('signUp')}
                 </button>
               </Link>
               <Link to="/login">
-                <button className="bg-red-500 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-red-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
-                  <IoMdLogIn className="text-xl text-white"/>
+                <button className="bg-red-500 text-white px-3 py-1  flex items-center gap-1 hover:bg-red-500/80 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
+                  
                   {t('login')}
                 </button>
               </Link>
+              <LanguageSwitcher variant="navbar" className="mr-0" />
             </div>
           )}
+          
         </div>
+        
       </div>
     </div>
   );
