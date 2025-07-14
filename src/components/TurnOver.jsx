@@ -123,9 +123,9 @@ const TurnOver = () => {
                 <span className="text-gray-300">{t('progress')}</span>
                 <span className="text-[#facc15] font-medium">{calculateTurnoverPercentage().toFixed(1)}%</span>
               </div>
-              <div className="w-full bg-[#1a1f24] rounded-full h-3 border border-[#facc15]/20">
+              <div className="w-full bg-[#1a1f24] rounded-full h-3 border border-[#facc15]/20 overflow-hidden">
                 <div 
-                  className="bg-[#facc15] h-3 rounded-full transition-all duration-500 ease-out"
+                  className="bg-[#facc15] h-3 rounded-full transition-all duration-500 ease-out overflow-hidden"
                   style={{ width: `${calculateTurnoverPercentage()}%` }}
                 ></div>
               </div>

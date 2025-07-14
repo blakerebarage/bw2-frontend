@@ -24,7 +24,7 @@ const AllBetsHistory = () => {
   const fetchBets = async () => {
     try {
       setLoading(true);
-      const response = user?.role === 'super-admin' ? await axiosSecure.get(
+      const response = user?.role === 'super-admin' || user?.role === 'admin' ? await axiosSecure.get(
         `/api/v1/game/bet-history?page=${currentPage}&limit=${limit}&search=${search}`
       ) : await axiosSecure.get(
         `/api/v1/game/bet-history/${user?.username}?page=${currentPage}&limit=${limit}&search=${search}`
