@@ -1,4 +1,5 @@
 import Loading from '@/components/shared/Loading';
+import useManualUserDataReload from '@/Hook/useUserDataReload';
 import { useEffect, useState } from 'react';
 import { IoArrowBack } from 'react-icons/io5';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -10,8 +11,11 @@ const GameLunch = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { addToast } = useToasts();
-
+  const { reloadUserData } = useManualUserDataReload();
   useEffect(() => {
+    (async () => {
+      await reloadUserData()
+    })();
     const params = new URLSearchParams(location.search);
     const url = params.get('url');
 
@@ -28,7 +32,7 @@ const GameLunch = () => {
 
     // Hide the query string from the address bar
     window.history.replaceState({}, '', '/game');
-  }, [location.search, navigate, addToast]);
+  }, [location.search, navigate, addToast, reloadUserData]);
 
   const handleIframeLoad = () => setLoading(false);
 
@@ -40,7 +44,10 @@ const GameLunch = () => {
     navigate('/');
   };
 
-  const handleBack = () => navigate(-1);
+  const handleBack = async() => {
+    await reloadUserData()
+    navigate(-1)
+  };
 
   return (
     <div className="fixed inset-0 w-full h-full bg-black z-50">

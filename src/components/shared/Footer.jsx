@@ -3,7 +3,6 @@ import gcGaming from "@/assets/Footer/gc_gaming.png";
 import { FaFacebook, FaTelegram, FaWhatsappSquare, FaYoutube } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../../contexts/LanguageContext";
-import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -14,9 +13,7 @@ const Footer = () => {
         {/* Main Footer Content */}
         <div className="py-4">
           {/* Language Switcher */}
-          <div className="flex justify-center mb-4">
-            <LanguageSwitcher variant="footer" />
-          </div>
+          
 
           {/* App Download Section */}
           <div className="flex flex-col items-center justify-center gap-4 mb-6">

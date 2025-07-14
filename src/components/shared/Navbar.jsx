@@ -10,6 +10,7 @@ import { IoMenu, IoNotifications } from "react-icons/io5";
 import { PiHandDepositFill } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 import Sidebar from "../Sidebar";
 
 const Navbar = () => {
@@ -38,7 +39,7 @@ const Navbar = () => {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-  const bgImage = import.meta.env.VITE_BASE_API_URL + logo?.url;
+  
   return (
     <div className="fixed top-0 z-20 w-full md:w-[60%] lg:w-[40%] xl:w-[30%] shadow-lg drop-shadow-lg">
       <div className="relative">
@@ -72,7 +73,7 @@ const Navbar = () => {
               />
             </Link>
           </div>
-        
+          <LanguageSwitcher variant="navbar" className="mr-0" />
           {token && userData && (
             <div className="flex flex-row items-center gap-2">
                {
@@ -88,6 +89,7 @@ const Navbar = () => {
           
         </div>
          }
+        
               {/* Withdraw Request Icon */}
               {userData?.role && ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"].includes(userData.role) && (
                 <div className="relative">
@@ -103,7 +105,7 @@ const Navbar = () => {
                   </Link>
                 </div>
               )}
-              
+               
               {/* Deposit Request Icon */}
               {userData?.role && ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"].includes(userData.role) && (
                 <div className="relative">
@@ -117,7 +119,7 @@ const Navbar = () => {
                   </Link>
                 </div>
               )}
-
+             
               <div className="flex flex-col text-white">
                 <p className="text-white text-end">
                   {/* @****{userData?.phoneOrUserName?.slice(-4)} */}

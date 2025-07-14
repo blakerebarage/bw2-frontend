@@ -8,9 +8,9 @@ export const MostPlayedGames = ({ games, onGameLaunch, onFavoriteToggle, favorit
      
       
       <div className="grid gap-4 grid-cols-3">
-        {games.map((game) => (
+        {games.map((game,i) => (
           <GameCard
-            key={game.game_code}
+            key={i}
             game={game}
             onGameLaunch={onGameLaunch}
             onFavoriteToggle={onFavoriteToggle}

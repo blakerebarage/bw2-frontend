@@ -35,28 +35,32 @@ const usersApi = baseApi.injectEndpoints({
 
     // get all users
     getUsers: builder.query({
-      query: ({ referredBy, page, limit }) => {
+      query: (params = {}) => {
+        const { referredBy, page, limit } = params;
         console.log({ referredBy, page, limit });
-        const params = new URLSearchParams({
+        const urlParams = new URLSearchParams({
           page: page?.toString() || '1',
           limit: limit?.toString() || '20'
         });
         
         if (referredBy) {
-          params.append('referredBy', referredBy);
+          urlParams.append('referredBy', referredBy);
         }
         
-        return `/api/v1/user/all?${params.toString()}`;
+        return `/api/v1/user/all?${urlParams.toString()}`;
       },
       providesTags: ["users"],
     }),
 
     updateBalance: builder.mutation({
-      query: ({ username, type, amount }) => ({
-        url: `/api/v1/finance/create-transaction`,
-        method: "POST",
-        body: { type, amount, username },
-      }),
+      query: (params = {}) => {
+        const { username, type, amount } = params;
+        return {
+          url: `/api/v1/finance/create-transaction`,
+          method: "POST",
+          body: { type, amount, username },
+        };
+      },
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;

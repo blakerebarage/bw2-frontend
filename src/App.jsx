@@ -1,12 +1,11 @@
-import useManualUserDataReload from '@/Hook/useUserDataReload';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation } from 'react-router-dom';
 import "./App.css";
 import InstallPrompt from './components/InstallPrompt';
 import WelcomeMessage from './components/WelcomeMessage/WelcomeMessage';
-import { LanguageProvider } from './contexts/LanguageContext';
 import usePendingRequests from './Hook/usePendingRequests';
+import useManualUserDataReload from './Hook/useUserDataReload';
 import { fetchSystemSettings } from "./redux/slices/systemSettingsSlice";
 import { WelcomeProvider } from './UserContext/WelcomeContext';
 
@@ -27,9 +26,9 @@ const RouteChangeHandler = () => {
 
 function App() {
   
-  const { reloadUserData } = useManualUserDataReload();
-  const dispatch = useDispatch();
-
+const { reloadUserData } = useManualUserDataReload();
+const dispatch = useDispatch();
+const pathname = useLocation().pathname
   // Initial data loading
   useEffect(() => {
     const loadInitialData = async () => {
@@ -43,8 +42,23 @@ function App() {
     loadInitialData();
   }, [dispatch, reloadUserData]);
 
+  // Call loadInitialData when pathname is "/game" or "/"
+  useEffect(() => {
+    if (pathname === "/game" || pathname === "/") {
+      const loadInitialData = async () => {
+        try {
+          await dispatch(fetchSystemSettings()).unwrap();
+          await reloadUserData();
+        } catch (error) {
+          console.error('Error loading initial data:', error);
+        }
+      };
+      loadInitialData();
+    }
+  }, [pathname, dispatch, reloadUserData]);
+
   return (
-    <LanguageProvider>
+    
       <WelcomeProvider>
         <div className="bg-gray-900">
           <RouteChangeHandler />
@@ -53,7 +67,7 @@ function App() {
           <InstallPrompt />
         </div>
       </WelcomeProvider>
-    </LanguageProvider>
+    
   );
 }
 

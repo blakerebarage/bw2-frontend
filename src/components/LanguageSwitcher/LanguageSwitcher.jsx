@@ -6,7 +6,7 @@ const LanguageSwitcher = ({ className = '', variant = 'default' }) => {
   const { currentLanguage, currentLanguageData, availableLanguages, changeLanguage, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+   console.log(currentLanguageData,"currentLanguageData")
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -35,12 +35,6 @@ const LanguageSwitcher = ({ className = '', variant = 'default' }) => {
           dropdown: 'absolute right-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 min-w-[150px]',
           item: 'flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-700 transition-colors duration-200 cursor-pointer',
         };
-      case 'footer':
-        return {
-          button: 'flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-yellow-400 transition-colors duration-200',
-          dropdown: 'absolute bottom-full mb-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 min-w-[150px]',
-          item: 'flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200 cursor-pointer',
-        };
       default:
         return {
           button: 'flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors duration-200',
@@ -61,7 +55,7 @@ const LanguageSwitcher = ({ className = '', variant = 'default' }) => {
       >
         <FaGlobe className="text-lg" />
         <span className="text-sm font-medium">
-          {currentLanguageData.flag} {currentLanguageData.name}
+          {currentLanguageData.code.toUpperCase()}
         </span>
         <FaChevronDown 
           className={`text-xs transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
@@ -79,7 +73,7 @@ const LanguageSwitcher = ({ className = '', variant = 'default' }) => {
               >
                 <span className="text-lg">{language.flag}</span>
                 <div className="flex flex-col">
-                  <span className="font-medium">{language.name}</span>
+                  
                   <span className="text-xs opacity-75">{language.englishName}</span>
                 </div>
                 {currentLanguage === code && (

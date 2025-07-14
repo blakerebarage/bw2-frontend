@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 import { ToastProvider } from "react-toast-notifications";
 import { PersistGate } from "redux-persist/integration/react";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import "./index.css";
 import { persistor, store } from "./redux/store";
 import router from "./routes/Router.jsx";
@@ -17,7 +18,9 @@ createRoot(document.getElementById("root")).render(
         <ToastProvider>
           <UserProvider>
             <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID_HERE">
+            <LanguageProvider>
               <RouterProvider router={router} />
+              </LanguageProvider>
             </GoogleOAuthProvider>
           </UserProvider>
         </ToastProvider>

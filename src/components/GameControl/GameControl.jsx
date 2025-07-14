@@ -1,5 +1,6 @@
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import useAxiosSecure from '@/Hook/useAxiosSecure';
+import useManualUserDataReload from '@/Hook/useUserDataReload';
 import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useState } from 'react';
 import { FaGamepad, FaSearch } from 'react-icons/fa';
@@ -35,7 +36,7 @@ const GameControl = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
   const [totalPages, setTotalPages] = useState(0);
-
+  const { reloadUserData } = useManualUserDataReload();
   // Search filter state
   const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -206,6 +207,7 @@ const GameControl = () => {
   };
 
   const initGameLaunch = async (gameId) => {
+    await reloadUserData();
     if (!user?.username) {
       addToast("Please login to play games", {
         appearance: "error",
