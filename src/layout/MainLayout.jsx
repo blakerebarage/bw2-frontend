@@ -1,32 +1,44 @@
 import ContactWidget from "@/components/ContactWidget";
 import Footer from "@/components/shared/Footer";
 import Navbar from "@/components/shared/Navbar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import bgimage from "../../public/bgimage.webp";
 import { trackPageView } from "../lib/facebookPixel"; // Adjust path if needed
 
 const MainLayout = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     // Track a page view or a custom event
     trackPageView("MainLayout Page");
     // Or use trackCustomEvent('MainLayoutVisit', { ... });
+
+    // Check if device is mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkMobile();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobile);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   return (
     <div
       style={{
-        backgroundImage:
-          // "url('https://www.wickspin24.live/images/velki-desktop-bg.webp')",
-          `url(${bgimage})`,
+        backgroundImage: isMobile ? 'none' : `url(${bgimage})`,
         backgroundSize: "cover",
         backgroundPosition: "top",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
-        
-       
       }}
-      className=" flex justify-center"
+      className="flex justify-center"
     >
       <div className="hidden lg:flex w-[30%] md:w-[20%] items-center justify-center">
         
