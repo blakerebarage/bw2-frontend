@@ -23,6 +23,8 @@ export function SelectCategory() {
  
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [popularSearchQuery, setPopularSearchQuery] = useState("");
+  const [debouncedPopularSearchQuery, setDebouncedPopularSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [gameLoading, setGameLoading] = useState(false);
   const [favoriteGames, setFavoriteGames] = useState([]);
@@ -49,6 +51,15 @@ export function SelectCategory() {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Debounce popular search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedPopularSearchQuery(popularSearchQuery);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [popularSearchQuery]);
 
   // Fetch all games data (consolidated with search functionality)
   useEffect(() => {
@@ -155,6 +166,14 @@ export function SelectCategory() {
       setCurrentPage(1);
     }
   }, [debouncedSearchQuery]);
+
+  // Reset popular page to 1 when popular search query changes
+  useEffect(() => {
+    if (debouncedPopularSearchQuery) {
+      setPopularPage(1);
+    }
+  }, [debouncedPopularSearchQuery]);
+
   // Fetch most played games
   useEffect(() => {
     const fetchMostPlayedGames = async () => {
@@ -163,7 +182,8 @@ export function SelectCategory() {
           params: {
             page: popularPage,
             limit: 15,
-            isActive: true
+            isActive: true,
+            search: debouncedPopularSearchQuery || undefined
           }
         });
         if (response?.data?.data?.popularGames) {
@@ -176,7 +196,7 @@ export function SelectCategory() {
     };
 
     fetchMostPlayedGames();
-  }, [popularPage]);
+  }, [popularPage, debouncedPopularSearchQuery]);
 
   // Function to get translated category title
   const getCategoryTitle = (categoryValue) => {
@@ -201,6 +221,8 @@ export function SelectCategory() {
     setDisplayGames([]);
     setSearchQuery("");
     setDebouncedSearchQuery(""); // Reset debounced search query
+    setPopularSearchQuery("");
+    setDebouncedPopularSearchQuery(""); // Reset popular search query
     setCategoryReloadKey(prev => prev + 1);
     if (category.value === "favourite") {
       fetchFavorites();
@@ -386,21 +408,22 @@ export function SelectCategory() {
             </div>
           )}
 
-          {/* Most Played Games Section - Always show in Favourite view when not searching */}
-          { mostPlayedGames.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-2xl font-bold text-white drop-shadow mb-4">
-                {t('popularGames')}
-              </h3>
-              <MostPlayedGames
-                games={mostPlayedGames}
-                onGameLaunch={initGameLaunch}
-                onFavoriteToggle={handleFavoriteToggle}
-                favoriteGames={favoriteGames}
-                user={user}
-              />
-            </div>
-          )}
+          {/* Most Played Games Section - Always show in Favourite view */}
+          <div className="mt-8">
+            <MostPlayedGames
+              games={mostPlayedGames}
+              onGameLaunch={initGameLaunch}
+              onFavoriteToggle={handleFavoriteToggle}
+              favoriteGames={favoriteGames}
+              user={user}
+              searchQuery={popularSearchQuery}
+              onSearchChange={setPopularSearchQuery}
+              onClearSearch={() => {
+                setPopularSearchQuery("");
+                setDebouncedPopularSearchQuery("");
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -517,6 +540,23 @@ export function SelectCategory() {
               </p>
             </div>
           )}
+
+          {/* Most Played Games Section - Show in all categories */}
+          <div className="mt-8">
+            <MostPlayedGames
+              games={mostPlayedGames}
+              onGameLaunch={initGameLaunch}
+              onFavoriteToggle={handleFavoriteToggle}
+              favoriteGames={favoriteGames}
+              user={user}
+              searchQuery={popularSearchQuery}
+              onSearchChange={setPopularSearchQuery}
+              onClearSearch={() => {
+                setPopularSearchQuery("");
+                setDebouncedPopularSearchQuery("");
+              }}
+            />
+          </div>
         </div>
       )}
     </div>
