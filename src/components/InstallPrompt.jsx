@@ -28,13 +28,13 @@ const InstallPrompt = () => {
 
     // Only proceed if on mobile device
     if (!mobile) {
-      console.log('PWA install prompt hidden - Desktop device detected');
+     
       return;
     }
 
     // Handle PWA install prompt (only on mobile)
     const handleBeforeInstallPrompt = (e) => {
-      console.log('PWA install prompt triggered on mobile device!');
+      
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       // Store the event so it can be triggered later
@@ -48,7 +48,7 @@ const InstallPrompt = () => {
 
     // Listen for app installation (when user installs via browser menu)
     const handleAppInstalled = () => {
-      console.log('App was installed via browser!');
+      
       localStorage.setItem('pwaInstalled', 'true');
       setShowInstallPrompt(false);
     };
@@ -77,7 +77,7 @@ const InstallPrompt = () => {
     
     if (isInstalled) {
       setShowInstallPrompt(false);
-      console.log('App is already installed - hiding install prompt');
+     
       // Store that app is installed
       localStorage.setItem('pwaInstalled', 'true');
     } else {
@@ -107,13 +107,7 @@ const InstallPrompt = () => {
     }
 
     // For testing: log PWA status
-    console.log('PWA Status:', {
-      isMobile: mobile,
-      isIOS,
-      isInstalled,
-      hasServiceWorker: 'serviceWorker' in navigator,
-      isSecureContext: window.isSecureContext
-    });
+   
 
   }, []);
 
@@ -161,12 +155,12 @@ ${t('androidInstallFooter')}
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
+       
         localStorage.setItem('pwaInstalled', 'true');
         localStorage.removeItem('installPromptDismissed');
         localStorage.removeItem('installPromptDismissedTime');
       } else {
-        console.log('User dismissed the install prompt');
+        
       }
       
       setDeferredPrompt(null);
@@ -182,7 +176,7 @@ ${t('androidInstallFooter')}
     // Remember user dismissed with timestamp
     localStorage.setItem('installPromptDismissed', 'true');
     localStorage.setItem('installPromptDismissedTime', Date.now().toString());
-    console.log('User dismissed install prompt');
+    
   };
 
   // Only show on mobile devices

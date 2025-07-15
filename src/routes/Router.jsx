@@ -66,6 +66,7 @@ import DepositByChat from "@/components/DepositByChat";
 import GameStatusChanges from "@/components/GameControl/GameStatusChanges";
 import MostPlayedGamesMonitor from "@/components/Home/MostPlayedGamesMonitor/MostPlayedGamesMonitor";
 import TurnOver from "@/components/TurnOver";
+import UserBetList from "@/components/UserBetList/UserBetList";
 import WithdrawByChat from "@/components/WithdrawByChat";
 import GameLunch from "@/pages/Game/GameLunch";
 import Settings from "@/pages/setting/Settings";
@@ -213,6 +214,9 @@ const router = createBrowserRouter([
       { path: "/profile/:id", element: <Profile /> },
       { path: "/downlist/:id", element: <Downlist /> },
       { path: "/activitylog/:id", element: <Activity /> },
+      {
+        path: "/betlist/:id", element: <UserBetList />
+      },
       { path: "*", element: <NotFound /> },
     ],
   },

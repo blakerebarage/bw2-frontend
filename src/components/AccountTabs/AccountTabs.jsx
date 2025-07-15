@@ -104,7 +104,20 @@ const AccountTabs = ({id}) => {
           </li>
           </Link>
         }
-       
+       <Link to={`/betlist/${id}`}>
+          <li>
+          <a
+                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+                  isActive("/activitylog")
+                    ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent"
+                }`}
+              >
+              <Activity className="w-4 h-4" />
+              Bet List
+            </a>
+          </li>
+          </Link>
       </ul>
     </div>
   );

@@ -29,7 +29,7 @@ const MostPlayedGamesMonitor = () => {
         setTotalItems(response.data.data.totalItems);
       }
     } catch (error) {
-      console.log(error);
+      
       addToast('Failed to fetch games', {
         appearance: 'error',
         autoDismiss: true,
@@ -59,11 +59,11 @@ const MostPlayedGamesMonitor = () => {
 
     if (playCount) {
       try {
-        console.log(gameId, playCount);
+       
         const response = await axiosSecure.patch(`/api/v1/game/update-play-count/${gameId}`, {
           playCount: parseInt(playCount)
         });
-        console.log(response);
+        
         addToast('Play count updated successfully', {
           appearance: 'success',
           autoDismiss: true,
@@ -71,7 +71,7 @@ const MostPlayedGamesMonitor = () => {
         // Refresh the games list
         fetchGames(currentPage);
       } catch (error) {
-        console.log(error);
+      
         addToast('Failed to update play count', {
           appearance: 'error',
           autoDismiss: true,

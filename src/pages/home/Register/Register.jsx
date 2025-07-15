@@ -151,7 +151,7 @@ const Register = () => {
       try {
         setLoading(true);
         const { data: registerData, error } = await addUser(userInfo);
-        console.log(registerData);  
+       
         if (registerData?.success) {
           // Track successful registration with Facebook Pixel
           trackRegistration({

@@ -24,7 +24,7 @@ const Downlist = () => {
   limit: usersPerPage, // Get all users for client-side filtering
   ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
 };
-console.log(queryParams);
+
 const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
   useEffect(() => {
     const foundUser = users?.data?.users.find((user) => user._id === id);

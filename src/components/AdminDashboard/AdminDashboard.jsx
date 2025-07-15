@@ -238,7 +238,7 @@ const AdminDashboard = () => {
       requesterUserId: user?._id, // Add requester user ID for tracking
     };
    
-   console.log(finalUserInfo);
+   
     const result = await addUser(finalUserInfo);
     
     if (result?.data?.success) {

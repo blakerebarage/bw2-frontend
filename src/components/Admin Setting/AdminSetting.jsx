@@ -22,7 +22,7 @@ const AdminSetting = () => {
     supportContact: [],
     depositWithdrawNumbers: []
   });
- console.log(form);
+ 
   useEffect(() => {
     const fetchSettings = async () => {
       setLoading(true);
