@@ -71,7 +71,7 @@ export function SelectCategory() {
         const response = await axiosSecure.get('/api/v1/game/all-games', {
           params: {
             page: currentPage,
-            limit: 45,
+            limit: selectedCategory.value === "allgames" ? 45 : 45,
             isActive: true,
             // When searching, ignore category filter to search all games
             category: debouncedSearchQuery ? undefined : (selectedCategory.value === "allgames" ? undefined : selectedCategory.value.charAt(0).toUpperCase() + selectedCategory.value.slice(1)),
@@ -187,7 +187,12 @@ export function SelectCategory() {
           }
         });
         if (response?.data?.data?.popularGames) {
-          setMostPlayedGames(response.data.data.popularGames);
+          // For first page or search, replace results. For load more, append results
+          if (popularPage === 1 || debouncedPopularSearchQuery) {
+            setMostPlayedGames(response.data.data.popularGames);
+          } else {
+            setMostPlayedGames(prev => [...prev, ...response.data.data.popularGames]);
+          }
           setPopularTotalPages(response.data.data.pageCount || 1);
         }
       } catch (error) {
@@ -335,8 +340,18 @@ export function SelectCategory() {
     setCurrentPage(prev => prev + 1);
   };
 
+  // Handle Load More functionality for popular games
+  const handlePopularLoadMore = () => {
+    setPopularPage(prev => prev + 1);
+  };
+
   // Calculate if there are more pages available
-  const hasMorePages = Math.ceil(totalGames / 45) > currentPage;
+  const hasMorePages = selectedCategory.value === "allgames" 
+    ? Math.ceil(totalGames / 45) > currentPage 
+    : Math.ceil(totalGames / 45) > currentPage;
+  
+  // Calculate if there are more popular pages available
+  const hasMorePopularPages = popularTotalPages > popularPage;
 
   if (gameLoading) {
     return <Loading />;
@@ -422,6 +437,9 @@ export function SelectCategory() {
                 setPopularSearchQuery("");
                 setDebouncedPopularSearchQuery("");
               }}
+              onLoadMore={handlePopularLoadMore}
+              hasMorePages={hasMorePopularPages}
+              loading={loading}
             />
           </div>
         </div>
@@ -541,22 +559,6 @@ export function SelectCategory() {
             </div>
           )}
 
-          {/* Most Played Games Section - Show in all categories */}
-          <div className="mt-8">
-            <MostPlayedGames
-              games={mostPlayedGames}
-              onGameLaunch={initGameLaunch}
-              onFavoriteToggle={handleFavoriteToggle}
-              favoriteGames={favoriteGames}
-              user={user}
-              searchQuery={popularSearchQuery}
-              onSearchChange={setPopularSearchQuery}
-              onClearSearch={() => {
-                setPopularSearchQuery("");
-                setDebouncedPopularSearchQuery("");
-              }}
-            />
-          </div>
         </div>
       )}
     </div>
