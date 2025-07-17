@@ -1,7 +1,7 @@
 import PageHeader from "@/components/shared/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
-import { Activity, Calendar, Eye, EyeOff, Key, Loader2, Lock, Mail, Phone, Shield, User, X } from "lucide-react";
+import { Activity, Calendar, Eye, EyeOff, Key, Loader2, Lock, Mail, Phone, User, X } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -110,14 +110,7 @@ const MyProfile = () => {
               <p className="text-sm text-gray-300 truncate">
                 {user?.email || t('noEmailProvided')}
               </p>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#facc15] text-[#1a1f24]">
-                  {user?.role || "User"}
-                </span>
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-                  {t('active')}
-                </span>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -183,13 +176,7 @@ const MyProfile = () => {
               value: user?.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : null, 
               icon: Calendar,
               sensitive: false
-            },
-            { 
-              label: t('role'), 
-              value: user?.role, 
-              icon: Shield,
-              sensitive: false
-            },
+            }
           ].map(({ label, value, icon: Icon, sensitive }) => (
             <div key={label} className="bg-[#1a1f24] rounded-lg shadow-sm border border-[#facc15]/20 p-4">
               <div className="flex items-center space-x-3">
