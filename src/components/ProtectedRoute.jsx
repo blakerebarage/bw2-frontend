@@ -14,6 +14,10 @@ const ProtectedRoute = ({ allowedRoles }) => {
     return <Navigate to="/" replace />;
   }
 
+  if (["cash-agent", "sub-cash-agent"].includes(user?.role)) {
+    return <Navigate to="/cash-agent" replace />;
+  }
+
   // Authorized, render the child routes
   return <Outlet />;
 };

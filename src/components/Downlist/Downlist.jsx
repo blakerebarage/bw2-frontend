@@ -1,7 +1,8 @@
+import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useUser } from "@/UserContext/UserContext";
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaHouseUser } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
@@ -15,33 +16,58 @@ const Downlist = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUserLoading, setSelectedUserLoading] = useState(false);
   const usersPerPage = 20;
   const { id } = useParams();
   const { selectedUser, setSelectedUser } = useUser();
- // Build query parameters based on user role
- const queryParams = {
-  page: currentPage,
-  limit: usersPerPage, // Get all users for client-side filtering
-  ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
-};
+  const axiosSecure = useAxiosSecure();
 
-const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
-  useEffect(() => {
-    const foundUser = users?.data?.users.find((user) => user._id === id);
-    if (foundUser) {
-      setSelectedUser(foundUser);
+  // Fetch single user by ID
+  const fetchSingleUser = useCallback(async (userId) => {
+    if (!userId) return;
+    
+    setSelectedUserLoading(true);
+    
+    try {
+      const response = await axiosSecure.get(`/api/v1/user/single/${userId}`);
+      if (response.data?.success && response.data?.data) {
+        setSelectedUser(response.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching user:", err);
+    } finally {
+      setSelectedUserLoading(false);
     }
-  }, [id, users, setSelectedUser]);
+  }, [axiosSecure, setSelectedUser]);
+
+  // Fetch selected user when ID changes
   useEffect(() => {
-    if (!isLoading && !error && selectedUser && users) {
-      const filteredUsers = users?.data?.users?.filter(
+    if (id) {
+      fetchSingleUser(id);
+    }
+  }, [id, fetchSingleUser]);
+
+  // Build query parameters - use the same pattern as other components
+  const queryParams = {
+    page: 1,
+    limit: 10000, // Get all users for filtering
+    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+  };
+
+  // Use RTK Query to fetch users - same pattern as other components
+  const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
+
+  // Filter referred users based on selectedUser's referral code
+  useEffect(() => {
+    if (!isLoading && !error && selectedUser && users?.data?.users) {
+      const filteredUsers = users.data.users.filter(
         (user) => user.referredBy === selectedUser.referralCode
       );
       
       setReferredUsers(filteredUsers || []);
       setTotalPages(Math.ceil((filteredUsers?.length || 0) / usersPerPage));
     }
-  }, [selectedUser, users, isLoading, error]);
+  }, [selectedUser, users, isLoading, error, usersPerPage]);
 
   // Filter users based on search query
   const filteredUsers = referredUsers.filter(user => 
@@ -65,10 +91,15 @@ const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
       "sub-admin": { bg: "bg-purple-100", text: "text-purple-800", label: "SA" },
       agent: { bg: "bg-green-100", text: "text-green-800", label: "AG" },
       "sub-agent": { bg: "bg-yellow-100", text: "text-yellow-800", label: "SG" },
+      "cash-agent": { bg: "bg-orange-100", text: "text-orange-800", label: "CA" },
+      "sub-cash-agent": { bg: "bg-red-100", text: "text-red-800", label: "SC" },
       user: { bg: "bg-gray-100", text: "text-gray-800", label: "US" }
     };
     return badges[role] || { bg: "bg-gray-100", text: "text-gray-800", label: role?.slice(0, 2).toUpperCase() };
   };
+
+  const loading = selectedUserLoading || isLoading;
+  const errorMessage = error ? "Error loading users. Please try again later." : null;
   
   return (
     <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen">
@@ -129,7 +160,7 @@ const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {isLoading ? (
+                  {loading ? (
                     <tr>
                       <td colSpan="9" className="px-4 py-8">
                         <div className="flex flex-col items-center justify-center space-y-3">
@@ -138,10 +169,10 @@ const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
                         </div>
                       </td>
                     </tr>
-                  ) : error ? (
+                  ) : errorMessage ? (
                     <tr>
                       <td colSpan="9" className="px-4 py-8 text-center text-red-600">
-                        Error loading users. Please try again later.
+                        {errorMessage}
                       </td>
                     </tr>
                   ) : currentUsers.length === 0 ? (

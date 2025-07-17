@@ -9,7 +9,7 @@ const usersApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["users"],
+      invalidatesTags: ["users", "balance"],
     }),
 
     // Login a user
@@ -19,8 +19,9 @@ const usersApi = baseApi.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
-      providesTags: ["users"],
+      invalidatesTags: ["profile", "balance"],
     }),
+
     // Fetch authenticated user
     getAuthenticatedUser: builder.query({
       query: (token) => ({
@@ -30,7 +31,7 @@ const usersApi = baseApi.injectEndpoints({
           Authorization: `Bearer ${token}`,
         },
       }),
-      providesTags: ["users"],
+      providesTags: ["profile"],
     }),
 
     // get all users
@@ -40,7 +41,7 @@ const usersApi = baseApi.injectEndpoints({
         
         const urlParams = new URLSearchParams({
           page: page?.toString() || '1',
-          limit: limit?.toString() || '10000000'
+          limit: limit?.toString() || '10'
         });
         
         if (referredBy) {
@@ -49,7 +50,23 @@ const usersApi = baseApi.injectEndpoints({
         
         return `/api/v1/user/all?${urlParams.toString()}`;
       },
-      providesTags: ["users"],
+      providesTags: (result) => 
+        result?.data?.users
+          ? [
+              ...result.data.users.map(({ _id }) => ({ type: 'users', id: _id })),
+              { type: 'users', id: 'LIST' },
+            ]
+          : [{ type: 'users', id: 'LIST' }],
+      // Add cache invalidation on focus and reconnect
+      keepUnusedDataFor: 30,
+      refetchOnMountOrArgChange: 20,
+    }),
+
+    // Get single user
+    getSingleUser: builder.query({
+      query: (userId) => `/api/v1/user/single/${userId}`,
+      providesTags: (result, error, userId) => [{ type: 'users', id: userId }],
+      keepUnusedDataFor: 60,
     }),
 
     updateBalance: builder.mutation({
@@ -61,23 +78,38 @@ const usersApi = baseApi.injectEndpoints({
           body: { type, amount, username },
         };
       },
+      invalidatesTags: ["users", "balance", "transactions"],
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
           // Invalidate and refetch user data
-          dispatch(baseApi.util.invalidateTags(['users']));
-          
+          dispatch(baseApi.util.invalidateTags(['users', 'balance', 'transactions']));
         } catch (error) {
-         
+          console.error('Error updating balance:', error);
         }
       },
     }),
+
     getUserTransactions: builder.query({
       query: ({ username, page, limit }) => ({
         url: `/api/v1/finance/all-transactions/${username}?page=${page}&limit=${limit}`,
         method: "GET",
       }),
-      providesTags: ["users"],
+      providesTags: (result, error, { username }) => [
+        { type: 'transactions', id: username },
+        { type: 'transactions', id: 'LIST' },
+      ],
+      keepUnusedDataFor: 30,
+    }),
+
+    // Send balance mutation
+    sendBalance: builder.mutation({
+      query: (data) => ({
+        url: "/api/v1/finance/send-balance",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["users", "balance", "transactions"],
     }),
   }),
 });
@@ -87,81 +119,8 @@ export const {
   useLoginUserMutation,
   useLazyGetAuthenticatedUserQuery,
   useGetUsersQuery,
+  useGetSingleUserQuery,
   useUpdateBalanceMutation,
-  useGetUserTransactionsQuery
+  useGetUserTransactionsQuery,
+  useSendBalanceMutation
 } = usersApi;
-
-
-// import baseApi from "../../baseApi";
-
-// // Function to generate a random referral code
-// const generateReferralCode = (length = 6) => {
-//   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-//   let code = "";
-//   for (let i = 0; i < length; i++) {
-//     code += chars.charAt(Math.floor(Math.random() * chars.length));
-//   }
-//   return code;
-// };
-// const usersApi = baseApi.injectEndpoints({
-//   endpoints: (builder) => ({
-//     // Register a user with referral code
-//     addUser: builder.mutation({
-//       query: (data) => {
-//         const referralCode = generateReferralCode(); // Generate unique referral code
-//         return {
-//           url: "/users/register",
-//           method: "POST",
-//           body: { ...data, referralCode }, // Add referralCode to request
-//         };
-//       },
-//       invalidatesTags: ["users"],
-//     }),
-
-//     // Login a user
-//     loginUser: builder.mutation({
-//       query: (credentials) => ({
-//         url: "/users/login",
-//         method: "POST",
-//         body: credentials,
-//       }),
-//       providesTags: ["users"],
-//     }),
-
-//     // Fetch authenticated user
-//     getAuthenticatedUser: builder.query({
-//       query: (token) => ({
-//         url: "/users/profile",
-//         method: "GET",
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }),
-//       providesTags: ["users"],
-//     }),
-
-//     // Get all users
-//     getUsers: builder.query({
-//       query: () => "/users",
-//       providesTags: ["users"],
-//     }),
-
-//     // Update balance
-//     updateBalance: builder.mutation({
-//       query: ({ userId, type, amount }) => ({
-//         url: `/users/balance/${userId}`,
-//         method: "PUT",
-//         body: { type, amount },
-//       }),
-//       invalidatesTags: ["users"],
-//     }),
-//   }),
-// });
-
-// export const {
-//   useAddUserMutation,
-//   useLoginUserMutation,
-//   useLazyGetAuthenticatedUserQuery,
-//   useGetUsersQuery,
-//   useUpdateBalanceMutation,
-// } = usersApi;

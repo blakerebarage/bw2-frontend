@@ -18,7 +18,6 @@ export const fetchSystemSettings = createAsyncThunk(
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
       if (response.data.success) {
         return response.data.data;
       }

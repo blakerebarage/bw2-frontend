@@ -1,6 +1,6 @@
-import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
+import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useUser } from "@/UserContext/UserContext";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import AccountTabs from "../AccountTabs/AccountTabs";
@@ -9,23 +9,48 @@ const UserProfile = () => {
   const { id } = useParams();
   const { selectedUser, setSelectedUser } = useUser();
   const { user } = useSelector((state) => state.auth);
-   // Build query parameters based on user role
-   const queryParams = {
-    page: 1,
-    limit: 100000, // Get all users for client-side filtering
-    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
-  };
-  const { data: users = [] } = useGetUsersQuery(queryParams);
- 
-  useEffect(() => {
-    const foundUser = users?.data?.users.find((user) => user._id === id);
-    if (foundUser) {
-      setSelectedUser(foundUser);
+  const [selectedUserLoading, setSelectedUserLoading] = useState(false);
+  const axiosSecure = useAxiosSecure();
+
+  // Fetch single user by ID
+  const fetchSingleUser = useCallback(async (userId) => {
+    if (!userId) return;
+    
+    setSelectedUserLoading(true);
+    
+    try {
+      const response = await axiosSecure.get(`/api/v1/user/single/${userId}`);
+      if (response.data?.success && response.data?.data) {
+        setSelectedUser(response.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching user:", err);
+    } finally {
+      setSelectedUserLoading(false);
     }
-  }, [id, users, setSelectedUser]);
+  }, [axiosSecure, setSelectedUser]);
+
+  // Fetch selected user when ID changes
+  useEffect(() => {
+    if (id) {
+      fetchSingleUser(id);
+    }
+  }, [id, fetchSingleUser]);
+
+  if (selectedUserLoading) {
+    return (
+      <div className="bg-adminBackground min-h-screen flex items-center justify-center">
+        <div className="text-center text-gray-500">Loading user...</div>
+      </div>
+    );
+  }
 
   if (!selectedUser) {
-    return <div className="text-center text-gray-500">User not found</div>;
+    return (
+      <div className="bg-adminBackground min-h-screen flex items-center justify-center">
+        <div className="text-center text-gray-500">User not found</div>
+      </div>
+    );
   }
 
   return (
@@ -47,7 +72,7 @@ const UserProfile = () => {
                 USD
               </span>
               <span className="text-gray-800 text-xl font-bold sm:text-3xl ">
-                {selectedUser?.balance.toFixed(2)}
+                {selectedUser?.balance?.toFixed(2) || '0.00'}
               </span>
             </h3>
           </div>

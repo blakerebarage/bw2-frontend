@@ -73,8 +73,13 @@ import Settings from "@/pages/setting/Settings";
 import UsersData from "@/pages/UsersData/UsersData";
 import { createBrowserRouter } from "react-router-dom";
 import AdminRoute from "./AdminRoute";
+import CashAgentRoute from "./CashAgentRoute";
 
 const router = createBrowserRouter([
+  {
+    path: "/cash-agent",
+    element: <CashAgentRoute />,
+  },
   {
     path: "/",
     element: <App />,

@@ -1,9 +1,8 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useUser } from "@/UserContext/UserContext";
 import { Loader2, Lock } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
@@ -13,28 +12,43 @@ import CommonNavMenu from "../CommonNavMenu/CommonNavMenu";
 const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [selectedUserLoading, setSelectedUserLoading] = useState(false);
   const { addToast } = useToasts();
   const { id } = useParams();
   const { selectedUser, setSelectedUser } = useUser();
   const { user } = useSelector((state) => state.auth);
-  const queryParams = {
-    page: 1,
-    limit: 100000,
-    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
-  };
-  const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
+  const axiosSecure = useAxiosSecure();
 
-  useEffect(() => {
-    const foundUser = users?.data?.users.find((user) => user._id === id);
-    if (foundUser) {
-      setSelectedUser(foundUser);
+  // Fetch single user by ID
+  const fetchSingleUser = useCallback(async (userId) => {
+    if (!userId) return;
+    
+    setSelectedUserLoading(true);
+    
+    try {
+      const response = await axiosSecure.get(`/api/v1/user/single/${userId}`);
+      if (response.data?.success && response.data?.data) {
+        setSelectedUser(response.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching user:", err);
+    } finally {
+      setSelectedUserLoading(false);
     }
-  }, [id, users, setSelectedUser]);
+  }, [axiosSecure, setSelectedUser]);
+
+  // Fetch selected user when ID changes
+  useEffect(() => {
+    if (id) {
+      fetchSingleUser(id);
+    }
+  }, [id, fetchSingleUser]);
+
   const [formData, setFormData] = useState({
     newPassword: "",
     confirmPassword: ""
   });
-  const axiosSecure = useAxiosSecure();
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({

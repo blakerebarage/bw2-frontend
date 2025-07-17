@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
-import { Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import "./App.css";
 import InstallPrompt from './components/InstallPrompt';
 import WelcomeMessage from './components/WelcomeMessage/WelcomeMessage';
@@ -25,10 +25,11 @@ const RouteChangeHandler = () => {
 };
 
 function App() {
-  
-const { reloadUserData } = useManualUserDataReload();
-const dispatch = useDispatch();
-const pathname = useLocation().pathname
+  const { reloadUserData } = useManualUserDataReload();
+  const dispatch = useDispatch();
+  const pathname = useLocation().pathname;
+  const { user } = useSelector((state) => state.auth);
+
   // Initial data loading
   useEffect(() => {
     const loadInitialData = async () => {
@@ -57,17 +58,20 @@ const pathname = useLocation().pathname
     }
   }, [pathname, dispatch, reloadUserData]);
 
+  // If user is cash-agent or sub-cash-agent, always redirect to /cash-agent
+  if (user && ["cash-agent", "sub-cash-agent"].includes(user.role) && pathname !== "/cash-agent") {
+    return <Navigate to="/cash-agent" replace />;
+  }
+
   return (
-    
-      <WelcomeProvider>
-        <div className="bg-gray-900">
-          <RouteChangeHandler />
-          <WelcomeMessage />
-          <Outlet />
-          <InstallPrompt />
-        </div>
-      </WelcomeProvider>
-    
+    <WelcomeProvider>
+      <div className="bg-gray-900">
+        <RouteChangeHandler />
+        <WelcomeMessage />
+        <Outlet />
+        <InstallPrompt />
+      </div>
+    </WelcomeProvider>
   );
 }
 

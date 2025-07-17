@@ -202,7 +202,7 @@ export const translations = {
     email: 'ইমেইল',
     phoneNumberField: 'ফোন নম্বর',
     lastLogin: 'শেষ লগইন',
-    noEmailProvided: 'কোন ইমেইল প্রদান করা হয়নি',
+    noEmailProvided: 'কোন ইমেইল নাই',
     role: 'ভূমিকা',
     currentPassword: 'বর্তমান পাসওয়ার্ড',
     newPassword: 'নতুন পাসওয়ার্ড',

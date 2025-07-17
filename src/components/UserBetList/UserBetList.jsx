@@ -1,10 +1,9 @@
 import Loading from "@/components/shared/Loading";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
-import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import { useUser } from "@/UserContext/UserContext";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaCalendarAlt, FaCoins, FaGamepad, FaMoneyBillWave, FaTrophy } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -19,31 +18,50 @@ const UserBetList = () => {
   const { selectedUser, setSelectedUser } = useUser();
   const { user } = useSelector((state) => state.auth);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit,setLimit]   = useState(50)
+  const [limit, setLimit] = useState(50);
   const [search, setSearch] = useState("");
-  const queryParams = {
-    page: currentPage,
-    limit,
-    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
-  };
+  const [selectedUserLoading, setSelectedUserLoading] = useState(false);
   const axiosSecure = useAxiosSecure();
   const { formatCurrency } = useCurrency();
-  const { data: users = [] } = useGetUsersQuery(queryParams);
-  useEffect(() => {
-    const foundUser = users?.data?.users.find((user) => user._id === id);
-    if (foundUser) {
-      setSelectedUser(foundUser);
+
+  // Fetch single user by ID
+  const fetchSingleUser = useCallback(async (userId) => {
+    if (!userId) return;
+    
+    setSelectedUserLoading(true);
+    
+    try {
+      const response = await axiosSecure.get(`/api/v1/user/single/${userId}`);
+      if (response.data?.success && response.data?.data) {
+        setSelectedUser(response.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching user:", err);
+    } finally {
+      setSelectedUserLoading(false);
     }
-  }, [id, users, setSelectedUser]);
+  }, [axiosSecure, setSelectedUser]);
+
+  // Fetch selected user when ID changes
   useEffect(() => {
-    fetchUserBets();
-  }, [currentPage, search, id]);
+    if (id) {
+      fetchSingleUser(id);
+    }
+  }, [id, fetchSingleUser]);
+
+  useEffect(() => {
+    if (selectedUser?.username) {
+      fetchUserBets();
+    }
+  }, [currentPage, search, selectedUser?.username]);
 
   const fetchUserBets = async () => {
+    if (!selectedUser?.username) return;
+    
     try {
       setLoading(true);
       const response = await axiosSecure.get(
-        `/api/v1/game/bet-history/${selectedUser?.username}?page=${currentPage}&limit=${limit}&search=${search}`
+        `/api/v1/game/bet-history/${selectedUser.username}?page=${currentPage}&limit=${limit}&search=${search}`
       );
       
       if (response.data.success) {
@@ -64,6 +82,17 @@ const UserBetList = () => {
     if (win < bet) return "text-red-600";
     return "text-gray-600";
   };
+
+  if (selectedUserLoading) {
+    return (
+      <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen">
+        <CommonNavMenu />
+        <div className="flex items-center justify-center min-h-screen">
+          <Loading />
+        </div>
+      </div>
+    );
+  }
 
   return (
     
