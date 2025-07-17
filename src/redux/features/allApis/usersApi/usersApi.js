@@ -40,7 +40,7 @@ const usersApi = baseApi.injectEndpoints({
         
         const urlParams = new URLSearchParams({
           page: page?.toString() || '1',
-          limit: limit?.toString() || '20'
+          limit: limit?.toString() || '10000000'
         });
         
         if (referredBy) {

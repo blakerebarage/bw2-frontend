@@ -268,77 +268,80 @@ const AddBank = () => {
         </div>
         <div className="navbar bg-white rounded-lg p-4 shadow-sm">
           <div className="flex justify-between w-full">
-            <div className="flex justify-between space-x-4">
-              <select
-                className="select bg-white border-2 border-gray-200 rounded-lg px-4 py-2 focus:border-[#1f2937] focus:ring-2 focus:ring-gray-200 transition-all duration-200 w-48"
-                value={bankType}
-                onChange={(e) => setBankType(e.target.value)}
-              >
-                <option value="">Select Bank Type</option>
-                <option value="Bkash">Bkash</option>
-                <option value="Nagad">Nagad</option>
-                <option value="Rocket">Rocket</option>
-                <option value="Upay">Upay</option>
-                <option value="Tap">Tap</option>
-                <option value="OkWallet">OkWallet</option>
-                <option value="Crypto">Crypto</option>
-                <option value="Bank">Bank</option>
-              </select>
-              
-              <select
-                className="select bg-white border-2 border-gray-200 rounded-lg px-4 py-2 focus:border-[#1f2937] focus:ring-2 focus:ring-gray-200 transition-all duration-200 w-40"
-                value={selectedPurpose}
-                onChange={(e) => setSelectedPurpose(e.target.value)}
-              >
-                <option value="">Select Purpose</option>
-                <option value="Deposit">Deposit</option>
-                <option value="Withdraw">Withdraw</option>
-              </select>
-              
-              <select
-                className="select bg-white border-2 border-gray-200 rounded-lg px-4 py-2 focus:border-[#1f2937] focus:ring-2 focus:ring-gray-200 transition-all duration-200 w-32"
-                value={selectBankLimit}
-                onChange={(e) => setSelectBankLimit(e.target.value)}
-              >
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="30">30</option>
-                <option value="40">40</option>
-                <option value="50">50</option>
-              </select>
-              
+            {/* Filter/Search Controls - Responsive */}
+            <div className="flex flex-col md:flex-row gap-2 md:gap-4 mb-2 w-full">
+              <div className="flex flex-col md:flex-row gap-2 md:gap-4 flex-1">
+                <select
+                  className="w-full md:w-auto p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-[#1f2937] text-sm"
+                  value={bankType}
+                  onChange={(e) => setBankType(e.target.value)}
+                >
+                  <option value="">Select Bank Type</option>
+                  <option value="Bkash">Bkash</option>
+                  <option value="Nagad">Nagad</option>
+                  <option value="Rocket">Rocket</option>
+                  <option value="Upay">Upay</option>
+                  <option value="Tap">Tap</option>
+                  <option value="OkWallet">OkWallet</option>
+                  <option value="Crypto">Crypto</option>
+                  <option value="Bank">Bank</option>
+                </select>
+                <select
+                  className="w-full md:w-auto p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-[#1f2937] text-sm"
+                  value={selectedPurpose}
+                  onChange={(e) => setSelectedPurpose(e.target.value)}
+                >
+                  <option value="">Select Purpose</option>
+                  <option value="Deposit">Deposit</option>
+                  <option value="Withdraw">Withdraw</option>
+                  <option value="Send-Money">Send-Money</option>
+                </select>
+                <select
+                  className="w-full md:w-auto p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-[#1f2937] text-sm"
+                  value={selectBankLimit}
+                  onChange={(e) => setSelectBankLimit(e.target.value)}
+                >
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="30">30</option>
+                  <option value="40">40</option>
+                  <option value="50">50</option>
+                </select>
+                <button
+                  className="btn bg-[#1f2937] hover:bg-gray-800 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 text-sm"
+                  onClick={handleSearch}
+                >
+                  Search
+                </button>
+              </div>
               <button
-                className="btn bg-[#1f2937] hover:bg-gray-800 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
-                onClick={handleSearch}
+                className="bg-[#1f2937] hover:bg-gray-800 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 text-sm mt-2 md:mt-0"
+                onClick={toggleModal}
               >
-                Search
+                <span>+</span>
+                <span>Add Bank</span>
               </button>
             </div>
             
-            <button
-              className="bg-[#1f2937] hover:bg-gray-800 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 flex items-center space-x-2"
-              onClick={toggleModal}
-            >
-              <span>+</span>
-              <span>Add Bank</span>
-            </button>
+            
           </div>
         </div>
 
-        <div className="overflow-x-auto mt-6 rounded-lg shadow">
-          <table className="min-w-full bg-white">
+        {/* Responsive Table */}
+        <div className="overflow-x-auto mt-6 rounded-lg shadow w-full">
+          <table className="min-w-full bg-white text-xs md:text-sm">
             <thead>
               <tr className="bg-gray-50 text-[#1f2937]">
-                <th className="py-3 px-4 border-b">Sr no.</th>
-                <th className="py-3 px-4 border-b">Bank Name</th>
-                <th className="py-3 px-4 border-b">Channel</th>
-                <th className="py-3 px-4 border-b">Account Number</th>
-                <th className="py-3 px-4 border-b">Purpose</th>
-                <th className="py-3 px-4 border-b">Daily Limit</th>
-                <th className="py-3 px-4 border-b">Remaining Limit</th>
-                <th className="py-3 px-4 border-b">Total Received Today</th>
-                <th className="py-3 px-4 border-b">Created Date</th>
-                <th className="py-3 px-4 border-b">Action/View</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Sr no.</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Bank Name</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Channel</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Account Number</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Purpose</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Daily Limit</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Remaining Limit</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Total Received Today</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Created Date</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Action/View</th>
               </tr>
             </thead>
             <tbody>
@@ -385,11 +388,11 @@ const AddBank = () => {
               ) : (
                 banks.map((bank, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors duration-200">
-                    <td className="py-3 px-4 border-b text-center">{index + 1}</td>
-                    <td className="py-3 px-4 border-b text-center">{ bank.bankType === "Bank" ? bank.bankName : bank.bankType}</td>
-                    <td className="py-3 px-4 border-b text-center">{bank.channel}</td>
-                    <td className="py-3 px-4 border-b text-center">{bank.accountNumber}</td>
-                    <td className="py-3 px-4 border-b text-center">
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{index + 1}</td>
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{ bank.bankType === "Bank" ? bank.bankName : bank.bankType}</td>
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{bank.channel}</td>
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{bank.accountNumber}</td>
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
                         ${bank.purpose === "Deposit" ? "bg-green-100 text-green-800" :
                           bank.purpose === "Withdraw" ? "bg-red-100 text-red-800" :
@@ -397,11 +400,11 @@ const AddBank = () => {
                         {bank.purpose || "N/A"}
                       </span>
                     </td>
-                    <td className="py-3 px-4 border-b text-center">{bank.dailyLimit || "0"}</td>
-                    <td className="py-3 px-4 border-b text-center">{bank.remainingDailyLimit || "0"}</td>
-                    <td className="py-3 px-4 border-b text-center">{bank.totalReceivedToday || "0"}</td>
-                    <td className="py-3 px-4 border-b text-center">{new Date(bank.createdAt).toISOString().split('T')[0]}</td>
-                    <td className="py-3 px-4 border-b text-center">
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{bank.dailyLimit || "0"}</td>
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{bank.remainingDailyLimit || "0"}</td>
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{bank.totalReceivedToday || "0"}</td>
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{new Date(bank.createdAt).toISOString().split('T')[0]}</td>
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">
                       <button
                         onClick={() => {
                           setSelectedBank(bank);
@@ -421,11 +424,12 @@ const AddBank = () => {
           </table>
         </div>
 
-        <div className="flex justify-center items-center gap-4 mt-6">
+        {/* Pagination Buttons - Responsive */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-6 w-full">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 text-xs md:text-sm ${
               currentPage === 1
                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                 : "bg-[#1f2937] text-white hover:bg-gray-800"
@@ -433,16 +437,14 @@ const AddBank = () => {
           >
             Previous
           </button>
-          
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm">
+          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm text-xs md:text-sm">
             <span className="text-gray-600">Page</span>
             <span className="font-semibold text-[#1f2937]">{currentPage}</span>
           </div>
-          
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || banks?.length === 0}
-            className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 text-xs md:text-sm ${
               currentPage === totalPages
                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                 : "bg-[#1f2937] text-white hover:bg-gray-800"

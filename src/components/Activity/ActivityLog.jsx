@@ -27,7 +27,7 @@ const Activity = () => {
         setSelectedUser(foundUser || null);
       }
     }, [id, users, usersLoading]);
-
+   console.log(selectedUser,id,users)
     useEffect(() => {
         const fetchActivityLog = async () => {
             if (!selectedUser) {
@@ -41,6 +41,7 @@ const Activity = () => {
                 const response = await axiosSecure.get(
                     `/api/v1/system-setting/activity-log?page=${currentPage}&limit=${limit}&username=${selectedUser.username}`
                 );
+                console.log(response,selectedUser)
                 if (response.data.success) {
                     setActivityLog(response.data.data.results);
                     setTotalPages(response.data.data.pageCount);

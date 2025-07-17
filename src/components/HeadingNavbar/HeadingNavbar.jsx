@@ -211,8 +211,8 @@ const HeadingNavbar = () => {
         </div>
         {/* User Info */}
         <div className="flex items-center gap-2">
-          {/* Language Switcher */}
-          <LanguageSwitcher variant="navbar" className="mr-2" />
+          {/* Language Switcher - only show on md and up */}
+          <LanguageSwitcher variant="navbar" className="mr-2 hidden md:inline-block" />
           
           {/* Withdraw Request Icon */}
           {user?.role && ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"].includes(user.role) && (
@@ -312,6 +312,11 @@ const HeadingNavbar = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+          </div>
+
+          {/* Language Switcher for mobile */}
+          <div className="block md:hidden px-4 py-2 border-b border-[#232e3e]">
+            <LanguageSwitcher variant="navbar" />
           </div>
 
           {/* Mobile Menu Content - Scrollable */}
