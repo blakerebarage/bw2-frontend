@@ -89,7 +89,7 @@ const AccountTabs = ({id,username}) => {
           </li>
         </Link>
         {
-          user.role === "super-admin" &&  <Link to={`/activitylog/${username}`}>
+          user.role === "super-admin" &&  <Link to={`/activitylog/${id}`}>
           <li>
           <a
                 className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
