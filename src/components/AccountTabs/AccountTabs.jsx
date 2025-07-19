@@ -2,7 +2,7 @@ import { Activity, CreditCard, FileText, User, Users } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 
-const AccountTabs = ({id,username}) => {
+const AccountTabs = ({id}) => {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
 

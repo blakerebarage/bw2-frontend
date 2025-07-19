@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import "./App.css";
 import InstallPrompt from './components/InstallPrompt';
+import RedirectHandler from './components/RedirectHandler';
 import WelcomeMessage from './components/WelcomeMessage/WelcomeMessage';
 import usePendingRequests from './Hook/usePendingRequests';
 import useManualUserDataReload from './Hook/useUserDataReload';
@@ -29,6 +30,41 @@ function App() {
   const dispatch = useDispatch();
   const pathname = useLocation().pathname;
   const { user } = useSelector((state) => state.auth);
+
+  // Set proper canonical URL and meta tags
+  useEffect(() => {
+    // Set canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      document.head.appendChild(canonical);
+    }
+    
+    // Set canonical URL based on current path
+    const baseUrl = 'https://play9.live';
+    if (pathname === '/' || pathname === '/home') {
+      canonical.href = baseUrl;
+    } else {
+      canonical.href = baseUrl + pathname;
+    }
+
+    // Set basic meta tags if they don't exist
+    if (!document.querySelector('meta[name="description"]')) {
+      const meta = document.createElement('meta');
+      meta.name = "description";
+      meta.content = "Play9.live - Your premier destination for online casino games and sports betting. Join now for the best gaming experience!";
+      document.head.appendChild(meta);
+    }
+
+    // Set robots meta
+    if (!document.querySelector('meta[name="robots"]')) {
+      const robots = document.createElement('meta');
+      robots.name = "robots";
+      robots.content = "index, follow";
+      document.head.appendChild(robots);
+    }
+  }, [pathname]);
 
   // Initial data loading
   useEffect(() => {
@@ -66,6 +102,7 @@ function App() {
   return (
     <WelcomeProvider>
       <div className="bg-gray-900">
+        <RedirectHandler />
         <RouteChangeHandler />
         <WelcomeMessage />
         <Outlet />

@@ -12,11 +12,47 @@ Disallow: /api/
 Disallow: /_next/
 Disallow: /static/
 
+# Disallow ASP.NET error pages and legacy URLs
+Disallow: /Home/Error
+Disallow: /home/error
+Disallow: /Error
+Disallow: /error
+Disallow: /Default.aspx
+Disallow: /default.aspx
+Disallow: /Index.aspx
+Disallow: /index.aspx
+Disallow: /Member/EmailResetPass
+Disallow: /member/emailresetpass
+Disallow: /id-ID/Member/
+Disallow: /id-id/member/
+Disallow: *.aspx
+Disallow: *.asp
+
 # Allow important pages
 Allow: /
 Allow: /login
 Allow: /signup
+Allow: /casino
+Allow: /sports
+Allow: /leagues
 Allow: /terms-conditions
 Allow: /privacy-policy
 Allow: /rules-regulation
-Allow: /responsible-gaming 
+Allow: /responsible-gaming
+
+# Block common crawlers from error pages
+User-agent: Googlebot
+Disallow: /Home/Error
+Disallow: /home/error
+Disallow: /Error
+Disallow: /error
+Disallow: *.aspx
+Disallow: *.asp
+
+User-agent: Bingbot
+Disallow: /Home/Error
+Disallow: /home/error
+Disallow: /Error
+Disallow: /error
+Disallow: *.aspx
+Disallow: *.asp 
