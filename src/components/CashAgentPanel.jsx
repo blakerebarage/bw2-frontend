@@ -1,3 +1,4 @@
+import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
 import { useAddUserMutation, useCompleteWithdrawalMutation, useGetUserTransactionsQuery, useInitiateWithdrawalMutation, useLazyGetActiveOtpQuery, useSendBalanceMutation, useUpdateBalanceMutation } from "@/redux/features/allApis/usersApi/usersApi";
@@ -18,6 +19,7 @@ const CashAgentPanel = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { reloadUserData } = useManualUserDataReload();
+  const axiosSecure = useAxiosSecure();
   
   // Balance sending states
   const [receiverUsername, setReceiverUsername] = useState("");
@@ -34,6 +36,14 @@ const CashAgentPanel = () => {
   const [withdrawOtp, setWithdrawOtp] = useState(["", "", "", "", "", ""]); // Change to array for 6 digits
   const [withdrawStep, setWithdrawStep] = useState(1); // 1: Enter details, 2: Enter OTP
   const [hasRestoredState, setHasRestoredState] = useState(false); // Flag to prevent multiple restorations
+
+  // Commission states
+  const [showCommissions, setShowCommissions] = useState(false);
+  const [commissionsData, setCommissionsData] = useState([]);
+  const [commissionsSummary, setCommissionsSummary] = useState(null);
+  const [commissionsLoading, setCommissionsLoading] = useState(false);
+  const [commissionsPage, setCommissionsPage] = useState(1);
+  const [commissionsPagination, setCommissionsPagination] = useState(null);
 
   // OTP display states for Cash Agent Panel
   const [showOtpDisplay, setShowOtpDisplay] = useState(false);
@@ -311,6 +321,31 @@ const CashAgentPanel = () => {
 
   const recentTransactions = transactionsData?.data?.results || [];
 
+  // Fetch commissions data
+  const fetchCommissions = async () => {
+    try {
+      setCommissionsLoading(true);
+      const response = await axiosSecure.get(`/api/v1/finance/cash-agent-commissions?page=${commissionsPage}&limit=10`);
+      
+      if (response.data.success) {
+        setCommissionsData(response.data.data.commissions || []);
+        setCommissionsPagination(response.data.data.pagination || null);
+        setCommissionsSummary(response.data.data.summary || null);
+      }
+    } catch (error) {
+      addToast("Failed to fetch commissions", { appearance: "error", autoDismiss: true });
+    } finally {
+      setCommissionsLoading(false);
+    }
+  };
+
+  // Fetch commissions when page changes or component mounts
+  useEffect(() => {
+    if (showCommissions && user && ["cash-agent", "sub-cash-agent"].includes(user.role)) {
+      fetchCommissions();
+    }
+  }, [commissionsPage, showCommissions]);
+
   const handleLogout = () => {
     dispatch(logout());
     localStorage.removeItem("token");
@@ -578,6 +613,21 @@ const CashAgentPanel = () => {
                 <FaArrowDown className="text-red-400 text-xl" />
                 <span className="font-medium">Withdraw from User</span>
               </button>
+
+              <button
+                onClick={() => {
+                  setShowCommissions(!showCommissions);
+                  if (!showCommissions) {
+                    setCommissionsPage(1);
+                  }
+                }}
+                className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
+              >
+                <FaMoneyBillWave className="text-blue-400 text-xl" />
+                <span className="font-medium">
+                  {showCommissions ? 'Hide' : 'Show'} Commissions
+                </span>
+              </button>
             </div>
           </div>
 
@@ -645,6 +695,154 @@ const CashAgentPanel = () => {
             </div>
           </div>
         </div>
+
+        {/* Commissions Section */}
+        {showCommissions && (
+          <div className="mt-6">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+              <div className="flex items-center gap-3 mb-6">
+                <FaMoneyBillWave className="text-blue-400 text-xl" />
+                <h2 className="text-xl font-bold text-white">Commission Details</h2>
+              </div>
+
+              {/* Summary Cards */}
+              {commissionsSummary && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-yellow-400 text-sm font-medium">Pending</p>
+                        <p className="text-white text-2xl font-bold">{formatCurrency(commissionsSummary.pending.amount)}</p>
+                        <p className="text-yellow-400/70 text-xs">{commissionsSummary.pending.count} transactions</p>
+                      </div>
+                      <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                        <FaHistory className="text-yellow-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-green-400 text-sm font-medium">Paid</p>
+                        <p className="text-white text-2xl font-bold">{formatCurrency(commissionsSummary.paid.amount)}</p>
+                        <p className="text-green-400/70 text-xs">{commissionsSummary.paid.count} transactions</p>
+                      </div>
+                      <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                        <FaUserCheck className="text-green-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-red-400 text-sm font-medium">Cancelled</p>
+                        <p className="text-white text-2xl font-bold">{formatCurrency(commissionsSummary.cancelled.amount)}</p>
+                        <p className="text-red-400/70 text-xs">{commissionsSummary.cancelled.count} transactions</p>
+                      </div>
+                      <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                        <FaTimes className="text-red-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-blue-400 text-sm font-medium">Total</p>
+                        <p className="text-white text-2xl font-bold">{formatCurrency(commissionsSummary.total.amount)}</p>
+                        <p className="text-blue-400/70 text-xs">{commissionsSummary.total.count} transactions</p>
+                      </div>
+                      <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                        <FaWallet className="text-blue-400" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Commissions Table */}
+              {commissionsLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                </div>
+              ) : commissionsData.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Date</th>
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Type</th>
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Amount</th>
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Commission</th>
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Status</th>
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">User</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {commissionsData.map((commission, index) => (
+                        <tr key={index} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <td className="py-3 px-4 text-gray-300">
+                            {new Date(commission.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="py-3 px-4 text-white capitalize">{commission.type}</td>
+                          <td className="py-3 px-4 text-white font-medium">
+                            {formatCurrency(commission.amount)}
+                          </td>
+                          <td className="py-3 px-4 text-yellow-400 font-bold">
+                            {formatCurrency(commission.commission)}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              commission.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                              commission.status === 'paid' ? 'bg-green-500/20 text-green-400' :
+                              'bg-red-500/20 text-red-400'
+                            }`}>
+                              {commission.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-gray-300">{commission.username || 'N/A'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Pagination */}
+                  {commissionsPagination && commissionsPagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+                      <div className="text-gray-400 text-sm">
+                        Showing page {commissionsPagination.page} of {commissionsPagination.totalPages} 
+                        ({commissionsPagination.total} total commissions)
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setCommissionsPage(prev => Math.max(prev - 1, 1))}
+                          disabled={commissionsPagination.page === 1}
+                          className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          onClick={() => setCommissionsPage(prev => prev + 1)}
+                          disabled={commissionsPagination.page >= commissionsPagination.totalPages}
+                          className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FaMoneyBillWave className="text-gray-500 text-4xl mx-auto mb-4" />
+                  <p className="text-gray-400">No commission data found</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Recent Transactions */}
         <div className="mt-6">
