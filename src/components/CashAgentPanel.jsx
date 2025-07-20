@@ -1,10 +1,10 @@
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
-import { useAddUserMutation, useCompleteWithdrawalMutation, useGetUserTransactionsQuery, useInitiateWithdrawalMutation, useSendBalanceMutation, useUpdateBalanceMutation } from "@/redux/features/allApis/usersApi/usersApi";
+import { useAddUserMutation, useCompleteWithdrawalMutation, useGetUserTransactionsQuery, useInitiateWithdrawalMutation, useLazyGetActiveOtpQuery, useSendBalanceMutation, useUpdateBalanceMutation } from "@/redux/features/allApis/usersApi/usersApi";
 import { logout } from "@/redux/slices/authSlice";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { FaArrowDown, FaArrowRight, FaHistory, FaMoneyBillWave, FaPaperPlane, FaUserCheck, FaUserPlus, FaWallet } from "react-icons/fa";
+import { FaArrowDown, FaArrowRight, FaCopy, FaEye, FaEyeSlash, FaHistory, FaMoneyBillWave, FaPaperPlane, FaTimes, FaUserCheck, FaUserPlus, FaWallet } from "react-icons/fa";
 import { RiLogoutCircleLine } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -31,8 +31,15 @@ const CashAgentPanel = () => {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [withdrawUsername, setWithdrawUsername] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawOtp, setWithdrawOtp] = useState("");
+  const [withdrawOtp, setWithdrawOtp] = useState(["", "", "", "", "", ""]); // Change to array for 6 digits
   const [withdrawStep, setWithdrawStep] = useState(1); // 1: Enter details, 2: Enter OTP
+  const [hasRestoredState, setHasRestoredState] = useState(false); // Flag to prevent multiple restorations
+
+  // OTP display states for Cash Agent Panel
+  const [showOtpDisplay, setShowOtpDisplay] = useState(false);
+  const [activeOtpData, setActiveOtpData] = useState(null);
+  const [otpVisible, setOtpVisible] = useState(true);
+  const [timeRemaining, setTimeRemaining] = useState("");
 
   // Use RTK Query mutations and queries
   const [sendBalance, { isLoading: sendingBalance }] = useSendBalanceMutation();
@@ -40,10 +47,258 @@ const CashAgentPanel = () => {
   const [updateBalance, { isLoading: updatingBalance }] = useUpdateBalanceMutation();
   const [initiateWithdrawal, { isLoading: initiatingWithdrawal }] = useInitiateWithdrawalMutation();
   const [completeWithdrawal, { isLoading: completingWithdrawal }] = useCompleteWithdrawalMutation();
+  const [getActiveOtp] = useLazyGetActiveOtpQuery();
   const { data: transactionsData, refetch: refetchTransactions } = useGetUserTransactionsQuery(
     { username: user?.username, page: 1, limit: 5 },
     { skip: !user?.username }
   );
+
+  // Keys for localStorage
+  const WITHDRAWAL_STATE_KEY = `withdrawal_state_${user?.username}`;
+
+  // Save withdrawal state to localStorage
+  const saveWithdrawalState = (state) => {
+    try {
+      localStorage.setItem(WITHDRAWAL_STATE_KEY, JSON.stringify({
+        ...state,
+        timestamp: Date.now(), // Add timestamp for expiry
+        restored: false // Flag to track if already restored
+      }));
+    } catch (error) {
+      console.error("Failed to save withdrawal state:", error);
+    }
+  };
+
+  // Load withdrawal state from localStorage
+  const loadWithdrawalState = () => {
+    try {
+      const savedState = localStorage.getItem(WITHDRAWAL_STATE_KEY);
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        const now = Date.now();
+        const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
+        
+        // Check if state is not older than 15 minutes and not already restored
+        if (parsedState.timestamp && (now - parsedState.timestamp) < fifteenMinutes && !parsedState.restored) {
+          return parsedState;
+        } else {
+          // Remove expired or already restored state
+          localStorage.removeItem(WITHDRAWAL_STATE_KEY);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load withdrawal state:", error);
+    }
+    return null;
+  };
+
+  // Mark state as restored in localStorage
+  const markStateAsRestored = () => {
+    try {
+      const savedState = localStorage.getItem(WITHDRAWAL_STATE_KEY);
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        parsedState.restored = true;
+        localStorage.setItem(WITHDRAWAL_STATE_KEY, JSON.stringify(parsedState));
+      }
+    } catch (error) {
+      console.error("Failed to mark state as restored:", error);
+    }
+  };
+
+  // Clear withdrawal state from localStorage
+  const clearWithdrawalState = () => {
+    try {
+      localStorage.removeItem(WITHDRAWAL_STATE_KEY);
+    } catch (error) {
+      console.error("Failed to clear withdrawal state:", error);
+    }
+  };
+
+  // Handle OTP input changes with auto-focus navigation
+  const handleOtpChange = (index, value) => {
+    // Get the last character entered (for when user types multiple characters)
+    const digit = value.slice(-1);
+    
+    // Only allow numeric input or empty string
+    if (digit && !/^[0-9]$/.test(digit)) return;
+    
+    const newOtp = [...withdrawOtp];
+    newOtp[index] = digit;
+    setWithdrawOtp(newOtp);
+    
+    // Auto focus next input only if a digit was entered and there's a next input
+    if (digit && index < 5) {
+      const nextInput = document.querySelector(`[data-otp-index="${index + 1}"]`);
+      if (nextInput) {
+        setTimeout(() => nextInput.focus(), 0); // Use setTimeout to ensure state update completes
+      }
+    }
+  };
+
+  // Handle OTP backspace navigation
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace') {
+      if (!withdrawOtp[index] && index > 0) {
+        // If current input is empty, move to previous and clear it
+        const newOtp = [...withdrawOtp];
+        newOtp[index - 1] = '';
+        setWithdrawOtp(newOtp);
+        
+        const prevInput = document.querySelector(`[data-otp-index="${index - 1}"]`);
+        if (prevInput) {
+          setTimeout(() => prevInput.focus(), 0);
+        }
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      const prevInput = document.querySelector(`[data-otp-index="${index - 1}"]`);
+      if (prevInput) prevInput.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      const nextInput = document.querySelector(`[data-otp-index="${index + 1}"]`);
+      if (nextInput) nextInput.focus();
+    } else if (e.key === 'Delete') {
+      // Handle Delete key to clear current input
+      const newOtp = [...withdrawOtp];
+      newOtp[index] = '';
+      setWithdrawOtp(newOtp);
+    }
+  };
+
+  // Handle OTP paste
+  const handleOtpPaste = (e, startIndex) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData('text');
+    const digits = pastedText.replace(/\D/g, '').split('').slice(0, 6 - startIndex);
+    
+    if (digits.length > 0) {
+      const newOtp = [...withdrawOtp];
+      digits.forEach((digit, i) => {
+        if (startIndex + i < 6) {
+          newOtp[startIndex + i] = digit;
+        }
+      });
+      setWithdrawOtp(newOtp);
+      
+      // Focus the next empty input or the last filled one
+      const lastFilledIndex = Math.min(startIndex + digits.length - 1, 5);
+      const nextEmptyIndex = newOtp.findIndex((digit, i) => i > lastFilledIndex && digit === '');
+      const focusIndex = nextEmptyIndex === -1 ? Math.min(startIndex + digits.length, 5) : nextEmptyIndex;
+      
+      const targetInput = document.querySelector(`[data-otp-index="${focusIndex}"]`);
+      if (targetInput) {
+        setTimeout(() => targetInput.focus(), 0);
+      }
+    }
+  };
+
+  // Check for active OTP for cash-agent and sub-cash-agent
+  useEffect(() => {
+    if (user && ["cash-agent", "sub-cash-agent"].includes(user.role)) {
+      const checkForActiveOtp = async () => {
+        try {
+          const result = await getActiveOtp();
+          if (result.data && result.data.success) {
+            setActiveOtpData(result.data.data);
+            setShowOtpDisplay(true);
+          }
+        } catch (error) {
+          console.error("Failed to fetch active OTP:", error);
+        }
+      };
+
+      // Check immediately
+      checkForActiveOtp();
+
+      // Check every 30 seconds for new OTPs
+      const interval = setInterval(checkForActiveOtp, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [user, getActiveOtp]);
+
+  // Update countdown timer for OTP display
+  useEffect(() => {
+    if (activeOtpData?.expiresAt && showOtpDisplay) {
+      const updateTimer = () => {
+        const now = new Date();
+        const expiry = new Date(activeOtpData.expiresAt);
+        const diff = expiry - now;
+
+        if (diff <= 0) {
+          setTimeRemaining("Expired");
+          setTimeout(() => setShowOtpDisplay(false), 2000);
+        } else {
+          const minutes = Math.floor(diff / 60000);
+          const seconds = Math.floor((diff % 60000) / 1000);
+          setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        }
+      };
+
+      updateTimer();
+      const timer = setInterval(updateTimer, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [activeOtpData, showOtpDisplay]);
+
+  // Copy OTP to clipboard for Cash Agent Panel
+  const copyOtpToClipboard = async () => {
+    if (activeOtpData?.otp) {
+      try {
+        await navigator.clipboard.writeText(activeOtpData.otp);
+        addToast("OTP copied to clipboard!", { appearance: "success", autoDismiss: true });
+      } catch (error) {
+        addToast("Failed to copy OTP", { appearance: "error", autoDismiss: true });
+      }
+    }
+  };
+
+  // Close OTP display
+  const closeOtpDisplay = () => {
+    setShowOtpDisplay(false);
+    setActiveOtpData(null);
+  };
+
+  // Restore withdrawal state on component mount
+  useEffect(() => {
+    if (user?.username && !hasRestoredState) {
+      const savedState = loadWithdrawalState();
+      if (savedState) {
+        setIsWithdrawModalOpen(true);
+        setWithdrawUsername(savedState.withdrawUsername || "");
+        setWithdrawAmount(savedState.withdrawAmount || "");
+        setWithdrawOtp(savedState.withdrawOtp || ["", "", "", "", "", ""]);
+        setWithdrawStep(savedState.withdrawStep || 1);
+        
+        // Show notification about restored state
+        addToast(
+          `Withdrawal process restored for ${savedState.withdrawUsername} (${formatCurrency(savedState.withdrawAmount)})`,
+          { appearance: "info", autoDismiss: true }
+        );
+        
+        // Mark the state as restored to prevent multiple restorations
+        markStateAsRestored();
+      }
+      setHasRestoredState(true); // Mark as restored to prevent running again
+    }
+  }, [user?.username, hasRestoredState, formatCurrency, addToast]);
+
+  // Add beforeunload event to warn about incomplete withdrawal
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isWithdrawModalOpen && withdrawStep === 2) {
+        e.preventDefault();
+        e.returnValue = "You have an incomplete withdrawal process. Are you sure you want to leave?";
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isWithdrawModalOpen, withdrawStep]);
 
   // User creation form
   const {
@@ -89,6 +344,7 @@ const CashAgentPanel = () => {
         
         if (result.success) {
           addToast("Balance sent successfully!", { appearance: "success", autoDismiss: true });
+          reloadUserData()
           setReceiverUsername("");
           setAmount("");
           refetchTransactions();
@@ -108,6 +364,7 @@ const CashAgentPanel = () => {
       const errorMessage = err?.data?.message || err?.message || "Error sending balance";
       addToast(errorMessage, { appearance: "error", autoDismiss: true });
     }
+    
   };
 
   // Generate referral code for new users
@@ -186,10 +443,18 @@ const CashAgentPanel = () => {
       };
 
       const result = await initiateWithdrawal(payload).unwrap();
-      console.log(result);
+
       if (result?.success) {
         addToast(result?.message || "OTP sent successfully! Please enter the OTP to complete withdrawal.", { appearance: "success", autoDismiss: true });
         setWithdrawStep(2); // Move to OTP step
+        
+        // Save withdrawal state to localStorage
+        saveWithdrawalState({
+          withdrawUsername,
+          withdrawAmount,
+          withdrawStep: 2,
+          withdrawOtp: ["", "", "", "", "", ""] // Reset OTP for new session
+        });
       }
     } catch (error) {
       addToast(error?.data?.message || "Error initiating withdrawal", { appearance: "error", autoDismiss: true });
@@ -199,8 +464,8 @@ const CashAgentPanel = () => {
   // Handle user withdrawal - Step 2: Complete withdrawal with OTP
   const handleCompleteWithdrawal = async (e) => {
     e.preventDefault();
-    if (!withdrawOtp) {
-      addToast("Please enter the OTP", { appearance: "error", autoDismiss: true });
+    if (!withdrawOtp.every(digit => digit !== "")) { // Check if all digits are filled
+      addToast("Please enter all 6 OTP digits", { appearance: "error", autoDismiss: true });
       return;
     }
 
@@ -208,7 +473,7 @@ const CashAgentPanel = () => {
       const payload = {
         username: withdrawUsername,
         amount: Number(withdrawAmount),
-        otp: withdrawOtp,
+        otp: withdrawOtp.join(""), // Join array to string
       };
 
       const result = await completeWithdrawal(payload).unwrap();
@@ -217,11 +482,14 @@ const CashAgentPanel = () => {
         addToast(result?.message || "Amount withdrawn successfully!", { appearance: "success", autoDismiss: true });
         setWithdrawUsername("");
         setWithdrawAmount("");
-        setWithdrawOtp("");
+        setWithdrawOtp(["", "", "", "", "", ""]); // Reset OTP
         setWithdrawStep(1);
         setIsWithdrawModalOpen(false);
         reloadUserData();
         refetchTransactions();
+        
+        // Clear withdrawal state from localStorage after successful completion
+        clearWithdrawalState();
       }
     } catch (error) {
       addToast(error?.data?.message || "Error completing withdrawal", { appearance: "error", autoDismiss: true });
@@ -233,8 +501,11 @@ const CashAgentPanel = () => {
     setIsWithdrawModalOpen(false);
     setWithdrawUsername("");
     setWithdrawAmount("");
-    setWithdrawOtp("");
+    setWithdrawOtp(["", "", "", "", "", ""]); // Reset OTP
     setWithdrawStep(1);
+    
+    // Clear withdrawal state from localStorage when modal is closed
+    clearWithdrawalState();
   };
 
   // Only render for cash-agent and sub-cash-agent roles
@@ -622,17 +893,34 @@ const CashAgentPanel = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#1f2937] mb-1">Enter OTP</label>
-                    <input
-                      type="text"
-                      placeholder="Enter the OTP sent to complete withdrawal"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors text-center text-lg tracking-wider"
-                      value={withdrawOtp}
-                      onChange={e => setWithdrawOtp(e.target.value)}
-                      maxLength="6"
-                      required
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Please enter the 6-digit OTP code</p>
+                    <label className="block text-sm font-medium text-[#1f2937] mb-3">Enter OTP</label>
+                    <div className="flex justify-center gap-3 mb-4">
+                      {withdrawOtp.map((digit, index) => (
+                        <input
+                          key={index}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="•"
+                          className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] transition-colors hover:border-gray-400"
+                          value={digit}
+                          onChange={e => handleOtpChange(index, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                          onPaste={(e) => handleOtpPaste(e, index)}
+                          onFocus={(e) => e.target.select()} // Select text on focus for easy replacement
+                          onInput={(e) => {
+                            // Additional safety: ensure only single digit
+                            if (e.target.value.length > 1) {
+                              e.target.value = e.target.value.slice(-1);
+                            }
+                          }}
+                          maxLength="1"
+                          data-otp-index={index}
+                          autoComplete="off"
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 text-center">Please enter the 6-digit OTP code</p>
                   </div>
 
                   <div className="flex justify-between pt-4 border-t">
@@ -670,6 +958,100 @@ const CashAgentPanel = () => {
           </div>
         )}
       </div>
+
+      {/* OTP Display Overlay for Cash Agent Panel */}
+      {showOtpDisplay && activeOtpData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 ease-out">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-4 rounded-t-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                  <FaEye className="text-white text-sm" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">Active OTP</h3>
+                  <p className="text-yellow-100 text-sm">Current withdrawal OTP</p>
+                </div>
+              </div>
+              <button
+                onClick={closeOtpDisplay}
+                className="text-white/80 hover:text-white hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {/* OTP Display */}
+              <div className="text-center">
+                <label className="block text-sm font-medium text-gray-700 mb-3">Current OTP Code:</label>
+                <div className="flex items-center justify-center gap-3 bg-gray-50 rounded-lg p-4">
+                  <div className="flex gap-1">
+                    {(activeOtpData.otp || "").split('').map((digit, index) => (
+                      <div
+                        key={index}
+                        className="w-10 h-10 bg-yellow-100 border border-yellow-300 rounded-md flex items-center justify-center text-xl font-bold text-yellow-700"
+                      >
+                        {otpVisible ? digit : "•"}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setOtpVisible(!otpVisible)}
+                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md transition-colors"
+                      title={otpVisible ? "Hide OTP" : "Show OTP"}
+                    >
+                      {otpVisible ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                    <button
+                      onClick={copyOtpToClipboard}
+                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md transition-colors"
+                      title="Copy OTP"
+                    >
+                      <FaCopy />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* OTP Details */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Amount:</span>
+                  <span className="font-medium">{formatCurrency(activeOtpData.amount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Attempts:</span>
+                  <span className="font-medium">{activeOtpData.attempts}/3</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Expires in:</span>
+                  <span className={`font-medium ${timeRemaining === "Expired" ? "text-red-600" : "text-green-600"}`}>
+                    {timeRemaining}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Created:</span>
+                  <span className="font-medium text-xs">
+                    {new Date(activeOtpData.createdAt).toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={closeOtpDisplay}
+                className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-medium py-3 rounded-lg transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

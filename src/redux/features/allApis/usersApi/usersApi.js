@@ -130,6 +130,16 @@ const usersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["users", "balance", "transactions"],
     }),
+
+    // Get active OTP
+    getActiveOtp: builder.query({
+      query: () => ({
+        url: "/api/v1/finance/active-otp",
+        method: "GET",
+      }),
+      // Don't cache this query as OTPs change frequently
+      keepUnusedDataFor: 0,
+    }),
   }),
 });
 
@@ -143,7 +153,9 @@ export const {
   useGetUserTransactionsQuery,
   useSendBalanceMutation,
   useInitiateWithdrawalMutation,
-  useCompleteWithdrawalMutation
+  useCompleteWithdrawalMutation,
+  useGetActiveOtpQuery,
+  useLazyGetActiveOtpQuery
 } = usersApi;
 
 export default usersApi;

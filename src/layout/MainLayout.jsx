@@ -1,4 +1,5 @@
 import ContactWidget from "@/components/ContactWidget";
+import OtpDisplay from "@/components/OtpDisplay";
 import Footer from "@/components/shared/Footer";
 import Navbar from "@/components/shared/Navbar";
 import { useEffect, useState } from "react";
@@ -57,6 +58,9 @@ const MainLayout = () => {
         <Footer />
       </div>
       <div className="hidden lg:block md:w-[20%] w-[30%]"></div>
+      
+      {/* OTP Display Overlay - Similar to Welcome Message */}
+      <OtpDisplay />
     </div>
   );
 };
