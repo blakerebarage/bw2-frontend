@@ -3,7 +3,7 @@ import { FaChevronDown, FaGlobe } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const LanguageSwitcher = ({ className = '', variant = 'default' }) => {
-  const { currentLanguage, currentLanguageData, availableLanguages, changeLanguage, t } = useLanguage();
+  const { currentLanguage, availableLanguages, changeLanguage, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   
