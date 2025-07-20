@@ -86,6 +86,14 @@ const UsersData = () => {
                           <span className="inline-flex items-center justify-center w-8 h-8 bg-[#1f2937] text-white text-sm font-semibold rounded-lg">
                             SG
                           </span>
+                        ) : row?.role === "cash-agent" ? (
+                          <span className="inline-flex items-center justify-center w-8 h-8 bg-orange-600 text-white text-sm font-semibold rounded-lg">
+                            CA
+                          </span>
+                        ) : row?.role === "sub-cash-agent" ? (
+                          <span className="inline-flex items-center justify-center w-8 h-8 bg-yellow-600 text-white text-sm font-semibold rounded-lg">
+                            SC
+                          </span>
                         ) : row?.role === "user" ? (
                           <span className="inline-flex items-center justify-center w-8 h-8 bg-[#1f2937] text-white text-sm font-semibold rounded-lg">
                             US

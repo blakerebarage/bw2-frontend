@@ -111,6 +111,25 @@ const usersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["users", "balance", "transactions"],
     }),
+
+    // Initiate withdrawal - Step 1
+    initiateWithdrawal: builder.mutation({
+      query: (data) => ({
+        url: "/api/v1/finance/initiate-withdrawal",
+        method: "POST",
+        body: data,
+      }),
+    }),
+
+    // Complete withdrawal - Step 2
+    completeWithdrawal: builder.mutation({
+      query: (data) => ({
+        url: "/api/v1/finance/complete-withdrawal",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["users", "balance", "transactions"],
+    }),
   }),
 });
 
@@ -122,5 +141,9 @@ export const {
   useGetSingleUserQuery,
   useUpdateBalanceMutation,
   useGetUserTransactionsQuery,
-  useSendBalanceMutation
+  useSendBalanceMutation,
+  useInitiateWithdrawalMutation,
+  useCompleteWithdrawalMutation
 } = usersApi;
+
+export default usersApi;

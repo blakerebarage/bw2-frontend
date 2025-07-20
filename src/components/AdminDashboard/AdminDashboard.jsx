@@ -206,10 +206,11 @@ const AdminDashboard = () => {
         "admin",
         "sub-admin",
         "agent",
+        "cash-agent",
         "user",
       ],
-      "admin": ["sub-admin", "agent"],
-      "sub-admin": ["agent"],
+      "admin": ["sub-admin", "agent", "cash-agent", "user"],
+      "sub-admin": ["agent", "user"],
       "agent": ["user","agent"],
     };
 
@@ -443,10 +444,10 @@ const AdminDashboard = () => {
         "admin",
         "sub-admin",
         "agent",
-        
+        "cash-agent",
         "user",
       ],
-      "admin": ["sub-admin","agent","user"],
+      "admin": ["sub-admin","agent","cash-agent","user"],
       "sub-admin": ["agent","user"],
       "agent": ["user","agent"],
       "user": [],
@@ -461,6 +462,7 @@ const AdminDashboard = () => {
       "admin": "Admin",
       "sub-admin": "Sub Admin",
       "agent": "Agent",
+      "cash-agent": "Cash Agent",
       "user": "User"
     };
 
@@ -483,6 +485,8 @@ const AdminDashboard = () => {
         { value: "admin", label: "Admin" },
         { value: "sub-admin", label: "Sub Admin" },
         { value: "agent", label: "Agent" },
+        { value: "cash-agent", label: "Cash Agent" },
+        { value: "sub-cash-agent", label: "Sub Cash Agent" },
         { value: "user", label: "User" }
       );
 
@@ -491,6 +495,8 @@ const AdminDashboard = () => {
       baseRoles.unshift({ value: "admin", label: "Admin" },
         { value: "sub-admin", label: "Sub Admin" },
         { value: "agent", label: "Agent" },
+        { value: "cash-agent", label: "Cash Agent" },
+        { value: "sub-cash-agent", label: "Sub Cash Agent" },
         { value: "user", label: "User" }
       );
     }
@@ -503,6 +509,15 @@ const AdminDashboard = () => {
     if (user?.role === 'agent') { 
       baseRoles.unshift({ value: "agent", label: "Agent" },
         { value: "user", label: "User" }
+      );
+    }
+    if (user?.role === 'cash-agent') { 
+      baseRoles.unshift({ value: "cash-agent", label: "Cash Agent" },
+        { value: "sub-cash-agent", label: "Sub Cash Agent" }
+      );
+    }
+    if (user?.role === 'sub-cash-agent') { 
+      baseRoles.unshift({ value: "sub-cash-agent", label: "Sub Cash Agent" }
       );
     }
     if (user?.role === 'user') {
@@ -850,11 +865,15 @@ const AdminDashboard = () => {
                                   row?.role === "super-agent" ? "bg-indigo-600" :
                                   row?.role === "master-agent" ? "bg-pink-600" :
                                   row?.role === "agent" ? "bg-green-600" :
+                                  row?.role === "cash-agent" ? "bg-orange-600" :
+                                  row?.role === "sub-cash-agent" ? "bg-yellow-600" :
                                   "bg-gray-600"}`}>
                                 {row?.role === "super-admin" ? "SA" :
                                  row?.role === "sub-admin" ? "SUB" :
                                  row?.role === "super-agent" ? "SPR" :
                                  row?.role === "master-agent" ? "MST" :
+                                 row?.role === "cash-agent" ? "CA" :
+                                 row?.role === "sub-cash-agent" ? "SC" :
                                  row?.role?.slice(0, 2).toUpperCase()}
                               </span>
                               <span className="text-sm font-medium text-[#1f2937]">
