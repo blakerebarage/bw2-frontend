@@ -1,7 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/Hook/useCurrency";
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiFilter, FiRefreshCw, FiSearch } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import Transaction from "./Transaction";
@@ -16,24 +16,57 @@ const Banking = () => {
     limit: itemsPerPage,
     ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
   };
-  const { data: users } = useGetUsersQuery(queryParams);
+  const { data: users, isLoading, isFetching, refetch } = useGetUsersQuery(queryParams, {
+    refetchOnMountOrArgChange: true,
+  });
+  
+  // Debug log to see if parameters are changing
+  console.log('Query params:', queryParams, 'Current page:', currentPage);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  // Reset current page if it exceeds total pages
+  useEffect(() => {
+    const totalPages = users?.data?.pageCount || 1;
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [users?.data?.pageCount, currentPage]);
+
+  // Force refetch when page changes
+  useEffect(() => {
+    console.log('Page changed to:', currentPage, 'Refetching...');
+    refetch();
+  }, [currentPage, refetch]);
   
   const { formatCurrency } = useCurrency();
 
   
-
+console.log(users);
   const filteredUsers = users?.data?.users?.filter((row) => {
-    const matchesRole = user?.referralCode === row?.referredBy;
-    const matchesSearch = (row?.username || row?.phoneOrUserName).toLowerCase().includes(searchTerm.toLowerCase());
+    // Role filtering is already done by the API based on referredBy query param
+    const matchesSearch = searchTerm === "" || 
+      (row?.username && row.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (row?.phoneOrUserName && row.phoneOrUserName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === "all" || row.status === statusFilter;
-    return matchesRole && matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
-  const totalPages = Math.ceil((filteredUsers?.length || 0) / itemsPerPage);
-  const paginatedUsers = filteredUsers?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // Use API pagination data instead of client-side pagination
+  const totalPages = users?.data?.pageCount || 1;
+  const paginatedUsers = filteredUsers; // Don't slice again, API already returned paginated data
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto">
@@ -50,7 +83,7 @@ const Banking = () => {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden relative">
           {/* Filters */}
           <div className="p-6 border-b border-gray-200 bg-gray-50">
             <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -63,7 +96,7 @@ const Banking = () => {
                   placeholder="Search by username or phone"
                   className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                 />
               </div>
               <div className="relative w-full sm:w-48">
@@ -73,7 +106,7 @@ const Banking = () => {
                 <select
                   className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm appearance-none"
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => handleStatusFilterChange(e.target.value)}
                 >
                   <option value="active">Active Users</option>
                   <option value="inactive">Deactivated Users</option>
@@ -89,6 +122,7 @@ const Banking = () => {
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("active");
+                  setCurrentPage(1);
                 }}
                 className="flex items-center gap-2 px-4 py-2.5 bg-[#1f2937] text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md"
               >
@@ -98,8 +132,18 @@ const Banking = () => {
             </div>
           </div>
 
+          {/* Loading Overlay */}
+          {(isLoading || isFetching) && (
+            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+              <div className="flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1f2937]"></div>
+                <span className="text-gray-700 font-medium">Loading...</span>
+              </div>
+            </div>
+          )}
+
           {/* Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto relative">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr className="bg-[#1f2937]">
@@ -204,7 +248,8 @@ const Banking = () => {
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
-                Showing page {currentPage} of {totalPages}
+                Showing page {currentPage} of {totalPages} ({users?.data?.totalItems || 0} total items)
+                {isFetching && <span className="ml-2 text-blue-600">(Fetching...)</span>}
               </div>
               <div className="flex items-center space-x-2">
                 <button

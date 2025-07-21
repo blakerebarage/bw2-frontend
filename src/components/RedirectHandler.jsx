@@ -27,10 +27,12 @@ const RedirectHandler = () => {
                           searchParams.has('aspxerror') ||
                           searchParams.has('errorpage');
 
-    // Check if current path should be redirected
-    const shouldRedirect = redirectPaths.some(path => 
-      currentPath.includes(path.toLowerCase())
-    ) || hasAspNetError;
+    // Check if current path should be redirected (only exact matches or paths that start with pattern)
+    const shouldRedirect = redirectPaths.some(path => {
+      const lowerPath = path.toLowerCase();
+      // Only redirect if the path exactly matches or starts with the redirect path followed by /
+      return currentPath === lowerPath || currentPath.startsWith(lowerPath + '/');
+    }) || hasAspNetError;
 
     if (shouldRedirect) {
       // Use replace to avoid adding to history

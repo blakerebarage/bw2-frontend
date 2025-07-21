@@ -15,8 +15,7 @@ const HomeControl = () => {
   const [bannerImages, setBannerImages] = useState([]);
   const { addToast } = useToasts();
 
-  const [logoLoading, setLogoLoading] = useState(false);
-  const { refreshMedia,logo} = useMedia()
+  const { refreshMedia, logo, loading: logoLoading } = useMedia()
   // Fetch notices on load
   useEffect(() => {
     const fetchNotices = async () => {
@@ -372,7 +371,7 @@ const HomeControl = () => {
       });
 
       if (response.data.success) {
-        setLogo(response.data.data);
+        refreshMedia(); // Refresh the media data instead of calling setLogo
         Swal.fire({
           icon: "success",
           title: "Logo updated!",

@@ -1,7 +1,7 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
-import { useAddUserMutation, useCompleteWithdrawalMutation, useGetUserTransactionsQuery, useInitiateWithdrawalMutation, useLazyGetActiveOtpQuery, useSendBalanceMutation, useUpdateBalanceMutation } from "@/redux/features/allApis/usersApi/usersApi";
+import { useAddUserMutation, useCompleteWithdrawalMutation, useGetUserTransactionsQuery, useInitiateWithdrawalMutation, useLazyGetActiveOtpQuery, useSendBalanceMutation } from "@/redux/features/allApis/usersApi/usersApi";
 import { logout } from "@/redux/slices/authSlice";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -40,7 +40,6 @@ const CashAgentPanel = () => {
   // Commission states
   const [showCommissions, setShowCommissions] = useState(false);
   const [commissionsData, setCommissionsData] = useState([]);
-  const [commissionsSummary, setCommissionsSummary] = useState(null);
   const [commissionsLoading, setCommissionsLoading] = useState(false);
   const [commissionsPage, setCommissionsPage] = useState(1);
   const [commissionsPagination, setCommissionsPagination] = useState(null);
@@ -54,7 +53,7 @@ const CashAgentPanel = () => {
   // Use RTK Query mutations and queries
   const [sendBalance, { isLoading: sendingBalance }] = useSendBalanceMutation();
   const [addUser, { isLoading: creatingUser }] = useAddUserMutation();
-  const [updateBalance, { isLoading: updatingBalance }] = useUpdateBalanceMutation();
+
   const [initiateWithdrawal, { isLoading: initiatingWithdrawal }] = useInitiateWithdrawalMutation();
   const [completeWithdrawal, { isLoading: completingWithdrawal }] = useCompleteWithdrawalMutation();
   const [getActiveOtp] = useLazyGetActiveOtpQuery();
@@ -65,7 +64,9 @@ const CashAgentPanel = () => {
 
   // Keys for localStorage
   const WITHDRAWAL_STATE_KEY = `withdrawal_state_${user?.username}`;
-
+  useEffect(() => {
+    reloadUserData()
+  }, [])
   // Save withdrawal state to localStorage
   const saveWithdrawalState = (state) => {
     try {
@@ -203,6 +204,7 @@ const CashAgentPanel = () => {
 
   // Check for active OTP for cash-agent and sub-cash-agent
   useEffect(() => {
+    
     if (user && ["cash-agent", "sub-cash-agent"].includes(user.role)) {
       const checkForActiveOtp = async () => {
         try {
@@ -328,9 +330,8 @@ const CashAgentPanel = () => {
       const response = await axiosSecure.get(`/api/v1/finance/cash-agent-commissions?page=${commissionsPage}&limit=10`);
       
       if (response.data.success) {
-        setCommissionsData(response.data.data.commissions || []);
+        setCommissionsData(response.data.data.commissions || response.data.data || []);
         setCommissionsPagination(response.data.data.pagination || null);
-        setCommissionsSummary(response.data.data.summary || null);
       }
     } catch (error) {
       addToast("Failed to fetch commissions", { appearance: "error", autoDismiss: true });
@@ -542,7 +543,7 @@ const CashAgentPanel = () => {
     // Clear withdrawal state from localStorage when modal is closed
     clearWithdrawalState();
   };
-
+  
   // Only render for cash-agent and sub-cash-agent roles
   if (!user || !["cash-agent", "sub-cash-agent"].includes(user.role)) return null;
 
@@ -706,30 +707,24 @@ const CashAgentPanel = () => {
               </div>
 
               {/* Summary Cards */}
-              {commissionsSummary && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-yellow-400 text-sm font-medium">Pending</p>
-                        <p className="text-white text-2xl font-bold">{formatCurrency(commissionsSummary.pending.amount)}</p>
-                        <p className="text-yellow-400/70 text-xs">{commissionsSummary.pending.count} transactions</p>
-                      </div>
-                      <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                        <FaHistory className="text-yellow-400" />
-                      </div>
-                    </div>
-                  </div>
-
+              {commissionsData.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                   <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-green-400 text-sm font-medium">Paid</p>
-                        <p className="text-white text-2xl font-bold">{formatCurrency(commissionsSummary.paid.amount)}</p>
-                        <p className="text-green-400/70 text-xs">{commissionsSummary.paid.count} transactions</p>
+                        <p className="text-green-400 text-sm font-medium">Deposits</p>
+                        <p className="text-white text-2xl font-bold">
+                          {formatCurrency(commissionsData
+                            .filter(c => c.type === 'deposit')
+                            .reduce((sum, c) => sum + c.commissionAmount, 0)
+                          )}
+                        </p>
+                        <p className="text-green-400/70 text-xs">
+                          {commissionsData.filter(c => c.type === 'deposit').length} transactions
+                        </p>
                       </div>
                       <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                        <FaUserCheck className="text-green-400" />
+                        <FaArrowDown className="text-green-400 rotate-180" />
                       </div>
                     </div>
                   </div>
@@ -737,12 +732,19 @@ const CashAgentPanel = () => {
                   <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-red-400 text-sm font-medium">Cancelled</p>
-                        <p className="text-white text-2xl font-bold">{formatCurrency(commissionsSummary.cancelled.amount)}</p>
-                        <p className="text-red-400/70 text-xs">{commissionsSummary.cancelled.count} transactions</p>
+                        <p className="text-red-400 text-sm font-medium">Withdrawals</p>
+                        <p className="text-white text-2xl font-bold">
+                          {formatCurrency(commissionsData
+                            .filter(c => c.type === 'withdraw')
+                            .reduce((sum, c) => sum + c.commissionAmount, 0)
+                          )}
+                        </p>
+                        <p className="text-red-400/70 text-xs">
+                          {commissionsData.filter(c => c.type === 'withdraw').length} transactions
+                        </p>
                       </div>
                       <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                        <FaTimes className="text-red-400" />
+                        <FaArrowDown className="text-red-400" />
                       </div>
                     </div>
                   </div>
@@ -750,9 +752,11 @@ const CashAgentPanel = () => {
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-blue-400 text-sm font-medium">Total</p>
-                        <p className="text-white text-2xl font-bold">{formatCurrency(commissionsSummary.total.amount)}</p>
-                        <p className="text-blue-400/70 text-xs">{commissionsSummary.total.count} transactions</p>
+                        <p className="text-blue-400 text-sm font-medium">Total Commission</p>
+                        <p className="text-white text-2xl font-bold">
+                          {formatCurrency(commissionsData.reduce((sum, c) => sum + c.commissionAmount, 0))}
+                        </p>
+                        <p className="text-blue-400/70 text-xs">{commissionsData.length} total transactions</p>
                       </div>
                       <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
                         <FaWallet className="text-blue-400" />
@@ -774,35 +778,52 @@ const CashAgentPanel = () => {
                       <tr className="border-b border-white/10">
                         <th className="text-left py-3 px-4 text-gray-300 font-medium">Date</th>
                         <th className="text-left py-3 px-4 text-gray-300 font-medium">Type</th>
-                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Amount</th>
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Transaction Amount</th>
                         <th className="text-left py-3 px-4 text-gray-300 font-medium">Commission</th>
-                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Status</th>
-                        <th className="text-left py-3 px-4 text-gray-300 font-medium">User</th>
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Rate</th>
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Client</th>
+                        <th className="text-left py-3 px-4 text-gray-300 font-medium">Description</th>
                       </tr>
                     </thead>
                     <tbody>
                       {commissionsData.map((commission, index) => (
                         <tr key={index} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                           <td className="py-3 px-4 text-gray-300">
-                            {new Date(commission.createdAt).toLocaleDateString()}
+                            {new Date(commission.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short', 
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
                           </td>
-                          <td className="py-3 px-4 text-white capitalize">{commission.type}</td>
-                          <td className="py-3 px-4 text-white font-medium">
-                            {formatCurrency(commission.amount)}
-                          </td>
-                          <td className="py-3 px-4 text-yellow-400 font-bold">
-                            {formatCurrency(commission.commission)}
-                          </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 text-white capitalize">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              commission.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                              commission.status === 'paid' ? 'bg-green-500/20 text-green-400' :
-                              'bg-red-500/20 text-red-400'
+                              commission.type === 'withdraw' ? 'bg-red-500/20 text-red-400' :
+                              commission.type === 'deposit' ? 'bg-green-500/20 text-green-400' :
+                              'bg-blue-500/20 text-blue-400'
                             }`}>
-                              {commission.status}
+                              {commission.type}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-gray-300">{commission.username || 'N/A'}</td>
+                          <td className="py-3 px-4 text-white font-medium">
+                            {formatCurrency(commission.transactionAmount)}
+                          </td>
+                          <td className="py-3 px-4 text-yellow-400 font-bold">
+                            {formatCurrency(commission.commissionAmount)}
+                          </td>
+                          <td className="py-3 px-4 text-gray-300">
+                            {commission.commissionRate}%
+                          </td>
+                          <td className="py-3 px-4 text-gray-300">{commission.clientUsername || 'N/A'}</td>
+                          <td className="py-3 px-4 text-gray-400 text-sm">
+                            <div className="max-w-xs truncate" title={commission.description}>
+                              {commission.description || `${commission.type} commission`}
+                            </div>
+                            <div className="text-xs text-gray-500 font-mono mt-1">
+                              Ref: {commission.transactionRef}
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

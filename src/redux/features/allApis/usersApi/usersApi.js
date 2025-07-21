@@ -105,7 +105,7 @@ const usersApi = baseApi.injectEndpoints({
     // Send balance mutation
     sendBalance: builder.mutation({
       query: (data) => ({
-        url: "/api/v1/finance/send-balance",
+        url: "/api/v1/finance/deposit-by-cash-agent",
         method: "POST",
         body: data,
       }),

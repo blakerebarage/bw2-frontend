@@ -13,7 +13,7 @@
 //   }, [token, user, navigate]);
 
 //   return token && user?.role !== "user" ? children : null;
-//   // return children;
+//   // return children;  
 // };
 
 // export default AdminRoute;
@@ -27,7 +27,7 @@ const AdminRoute = ({ children }) => {
 
   useEffect(() => {
     if (!loading && (!token || !user || !user?.role || user?.role === "user")) {
-      navigate("/admin");
+      navigate("/"); // Redirect to home instead of non-existent /admin route
     }
   }, [token, user, loading, navigate]);
 

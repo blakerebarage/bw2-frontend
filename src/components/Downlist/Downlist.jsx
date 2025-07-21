@@ -12,9 +12,7 @@ import CommonNavMenu from "../CommonNavMenu/CommonNavMenu";
 
 const Downlist = () => {
   const { user } = useSelector((state) => state.auth);
-  const [referredUsers, setReferredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserLoading, setSelectedUserLoading] = useState(false);
   const usersPerPage = 20;
@@ -47,42 +45,65 @@ const Downlist = () => {
     }
   }, [id, fetchSingleUser]);
 
-  // Build query parameters - use the same pattern as other components
+  // Build query parameters for server-side pagination
   const queryParams = {
-    page: 1,
-    limit: 10000, // Get all users for filtering
-    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+    page: currentPage,
+    limit: usersPerPage,
+    // Filter by selectedUser's referral code if available
+    ...(selectedUser?.referralCode && { referredBy: selectedUser.referralCode })
   };
 
-  // Use RTK Query to fetch users - same pattern as other components
-  const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
+  // Only fetch users if we have a selectedUser with referralCode
+  const shouldFetchUsers = selectedUser?.referralCode;
+  
+  // Use RTK Query to fetch users with proper pagination
+  const { data: users, isLoading, error, refetch, isFetching } = useGetUsersQuery(queryParams, {
+    refetchOnMountOrArgChange: true,
+    skip: !shouldFetchUsers, // Skip the query if no selectedUser
+  });
+   console.log(users)
+  
+  // Use API pagination data instead of client-side pagination
+  const totalPages = users?.data?.pageCount || 0;
+  const totalItems = users?.data?.totalItems || 0;
+  const currentUsers = users?.data?.users || [];
 
-  // Filter referred users based on selectedUser's referral code
-  useEffect(() => {
-    if (!isLoading && !error && selectedUser && users?.data?.users) {
-      const filteredUsers = users.data.users.filter(
-        (user) => user.referredBy === selectedUser.referralCode
-      );
-      
-      setReferredUsers(filteredUsers || []);
-      setTotalPages(Math.ceil((filteredUsers?.length || 0) / usersPerPage));
-    }
-  }, [selectedUser, users, isLoading, error, usersPerPage]);
+  // Check if error is 404 (no users found) vs actual error
+  const is404Error = error?.status === 404 || error?.originalStatus === 404;
+  const hasActualError = error && !is404Error;
 
-  // Filter users based on search query
-  const filteredUsers = referredUsers.filter(user => 
+  // Filter users based on search query (client-side for now)
+  const filteredUsers = currentUsers.filter(user => 
     user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Pagination logic
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  // Reset to page 1 when selectedUser changes
+  useEffect(() => {
+    if (selectedUser?.referralCode) {
+      setCurrentPage(1);
+    }
+  }, [selectedUser?.referralCode]);
+
+  // Force refetch when page changes or selectedUser changes
+  useEffect(() => {
+    if (selectedUser?.referralCode) {
+      console.log('Page or selectedUser changed, refetching...');
+      refetch();
+    }
+  }, [currentPage, selectedUser?.referralCode, refetch]);
 
   const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  // Reset to page 1 when search changes
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
   };
 
   const getRoleBadge = (role) => {
@@ -99,7 +120,6 @@ const Downlist = () => {
   };
 
   const loading = selectedUserLoading || isLoading;
-  const errorMessage = error ? "Error loading users. Please try again later." : null;
   
   return (
     <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen">
@@ -119,13 +139,23 @@ const Downlist = () => {
               type="text"
               placeholder="Search by username, name, or email..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
 
           {/* Table Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
+            {/* Loading Overlay */}
+            {(isLoading || isFetching) && (
+              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <span className="text-gray-700 font-medium">Loading users...</span>
+                </div>
+              </div>
+            )}
+
             <div className="overflow-x-auto">
               <table className="w-full divide-y divide-gray-300">
                 <thead className="bg-headerGray text-headingTextColor">
@@ -160,7 +190,19 @@ const Downlist = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {loading ? (
+                  {!shouldFetchUsers ? (
+                    <tr>
+                      <td colSpan="9" className="px-4 py-8 text-center text-gray-500">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          <p className="text-lg font-medium">Select a user to view their downline</p>
+                          <p className="text-sm">Choose a user from the navigation to see their referred users</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (isLoading && !isFetching) ? (
                     <tr>
                       <td colSpan="9" className="px-4 py-8">
                         <div className="flex flex-col items-center justify-center space-y-3">
@@ -169,20 +211,26 @@ const Downlist = () => {
                         </div>
                       </td>
                     </tr>
-                  ) : errorMessage ? (
+                  ) : hasActualError ? (
                     <tr>
                       <td colSpan="9" className="px-4 py-8 text-center text-red-600">
-                        {errorMessage}
+                        Error loading users. Please try again later.
                       </td>
                     </tr>
-                  ) : currentUsers.length === 0 ? (
+                  ) : (is404Error || filteredUsers.length === 0) ? (
                     <tr>
                       <td colSpan="9" className="px-4 py-8 text-center text-gray-500">
-                        No users found
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                          </svg>
+                          <p className="text-lg font-medium">No downline users found</p>
+                          <p className="text-sm">This user hasn't referred anyone yet</p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
-                    currentUsers.map((row, index) => {
+                    filteredUsers.map((row, index) => {
                       const roleBadge = getRoleBadge(row.role);
                       return (
                         <tr key={index} className="hover:bg-yellow-50 transition-colors duration-200">
@@ -237,46 +285,51 @@ const Downlist = () => {
               </table>
             </div>
 
-            {/* Pagination */}
-            <div className="px-4 py-4 bg-gray-50 border-t border-gray-200">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-sm text-gray-700">
-                  Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, filteredUsers.length)} of {filteredUsers.length} users
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                  >
-                    Previous
-                  </button>
+            {/* Pagination - only show when we have users and are fetching data */}
+            {shouldFetchUsers && !hasActualError && !is404Error && totalPages > 0 && (
+              <div className="px-4 py-4 bg-gray-50 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-gray-700">
+                    Showing page {currentPage} of {totalPages} ({totalItems} total users)
+                    {isFetching && <span className="ml-2 text-blue-600">(Fetching...)</span>}
+                  </div>
                   <div className="flex items-center space-x-2">
-                    <input
-                      type="number"
-                      min="1"
-                      max={totalPages}
-                      value={currentPage}
-                      onChange={(e) => handlePageChange(Math.min(Math.max(1, parseInt(e.target.value) || 1), totalPages))}
-                      className="w-16 px-2 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
                     <button
-                      onClick={() => handlePageChange(currentPage)}
-                      className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-800 rounded-md transition-colors duration-200"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1 || isFetching}
+                      className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     >
-                      Go
+                      Previous
+                    </button>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max={totalPages}
+                        value={currentPage}
+                        onChange={(e) => handlePageChange(Math.min(Math.max(1, parseInt(e.target.value) || 1), totalPages))}
+                        disabled={isFetching}
+                        className="w-16 px-2 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+                      />
+                      <button
+                        onClick={() => handlePageChange(currentPage)}
+                        disabled={isFetching}
+                        className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-800 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Go
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages || isFetching}
+                      className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    >
+                      Next
                     </button>
                   </div>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                  >
-                    Next
-                  </button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
