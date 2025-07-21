@@ -16,7 +16,7 @@ const MyAccountDownList = () => {
   const queryParams = {
     page: currentPage,
     limit: usersPerPage, // Get all users for client-side filtering
-    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+    ...( user?.referralCode && { referredBy: user.referralCode })
   };
   
   const { data: users, isLoading, error } = useGetUsersQuery(queryParams);

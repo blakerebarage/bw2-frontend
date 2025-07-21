@@ -15,7 +15,7 @@ const AccountStatementTabs = () => {
   const queryParams = {
     page: currentPage,
     limit: 50,
-    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+    ...( user?.referralCode && { referredBy: user.referralCode })
   };
   const { data: users = [] } = useGetUsersQuery(queryParams);
   

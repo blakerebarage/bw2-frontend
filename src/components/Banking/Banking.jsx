@@ -14,7 +14,7 @@ const Banking = () => {
   const queryParams = {
     page: currentPage,
     limit: itemsPerPage,
-    ...(user?.role !== 'super-admin' && user?.referralCode && { referredBy: user.referralCode })
+    ...(user?.referralCode && { referredBy: user.referralCode })
   };
   const { data: users, isLoading, isFetching, refetch } = useGetUsersQuery(queryParams, {
     refetchOnMountOrArgChange: true,
