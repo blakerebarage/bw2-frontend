@@ -21,6 +21,10 @@ const BalanceRequest = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const {formatCurrency} = useCurrency();
   const { reloadUserData } = useManualUserDataReload();
+
+  // Check if user is admin or super-admin
+  const isAdminOrSuperAdmin = user?.role === "admin" || user?.role === "super-admin";
+
   const fetchRequests = async () => {
     try {
       setLoading(true);
@@ -32,15 +36,16 @@ const BalanceRequest = () => {
         }`
       );
 
-
       if (!res.data.success) {
         throw new Error(res.data.message || "Failed to fetch recharge requests");
       }
 
       const { results } = res?.data?.data;
-      const filteredRequests = results.filter(
-        (data) => data?.referralCode === user?.referralCode
-      );
+      
+      // Filter by referral code only if user is not admin or super-admin
+      const filteredRequests = isAdminOrSuperAdmin 
+        ? results 
+        : results.filter((data) => data?.referralCode === user?.referralCode);
 
       setRequestData(filteredRequests || []);
       setTotalPages(res.data.data.pageCount);
@@ -56,7 +61,7 @@ const BalanceRequest = () => {
 
   useEffect(() => {
     fetchRequests();
-  }, [page, statusFilter]);
+  }, [page, statusFilter, isAdminOrSuperAdmin]);
 
   const handleApproveBtn = async (id, txnId) => {
     try {
@@ -127,8 +132,16 @@ const BalanceRequest = () => {
               Balance Requests
             </h1>
             <p className="text-gray-300 text-center mt-1">
-              Manage user balance requests
+              {isAdminOrSuperAdmin 
+                ? "Manage all user balance requests" 
+                : "Manage user balance requests"
+              }
             </p>
+            {isAdminOrSuperAdmin && (
+              <p className="text-gray-400 text-center mt-1 text-sm">
+                Showing all requests (Admin/Super-Admin view)
+              </p>
+            )}
           </div>
         </div>
 
@@ -175,6 +188,11 @@ const BalanceRequest = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Txn ID
                   </th>
+                  {isAdminOrSuperAdmin && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Wallet Agent
+                    </th>
+                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Amount
                   </th>
@@ -216,7 +234,11 @@ const BalanceRequest = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{request.txnId[0]}</div>
                     </td>
-                    
+                    {isAdminOrSuperAdmin && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{request.walletAgentUsername || 'N/A'}</div>
+                      </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{formatCurrency(request.amount)}</div>
                     </td>
@@ -253,7 +275,7 @@ const BalanceRequest = () => {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan="10" className="px-6 py-12 text-center">
+                    <td colSpan={isAdminOrSuperAdmin ? "11" : "10"} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center text-gray-500">
                         <svg className="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

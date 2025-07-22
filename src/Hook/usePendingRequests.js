@@ -37,7 +37,6 @@ const usePendingRequests = () => {
             req => req.status === "pending" && req?.referralCode === user?.referralCode
           ).length;
         }
-        
         setPendingDeposits(pendingDepositCount);
       }
 

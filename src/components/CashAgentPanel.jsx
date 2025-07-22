@@ -101,17 +101,19 @@ const CashAgentPanel = () => {
       setRequestsLoading(true);
       
       // Fetch deposit requests
-      const depositRes = await axiosSecure.get("/api/v1/finance/wallet-agent-deposit-requests");
+      const depositRes = await axiosSecure.get(`/api/v1/finance/all-recharge-request?walletAgentUsername=${user?.username}`);
       if (depositRes.data.success) {
-        setDepositRequests(depositRes.data.data || []);
-        setDepositNotificationCount(depositRes.data.data?.filter(req => req.status === "pending")?.length || 0);
+        const depositData = depositRes.data.data?.results || depositRes.data.data || [];
+        setDepositRequests(depositData);
+        setDepositNotificationCount(depositData.filter(req => req.status === "pending")?.length || 0);
       }
       
       // Fetch withdraw requests
-      const withdrawRes = await axiosSecure.get("/api/v1/finance/wallet-agent-withdraw-requests");
+      const withdrawRes = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?walletAgentUsername=${user?.username}`);
       if (withdrawRes.data.success) {
-        setWithdrawRequests(withdrawRes.data.data || []);
-        setWithdrawNotificationCount(withdrawRes.data.data?.filter(req => req.status === "pending")?.length || 0);
+        const withdrawData = withdrawRes.data.data?.results || withdrawRes.data.data || [];
+        setWithdrawRequests(withdrawData);
+        setWithdrawNotificationCount(withdrawData.filter(req => req.status === "pending")?.length || 0);
       }
     } catch (error) {
       console.error("Failed to fetch requests:", error);
@@ -135,10 +137,12 @@ const CashAgentPanel = () => {
   const handleRequestAction = async (requestId, action, type) => {
     try {
       const endpoint = type === "deposit" 
-        ? `/api/v1/finance/wallet-agent-deposit-requests/${requestId}/${action}`
-        : `/api/v1/finance/wallet-agent-withdraw-requests/${requestId}/${action}`;
+        ? `/api/v1/finance/update-recharge-request-status/${requestId}`
+        : `/api/v1/finance/update-withdraw-request-status/${requestId}`;
         
-      const res = await axiosSecure.patch(endpoint);
+      const res = await axiosSecure.patch(endpoint, {
+        status: action === "approve" ? "approved" : "cancelled"
+      });
       
       if (res.data.success) {
         addToast(`${type} request ${action}ed successfully!`, {
@@ -949,7 +953,8 @@ const CashAgentPanel = () => {
                                 </div>
                                 <div className="text-sm text-gray-400">
                                   <p>Method: {request.paymentMethod} | Channel: {request.channel}</p>
-                                  <p>TXN ID: {request.txnId} | Phone: {request.senderPhone}</p>
+                                  <p>TXN ID: {Array.isArray(request.txnId) ? request.txnId[0] : request.txnId} | Phone: {request.senderPhone}</p>
+                                  <p>Account: {request.accountNumber} | Agent: {request.walletAgentUsername || 'N/A'}</p>
                                   <p>Date: {new Date(request.createdAt).toLocaleString()}</p>
                                 </div>
                               </div>
@@ -1021,7 +1026,7 @@ const CashAgentPanel = () => {
                                 </div>
                                 <div className="text-sm text-gray-400">
                                   <p>Method: {request.paymentMethod} | Channel: {request.channel}</p>
-                                  <p>Account: {request.accountNumber}</p>
+                                  <p>Account: {request.accountNumber} | Agent: {request.walletAgentUsername || 'N/A'}</p>
                                   <p>Date: {new Date(request.createdAt).toLocaleString()}</p>
                                 </div>
                               </div>
@@ -1794,9 +1799,9 @@ const CashAgentPanel = () => {
                     required
                   >
                     <option value="">Select Purpose</option>
-                    <option value="deposit">Deposit</option>
-                    <option value="withdraw">Withdraw</option>
-                    <option value="both">Both</option>
+                    <option value="Deposit">Deposit</option>
+                    <option value="Withdraw">Withdraw</option>
+                    <option value="Deposit-Withdraw">Both</option>
                   </select>
                 </div>
 

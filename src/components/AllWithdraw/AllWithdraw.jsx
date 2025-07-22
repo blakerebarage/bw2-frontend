@@ -19,6 +19,10 @@ const AllWithdraw = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const itemsPerPage = 50;
   const { reloadUserData } = useManualUserDataReload();
+
+  // Check if user is admin or super-admin
+  const isAdminOrSuperAdmin = user?.role === "admin" || user?.role === "super-admin";
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -27,9 +31,14 @@ const AllWithdraw = () => {
         const res = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}&${
           statusFilter === "all" ? "" : `status=${statusFilter}`
         }`);
-        const filteredWithdraws = res?.data?.data?.results.filter(
-          (item) => item?.referralCode === user?.referralCode
-        );
+        
+        // Filter by referral code only if user is not admin or super-admin
+        const filteredWithdraws = isAdminOrSuperAdmin 
+          ? res?.data?.data?.results 
+          : res?.data?.data?.results.filter(
+              (item) => item?.referralCode === user?.referralCode
+            );
+        
         setWithdraws(filteredWithdraws);
         setTotalPages((res.data.data.pageCount));
       } catch (error) {
@@ -39,10 +48,10 @@ const AllWithdraw = () => {
       }
     };
 
-    if (user?.referralCode) {
+    if (user?.referralCode || isAdminOrSuperAdmin) {
       fetchData();
     }
-  }, [axiosSecure, user?.referralCode, currentPage, statusFilter]);
+  }, [axiosSecure, user?.referralCode, currentPage, statusFilter, isAdminOrSuperAdmin]);
 
   const handleApprove = async (id) => {
     try {
@@ -99,9 +108,11 @@ const AllWithdraw = () => {
         });
 
         const refreshedWithdraws = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}`);
-        const filteredWithdraws = refreshedWithdraws?.data?.data?.results.filter(
-          (item) => item?.referralCode === user?.referralCode
-        );
+        const filteredWithdraws = isAdminOrSuperAdmin 
+          ? refreshedWithdraws?.data?.data?.results 
+          : refreshedWithdraws?.data?.data?.results.filter(
+              (item) => item?.referralCode === user?.referralCode
+            );
         setWithdraws(filteredWithdraws);
         reloadUserData();
       }
@@ -142,9 +153,11 @@ const AllWithdraw = () => {
         });
 
         const refreshedWithdraws = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}`);
-        const filteredWithdraws = refreshedWithdraws?.data?.data?.results.filter(
-          (item) => item?.referralCode === user?.referralCode
-        );
+        const filteredWithdraws = isAdminOrSuperAdmin 
+          ? refreshedWithdraws?.data?.data?.results 
+          : refreshedWithdraws?.data?.data?.results.filter(
+              (item) => item?.referralCode === user?.referralCode
+            );
         setWithdraws(filteredWithdraws);
         reloadUserData();
       }
@@ -188,8 +201,16 @@ const AllWithdraw = () => {
               Withdraw Requests
             </h1>
             <p className="text-gray-300 text-center mt-2">
-              Manage and update user withdraw requests efficiently
+              {isAdminOrSuperAdmin 
+                ? "Manage and update all user withdraw requests efficiently" 
+                : "Manage and update user withdraw requests efficiently"
+              }
             </p>
+            {isAdminOrSuperAdmin && (
+              <p className="text-gray-400 text-center mt-1 text-sm">
+                Showing all requests (Admin/Super-Admin view)
+              </p>
+            )}
           </div>
         </div>
 
@@ -233,6 +254,11 @@ const AllWithdraw = () => {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
                     Referred By
                   </th>
+                  {isAdminOrSuperAdmin && (
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
+                      Wallet Agent
+                    </th>
+                  )}
                   <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
                     Date
                   </th>
@@ -271,6 +297,11 @@ const AllWithdraw = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {withdraw?.referralCode}
                       </td>
+                      {isAdminOrSuperAdmin && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {withdraw?.walletAgentUsername || "N/A"}
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {new Date(withdraw?.createdAt).toLocaleString()}
                       </td>
@@ -304,7 +335,7 @@ const AllWithdraw = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="9" className="px-6 py-12 text-center">
+                    <td colSpan={isAdminOrSuperAdmin ? "10" : "9"} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center text-gray-500">
                         <svg className="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
