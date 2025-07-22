@@ -300,7 +300,7 @@ export default function Withdraw() {
       }
     };
     fetchWalletAgentBanks();
-  }, [axiosSecure, sortPaymentMethods]);
+  }, [axiosSecure]);
 
   // Update channels when method changes
   useEffect(() => {

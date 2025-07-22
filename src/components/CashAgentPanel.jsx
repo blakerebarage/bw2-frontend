@@ -5,13 +5,16 @@ import { useAddUserMutation, useCompleteWithdrawalMutation, useGetUserTransactio
 import { logout } from "@/redux/slices/authSlice";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { FaArrowDown, FaArrowRight, FaBell, FaCheck, FaCopy, FaEye, FaEyeSlash, FaHistory, FaMoneyBillWave, FaPaperPlane, FaPlus, FaTimes as FaReject, FaTimes, FaUniversity, FaUserCheck, FaUserPlus, FaWallet } from "react-icons/fa";
+import { FaArrowDown, FaArrowRight, FaBell, FaCopy, FaEye, FaEyeSlash, FaHistory, FaMoneyBillWave, FaPaperPlane, FaPlus, FaTimes, FaUserCheck, FaUserPlus, FaWallet } from "react-icons/fa";
 import { RiLogoutCircleLine } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import Swal from "sweetalert2";
 import LanguageSwitcher from "./LanguageSwitcher/LanguageSwitcher";
+import WalletAgentDepositRequests from "./WalletAgentDepositRequests";
+import WalletAgentPaymentMethods from "./WalletAgentPaymentMethods";
+import WalletAgentWithdrawRequests from "./WalletAgentWithdrawRequests";
 
 const CashAgentPanel = () => {
   const { user } = useSelector((state) => state.auth);
@@ -21,7 +24,6 @@ const CashAgentPanel = () => {
   const navigate = useNavigate();
   const { reloadUserData } = useManualUserDataReload();
   const axiosSecure = useAxiosSecure();
-  
   // Balance sending states
   const [receiverUsername, setReceiverUsername] = useState("");
   const [amount, setAmount] = useState("");
@@ -73,6 +75,10 @@ const CashAgentPanel = () => {
   const [accountHolderName, setAccountHolderName] = useState("");
   const [districtName, setDistrictName] = useState("");
   const [routingNumber, setRoutingNumber] = useState("");
+
+  // User banks states
+  const [userBanks, setUserBanks] = useState([]);
+  const [banksLoading, setBanksLoading] = useState(false);
 
   // Use RTK Query mutations and queries
   const [sendBalance, { isLoading: sendingBalance }] = useSendBalanceMutation();
@@ -133,32 +139,7 @@ const CashAgentPanel = () => {
     }
   }, [fetchRequests, user?.role]);
 
-  // Handle deposit/withdraw request actions
-  const handleRequestAction = async (requestId, action, type) => {
-    try {
-      const endpoint = type === "deposit" 
-        ? `/api/v1/finance/update-recharge-request-status/${requestId}`
-        : `/api/v1/finance/update-withdraw-request-status/${requestId}`;
-        
-      const res = await axiosSecure.patch(endpoint, {
-        status: action === "approve" ? "approved" : "cancelled"
-      });
-      
-      if (res.data.success) {
-        addToast(`${type} request ${action}ed successfully!`, {
-          appearance: "success",
-          autoDismiss: true,
-        });
-        fetchRequests(); // Refresh requests
-        reloadUserData(); // Update user balance if needed
-      }
-    } catch (error) {
-      addToast(`Failed to ${action} ${type} request`, {
-        appearance: "error",
-        autoDismiss: true,
-      });
-    }
-  };
+  
 
   // Handle payment method submission for wallet-agent
   const handleSubmitPaymentMethod = async (e) => {
@@ -218,6 +199,7 @@ const CashAgentPanel = () => {
         });
         resetPaymentMethodForm();
         setShowPaymentMethodModal(false);
+        fetchUserBanks(); // Refresh user banks after adding new one
       }
     } catch (error) {
       Swal.fire({
@@ -671,6 +653,7 @@ const CashAgentPanel = () => {
         });
       }
     } catch (error) {
+      console.log(error)
       addToast(error?.data?.message || "Error initiating withdrawal", { appearance: "error", autoDismiss: true });
     }
   };
@@ -734,6 +717,39 @@ const CashAgentPanel = () => {
 
   // Tab system for wallet agent
   const [activeTab, setActiveTab] = useState("deposits"); // deposits, withdraws, addBalance, sendBalance
+
+  // Fetch user's banks
+  const fetchUserBanks = useCallback(async () => {
+    if (user?.role !== "wallet-agent") return;
+    
+    try {
+      setBanksLoading(true);
+      const params = new URLSearchParams({
+        username: user?.username || '',
+        limit: '50'
+      });
+      
+      const res = await axiosSecure.get(`/api/v1/finance/bank-list?${params.toString()}`);
+      
+      if (res.data.success) {
+        setUserBanks(res.data.data.results || []);
+      } else {
+        setUserBanks([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch user banks:", err);
+      setUserBanks([]);
+    } finally {
+      setBanksLoading(false);
+    }
+  }, [axiosSecure, user?.username, user?.role]);
+
+  // Fetch user banks when component mounts or when payment method is added
+  useEffect(() => {
+    if (user?.role === "wallet-agent") {
+      fetchUserBanks();
+    }
+  }, [fetchUserBanks, user?.role]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4">
@@ -918,190 +934,17 @@ const CashAgentPanel = () => {
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                 {/* Deposit Requests Content */}
                 {activeTab === "deposits" && (
-                  <div>
-                    <div className="flex items-center gap-3 mb-6">
-                      <FaArrowDown className="text-green-400 text-xl rotate-180" />
-                      <h2 className="text-xl font-bold text-white">Deposit Requests</h2>
-                      <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">
-                        {currentDepositRequests.length} total
-                      </span>
-                      <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
-                        {currentDepositCount} pending
-                      </span>
-                    </div>
-
-                    {requestsLoading ? (
-                      <div className="flex justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                      </div>
-                    ) : currentDepositRequests.length > 0 ? (
-                      <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
-                        {currentDepositRequests.map((request, index) => (
-                          <div key={request._id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-4 mb-2">
-                                  <span className="font-medium text-white">#{index + 1} {request.username}</span>
-                                  <span className="text-green-400 font-bold">{formatCurrency(request.amount)}</span>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                    request.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                                    'bg-red-500/20 text-red-400'
-                                  }`}>
-                                    {request.status}
-                                  </span>
-                                </div>
-                                <div className="text-sm text-gray-400">
-                                  <p>Method: {request.paymentMethod} | Channel: {request.channel}</p>
-                                  <p>TXN ID: {Array.isArray(request.txnId) ? request.txnId[0] : request.txnId} | Phone: {request.senderPhone}</p>
-                                  <p>Account: {request.accountNumber} | Agent: {request.walletAgentUsername || 'N/A'}</p>
-                                  <p>Date: {new Date(request.createdAt).toLocaleString()}</p>
-                                </div>
-                              </div>
-                              {request.status === 'pending' && (
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleRequestAction(request._id, 'approve', 'deposit')}
-                                    className="flex items-center gap-1 px-3 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
-                                  >
-                                    <FaCheck className="text-sm" />
-                                    <span className="text-sm">Approve</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleRequestAction(request._id, 'reject', 'deposit')}
-                                    className="flex items-center gap-1 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
-                                  >
-                                    <FaReject className="text-sm" />
-                                    <span className="text-sm">Reject</span>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <FaArrowDown className="text-gray-500 text-4xl mx-auto mb-4 rotate-180" />
-                        <p className="text-gray-400">No deposit requests found</p>
-                      </div>
-                    )}
-                  </div>
+                  <WalletAgentDepositRequests />
                 )}
 
                 {/* Withdraw Requests Content */}
                 {activeTab === "withdraws" && (
-                  <div>
-                    <div className="flex items-center gap-3 mb-6">
-                      <FaArrowDown className="text-red-400 text-xl" />
-                      <h2 className="text-xl font-bold text-white">Withdraw Requests</h2>
-                      <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">
-                        {currentWithdrawRequests.length} total
-                      </span>
-                      <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
-                        {currentWithdrawCount} pending
-                      </span>
-                    </div>
-
-                    {requestsLoading ? (
-                      <div className="flex justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                      </div>
-                    ) : currentWithdrawRequests.length > 0 ? (
-                      <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
-                        {currentWithdrawRequests.map((request, index) => (
-                          <div key={request._id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-4 mb-2">
-                                  <span className="font-medium text-white">#{index + 1} {request.username}</span>
-                                  <span className="text-red-400 font-bold">{formatCurrency(request.amount)}</span>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                    request.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                                    'bg-red-500/20 text-red-400'
-                                  }`}>
-                                    {request.status}
-                                  </span>
-                                </div>
-                                <div className="text-sm text-gray-400">
-                                  <p>Method: {request.paymentMethod} | Channel: {request.channel}</p>
-                                  <p>Account: {request.accountNumber} | Agent: {request.walletAgentUsername || 'N/A'}</p>
-                                  <p>Date: {new Date(request.createdAt).toLocaleString()}</p>
-                                </div>
-                              </div>
-                              {request.status === 'pending' && (
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleRequestAction(request._id, 'approve', 'withdraw')}
-                                    className="flex items-center gap-1 px-3 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
-                                  >
-                                    <FaCheck className="text-sm" />
-                                    <span className="text-sm">Approve</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleRequestAction(request._id, 'reject', 'withdraw')}
-                                    className="flex items-center gap-1 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
-                                  >
-                                    <FaReject className="text-sm" />
-                                    <span className="text-sm">Reject</span>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <FaArrowDown className="text-gray-500 text-4xl mx-auto mb-4" />
-                        <p className="text-gray-400">No withdraw requests found</p>
-                      </div>
-                    )}
-                  </div>
+                  <WalletAgentWithdrawRequests />
                 )}
 
                 {/* Add Payment Method Content */}
                 {activeTab === "addBalance" && (
-                  <div>
-                    <div className="flex items-center gap-3 mb-6">
-                      <FaPlus className="text-blue-400 text-xl" />
-                      <h2 className="text-xl font-bold text-white">Add Payment Method</h2>
-                    </div>
-                    
-                    <div className="w-full">
-                      <button
-                        onClick={() => setShowPaymentMethodModal(true)}
-                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg"
-                      >
-                        <FaPlus className="text-xl" />
-                        <span className="text-lg">Add New Payment Method</span>
-                      </button>
-                      
-                      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-white/5 rounded-lg p-4 text-center">
-                          <FaWallet className="text-yellow-400 text-2xl mx-auto mb-2" />
-                          <p className="text-white text-sm font-medium">Mobile Banking</p>
-                          <p className="text-gray-400 text-xs">Bkash, Nagad, Rocket</p>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-4 text-center">
-                          <FaUniversity className="text-blue-400 text-2xl mx-auto mb-2" />
-                          <p className="text-white text-sm font-medium">Bank Transfer</p>
-                          <p className="text-gray-400 text-xs">All Banks</p>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-4 text-center">
-                          <FaWallet className="text-green-400 text-2xl mx-auto mb-2" />
-                          <p className="text-white text-sm font-medium">Digital Wallet</p>
-                          <p className="text-gray-400 text-xs">Upay, Tap, OkWallet</p>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-4 text-center">
-                          <FaWallet className="text-orange-400 text-2xl mx-auto mb-2" />
-                          <p className="text-white text-sm font-medium">Crypto</p>
-                          <p className="text-gray-400 text-xs">Bitcoin, USDT</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <WalletAgentPaymentMethods />
                 )}
 
                 {/* Send Balance Content */}
