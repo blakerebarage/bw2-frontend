@@ -207,11 +207,13 @@ const AdminDashboard = () => {
         "sub-admin",
         "agent",
         "cash-agent",
+        "wallet-agent",
         "user",
       ],
-      "admin": ["sub-admin", "agent", "cash-agent", "user"],
+      "admin": ["sub-admin", "agent", "cash-agent", "wallet-agent", "user"],
       "sub-admin": ["agent", "user"],
       "agent": ["user","agent"],
+     
     };
 
     const allowedRoles = allowedUserCreationRoles[user?.role] || [];
@@ -445,9 +447,10 @@ const AdminDashboard = () => {
         "sub-admin",
         "agent",
         "cash-agent",
+        "wallet-agent",
         "user",
       ],
-      "admin": ["sub-admin","agent","cash-agent","user"],
+      "admin": ["sub-admin","agent","cash-agent","wallet-agent","user"],
       "sub-admin": ["agent","user"],
       "agent": ["user","agent"],
       "user": [],
@@ -463,6 +466,7 @@ const AdminDashboard = () => {
       "sub-admin": "Sub Admin",
       "agent": "Agent",
       "cash-agent": "Cash Agent",
+      "wallet-agent": "Wallet Agent",
       "user": "User"
     };
 
@@ -487,6 +491,7 @@ const AdminDashboard = () => {
         { value: "agent", label: "Agent" },
         { value: "cash-agent", label: "Cash Agent" },
         { value: "sub-cash-agent", label: "Sub Cash Agent" },
+        { value: "wallet-agent", label: "Wallet Agent" },
         { value: "user", label: "User" }
       );
 
@@ -497,12 +502,14 @@ const AdminDashboard = () => {
         { value: "agent", label: "Agent" },
         { value: "cash-agent", label: "Cash Agent" },
         { value: "sub-cash-agent", label: "Sub Cash Agent" },
+        { value: "wallet-agent", label: "Wallet Agent" },
         { value: "user", label: "User" }
       );
     }
     if (user?.role === 'sub-admin') {
       baseRoles.unshift({ value: "sub-admin", label: "Sub Admin" },
         { value: "agent", label: "Agent" },
+      
         { value: "user", label: "User" }
       );
     }

@@ -3,13 +3,14 @@ import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
 import { useAddUserMutation, useCompleteWithdrawalMutation, useGetUserTransactionsQuery, useInitiateWithdrawalMutation, useLazyGetActiveOtpQuery, useSendBalanceMutation } from "@/redux/features/allApis/usersApi/usersApi";
 import { logout } from "@/redux/slices/authSlice";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { FaArrowDown, FaArrowRight, FaCopy, FaEye, FaEyeSlash, FaHistory, FaMoneyBillWave, FaPaperPlane, FaTimes, FaUserCheck, FaUserPlus, FaWallet } from "react-icons/fa";
+import { FaArrowDown, FaArrowRight, FaBell, FaCheck, FaCopy, FaEye, FaEyeSlash, FaHistory, FaMoneyBillWave, FaPaperPlane, FaPlus, FaTimes as FaReject, FaTimes, FaUniversity, FaUserCheck, FaUserPlus, FaWallet } from "react-icons/fa";
 import { RiLogoutCircleLine } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
+import Swal from "sweetalert2";
 import LanguageSwitcher from "./LanguageSwitcher/LanguageSwitcher";
 
 const CashAgentPanel = () => {
@@ -26,7 +27,7 @@ const CashAgentPanel = () => {
   const [amount, setAmount] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   
-  // User creation states
+  // User creation states (only for cash-agent)
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   
   // User withdrawal states  
@@ -50,6 +51,29 @@ const CashAgentPanel = () => {
   const [otpVisible, setOtpVisible] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState("");
 
+  // Wallet Agent specific states
+  const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
+  // const [showDepositRequests, setShowDepositRequests] = useState(false);
+  // const [showWithdrawRequests, setShowWithdrawRequests] = useState(false);
+  const [depositRequests, setDepositRequests] = useState([]);
+  const [withdrawRequests, setWithdrawRequests] = useState([]);
+  const [depositNotificationCount, setDepositNotificationCount] = useState(0);
+  const [withdrawNotificationCount, setWithdrawNotificationCount] = useState(0);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Payment method states (for wallet-agent)
+  const [bankType, setBankType] = useState("");
+  const [channel, setChannel] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [dailyLimit, setDailyLimit] = useState("");
+  const [purpose, setPurpose] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [branchName, setBranchName] = useState("");
+  const [accountHolderName, setAccountHolderName] = useState("");
+  const [districtName, setDistrictName] = useState("");
+  const [routingNumber, setRoutingNumber] = useState("");
+
   // Use RTK Query mutations and queries
   const [sendBalance, { isLoading: sendingBalance }] = useSendBalanceMutation();
   const [addUser, { isLoading: creatingUser }] = useAddUserMutation();
@@ -64,9 +88,159 @@ const CashAgentPanel = () => {
 
   // Keys for localStorage
   const WITHDRAWAL_STATE_KEY = `withdrawal_state_${user?.username}`;
+  
   useEffect(() => {
     reloadUserData()
   }, [])
+
+  // Fetch deposit and withdraw requests for wallet-agent
+  const fetchRequests = useCallback(async () => {
+    if (user?.role !== "wallet-agent") return;
+    
+    try {
+      setRequestsLoading(true);
+      
+      // Fetch deposit requests
+      const depositRes = await axiosSecure.get("/api/v1/finance/wallet-agent-deposit-requests");
+      if (depositRes.data.success) {
+        setDepositRequests(depositRes.data.data || []);
+        setDepositNotificationCount(depositRes.data.data?.filter(req => req.status === "pending")?.length || 0);
+      }
+      
+      // Fetch withdraw requests
+      const withdrawRes = await axiosSecure.get("/api/v1/finance/wallet-agent-withdraw-requests");
+      if (withdrawRes.data.success) {
+        setWithdrawRequests(withdrawRes.data.data || []);
+        setWithdrawNotificationCount(withdrawRes.data.data?.filter(req => req.status === "pending")?.length || 0);
+      }
+    } catch (error) {
+      console.error("Failed to fetch requests:", error);
+    } finally {
+      setRequestsLoading(false);
+    }
+  }, [axiosSecure, user?.role]);
+
+  // Fetch requests on component mount and set up interval
+  useEffect(() => {
+    if (user?.role === "wallet-agent") {
+      fetchRequests();
+      
+      // Refresh requests every 30 seconds
+      const interval = setInterval(fetchRequests, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [fetchRequests, user?.role]);
+
+  // Handle deposit/withdraw request actions
+  const handleRequestAction = async (requestId, action, type) => {
+    try {
+      const endpoint = type === "deposit" 
+        ? `/api/v1/finance/wallet-agent-deposit-requests/${requestId}/${action}`
+        : `/api/v1/finance/wallet-agent-withdraw-requests/${requestId}/${action}`;
+        
+      const res = await axiosSecure.patch(endpoint);
+      
+      if (res.data.success) {
+        addToast(`${type} request ${action}ed successfully!`, {
+          appearance: "success",
+          autoDismiss: true,
+        });
+        fetchRequests(); // Refresh requests
+        reloadUserData(); // Update user balance if needed
+      }
+    } catch (error) {
+      addToast(`Failed to ${action} ${type} request`, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    }
+  };
+
+  // Handle payment method submission for wallet-agent
+  const handleSubmitPaymentMethod = async (e) => {
+    e.preventDefault();
+
+    if (bankType === "Bank Transfer") {
+      if (!bankName || !branchName || !accountNumber || !accountHolderName || !districtName || !routingNumber || !purpose) {
+        addToast("All bank fields are required!", {
+          appearance: "error",
+          autoDismiss: true,
+        });
+        return;
+      }
+    } else {
+      if (!bankType || !channel || !accountNumber || !purpose) {
+        addToast("All fields are required!", {
+          appearance: "error",
+          autoDismiss: true,
+        });
+        return;
+      }
+    }
+
+    const newBank = bankType === "Bank Transfer" ? {
+      username: user?.username,
+      bankType,
+      bankName,
+      branchName,
+      accountNumber,
+      accountHolderName,
+      districtName,
+      routingNumber,
+      channel: "Bank-Transfer",
+      dailyLimit: dailyLimit || "0",
+      purpose,
+      isWalletAgent: true
+    } : {
+      username: user?.username,
+      bankType,
+      channel,
+      accountNumber,
+      dailyLimit: dailyLimit || "0",
+      purpose,
+      isWalletAgent: true
+    };
+
+    try {
+      setLoading(true);
+      const res = await axiosSecure.post("/api/v1/finance/create-bank", newBank);
+      
+      if (res.data.success) {
+        Swal.fire({
+          title: "Success!",
+          text: "Payment method added successfully.",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+        resetPaymentMethodForm();
+        setShowPaymentMethodModal(false);
+      }
+    } catch (error) {
+      Swal.fire({
+        title: "Error!",
+        text: error.response?.data?.message || "Something went wrong. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset payment method form
+  const resetPaymentMethodForm = () => {
+    setBankType("");
+    setChannel("");
+    setAccountNumber("");
+    setBankName("");
+    setBranchName("");
+    setAccountHolderName("");
+    setDistrictName("");
+    setRoutingNumber("");
+    setDailyLimit("");
+    setPurpose("");
+  };
+
   // Save withdrawal state to localStorage
   const saveWithdrawalState = (state) => {
     try {
@@ -202,10 +376,10 @@ const CashAgentPanel = () => {
     }
   };
 
-  // Check for active OTP for cash-agent and sub-cash-agent
+  // Check for active OTP for cash-agent, sub-cash-agent, and wallet-agent
   useEffect(() => {
     
-    if (user && ["cash-agent", "sub-cash-agent"].includes(user.role)) {
+    if (user && ["cash-agent", "sub-cash-agent", "wallet-agent"].includes(user.role)) {
       const checkForActiveOtp = async () => {
         try {
           const result = await getActiveOtp();
@@ -312,7 +486,7 @@ const CashAgentPanel = () => {
     };
   }, [isWithdrawModalOpen, withdrawStep]);
 
-  // User creation form
+  // User creation form (only for cash-agent)
   const {
     register,
     handleSubmit: handleCreateUserSubmit,
@@ -342,7 +516,7 @@ const CashAgentPanel = () => {
 
   // Fetch commissions when page changes or component mounts
   useEffect(() => {
-    if (showCommissions && user && ["cash-agent", "sub-cash-agent"].includes(user.role)) {
+    if (showCommissions && user && ["cash-agent", "sub-cash-agent", "wallet-agent"].includes(user.role)) {
       fetchCommissions();
     }
   }, [commissionsPage, showCommissions]);
@@ -415,7 +589,7 @@ const CashAgentPanel = () => {
     return `${randomPart}`;
   };
 
-  // Handle user creation
+  // Handle user creation (only for cash-agent)
   const onCreateUserSubmit = async (data) => {
     const { confirmPassword, ...userInfo } = data;
     
@@ -544,8 +718,18 @@ const CashAgentPanel = () => {
     clearWithdrawalState();
   };
   
-  // Only render for cash-agent and sub-cash-agent roles
-  if (!user || !["cash-agent", "sub-cash-agent"].includes(user.role)) return null;
+  // Only render for cash-agent, sub-cash-agent, and wallet-agent roles
+  if (!user || !["cash-agent", "sub-cash-agent", "wallet-agent"].includes(user.role)) return null;
+
+  // Use real user data
+  const currentUser = user;
+  const currentDepositRequests = depositRequests;
+  const currentWithdrawRequests = withdrawRequests;
+  const currentDepositCount = depositNotificationCount;
+  const currentWithdrawCount = withdrawNotificationCount;
+
+  // Tab system for wallet agent
+  const [activeTab, setActiveTab] = useState("deposits"); // deposits, withdraws, addBalance, sendBalance
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4">
@@ -555,13 +739,13 @@ const CashAgentPanel = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                <FaUserCheck className="text-white text-xl" />
+                {currentUser.role === "wallet-agent" ? <FaWallet className="text-white text-xl" /> : <FaUserCheck className="text-white text-xl" />}
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white capitalize">
-                  {user.role.replace("-", " ")} Panel
+                  {currentUser.role.replace("-", " ")} Panel
                 </h1>
-                <p className="text-gray-300">Welcome back, {user.username}</p>
+                <p className="text-gray-300">Welcome back, {currentUser.username}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -578,9 +762,12 @@ const CashAgentPanel = () => {
           </div>
         </div>
 
+
+
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Balance Card */}
-          <div className="lg:col-span-1">
+          {/* Balance Card and Action Buttons */}
+          <div className="lg:col-1">
             <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl p-6 text-white shadow-2xl mb-6">
               <div className="flex items-center justify-between mb-4">
                 <FaWallet className="text-3xl opacity-80" />
@@ -595,105 +782,452 @@ const CashAgentPanel = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-4">
-              {user?.role === "cash-agent" && (
+            {/* Action Buttons for Wallet Agent */}
+            {currentUser?.role === "wallet-agent" && (
+              <div className="space-y-4">
                 <button
-                  onClick={() => setIsCreateUserModalOpen(true)}
+                  onClick={() => setActiveTab("deposits")}
+                  className={`w-full border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
+                    activeTab === "deposits" ? "bg-green-500/20 border-green-500/30 text-green-400" : "bg-white/10"
+                  }`}
+                >
+                  <div className="relative">
+                    <FaBell className="text-xl" />
+                    <FaArrowDown className="text-xs rotate-180 absolute -top-1 -right-1" />
+                    {currentDepositCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                        {currentDepositCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-medium">Deposit Requests</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("withdraws")}
+                  className={`w-full border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
+                    activeTab === "withdraws" ? "bg-red-500/20 border-red-500/30 text-red-400" : "bg-white/10"
+                  }`}
+                >
+                  <div className="relative">
+                    <FaBell className="text-xl" />
+                    <FaArrowDown className="text-xs absolute -top-1 -right-1" />
+                    {currentWithdrawCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                        {currentWithdrawCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-medium">Withdraw Requests</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("addBalance")}
+                  className={`w-full border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
+                    activeTab === "addBalance" ? "bg-blue-500/20 border-blue-500/30 text-blue-400" : "bg-white/10"
+                  }`}
+                >
+                  <FaPlus className="text-xl" />
+                  <span className="font-medium">Add Payment Method</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("sendBalance")}
+                  className={`w-full border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
+                    activeTab === "sendBalance" ? "bg-orange-500/20 border-orange-500/30 text-orange-400" : "bg-white/10"
+                  }`}
+                >
+                  <FaPaperPlane className="text-xl" />
+                  <span className="font-medium">Send Balance</span>
+                </button>
+
+                <button
+                  onClick={() => setIsWithdrawModalOpen(true)}
                   className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
                 >
-                  <FaUserPlus className="text-green-400 text-xl" />
-                  <span className="font-medium">Create Sub Cash Agent</span>
+                  <FaArrowDown className="text-red-400 text-xl" />
+                  <span className="font-medium">Withdraw from User</span>
                 </button>
-              )}
-              
-              <button
-                onClick={() => setIsWithdrawModalOpen(true)}
-                className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
-              >
-                <FaArrowDown className="text-red-400 text-xl" />
-                <span className="font-medium">Withdraw from User</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowCommissions(!showCommissions);
-                  if (!showCommissions) {
-                    setCommissionsPage(1);
-                  }
-                }}
-                className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
-              >
-                <FaMoneyBillWave className="text-blue-400 text-xl" />
-                <span className="font-medium">
-                  {showCommissions ? 'Hide' : 'Show'} Commissions
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {/* Send Balance Form */}
-          <div className="lg:col-span-3">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-6">
-                <FaPaperPlane className="text-yellow-400 text-xl" />
-                <h2 className="text-xl font-bold text-white">Send Balance</h2>
-              </div>
-              
-              <form onSubmit={handleSendBalance} className="space-y-4">
-                <div>
-                  <label className="block text-gray-300 text-sm font-medium mb-2">
-                    Receiver Username
-                  </label>
-                  <div className="relative">
-                    <FaUserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Enter username"
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                      value={receiverUsername}
-                      onChange={e => setReceiverUsername(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-gray-300 text-sm font-medium mb-2">
-                    Amount
-                  </label>
-                  <div className="relative">
-                    <FaMoneyBillWave className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="number"
-                      placeholder="Enter amount"
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                      value={amount}
-                      onChange={e => setAmount(e.target.value)}
-                      min="1"
-                    />
-                  </div>
-                </div>
 
                 <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                  disabled={sendingBalance}
+                  onClick={() => {
+                    setShowCommissions(!showCommissions);
+                    if (!showCommissions) {
+                      setCommissionsPage(1);
+                    }
+                  }}
+                  className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
                 >
-                  {sendingBalance ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <FaPaperPlane />
-                      Send Balance
-                      <FaArrowRight />
-                    </>
-                  )}
+                  <FaMoneyBillWave className="text-blue-400 text-xl" />
+                  <span className="font-medium">
+                    {showCommissions ? 'Hide' : 'Show'} Commissions
+                  </span>
                 </button>
-              </form>
-            </div>
+              </div>
+            )}
+
+            {/* Action Buttons for Cash Agent */}
+            {["cash-agent", "sub-cash-agent"].includes(currentUser?.role) && (
+              <div className="space-y-4">
+                {/* User Creation - Only for cash-agent */}
+                {currentUser?.role === "cash-agent" && (
+                  <button
+                    onClick={() => setIsCreateUserModalOpen(true)}
+                    className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
+                  >
+                    <FaUserPlus className="text-green-400 text-xl" />
+                    <span className="font-medium">Create Sub Cash Agent</span>
+                  </button>
+                )}
+                
+                {/* Withdraw functionality for cash agents */}
+                <button
+                  onClick={() => setIsWithdrawModalOpen(true)}
+                  className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
+                >
+                  <FaArrowDown className="text-red-400 text-xl" />
+                  <span className="font-medium">Withdraw from User</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowCommissions(!showCommissions);
+                    if (!showCommissions) {
+                      setCommissionsPage(1);
+                    }
+                  }}
+                  className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
+                >
+                  <FaMoneyBillWave className="text-blue-400 text-xl" />
+                  <span className="font-medium">
+                    {showCommissions ? 'Hide' : 'Show'} Commissions
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Main Content Area */}
+          <div className="lg:col-span-3">
+            {/* Wallet Agent Main Content */}
+            {currentUser?.role === "wallet-agent" && (
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                {/* Deposit Requests Content */}
+                {activeTab === "deposits" && (
+                  <div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <FaArrowDown className="text-green-400 text-xl rotate-180" />
+                      <h2 className="text-xl font-bold text-white">Deposit Requests</h2>
+                      <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">
+                        {currentDepositRequests.length} total
+                      </span>
+                      <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
+                        {currentDepositCount} pending
+                      </span>
+                    </div>
+
+                    {requestsLoading ? (
+                      <div className="flex justify-center items-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                      </div>
+                    ) : currentDepositRequests.length > 0 ? (
+                      <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
+                        {currentDepositRequests.map((request, index) => (
+                          <div key={request._id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-4 mb-2">
+                                  <span className="font-medium text-white">#{index + 1} {request.username}</span>
+                                  <span className="text-green-400 font-bold">{formatCurrency(request.amount)}</span>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                    request.status === 'approved' ? 'bg-green-500/20 text-green-400' :
+                                    'bg-red-500/20 text-red-400'
+                                  }`}>
+                                    {request.status}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-400">
+                                  <p>Method: {request.paymentMethod} | Channel: {request.channel}</p>
+                                  <p>TXN ID: {request.txnId} | Phone: {request.senderPhone}</p>
+                                  <p>Date: {new Date(request.createdAt).toLocaleString()}</p>
+                                </div>
+                              </div>
+                              {request.status === 'pending' && (
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleRequestAction(request._id, 'approve', 'deposit')}
+                                    className="flex items-center gap-1 px-3 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                                  >
+                                    <FaCheck className="text-sm" />
+                                    <span className="text-sm">Approve</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleRequestAction(request._id, 'reject', 'deposit')}
+                                    className="flex items-center gap-1 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+                                  >
+                                    <FaReject className="text-sm" />
+                                    <span className="text-sm">Reject</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <FaArrowDown className="text-gray-500 text-4xl mx-auto mb-4 rotate-180" />
+                        <p className="text-gray-400">No deposit requests found</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Withdraw Requests Content */}
+                {activeTab === "withdraws" && (
+                  <div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <FaArrowDown className="text-red-400 text-xl" />
+                      <h2 className="text-xl font-bold text-white">Withdraw Requests</h2>
+                      <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">
+                        {currentWithdrawRequests.length} total
+                      </span>
+                      <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
+                        {currentWithdrawCount} pending
+                      </span>
+                    </div>
+
+                    {requestsLoading ? (
+                      <div className="flex justify-center items-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                      </div>
+                    ) : currentWithdrawRequests.length > 0 ? (
+                      <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
+                        {currentWithdrawRequests.map((request, index) => (
+                          <div key={request._id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-4 mb-2">
+                                  <span className="font-medium text-white">#{index + 1} {request.username}</span>
+                                  <span className="text-red-400 font-bold">{formatCurrency(request.amount)}</span>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                    request.status === 'approved' ? 'bg-green-500/20 text-green-400' :
+                                    'bg-red-500/20 text-red-400'
+                                  }`}>
+                                    {request.status}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-400">
+                                  <p>Method: {request.paymentMethod} | Channel: {request.channel}</p>
+                                  <p>Account: {request.accountNumber}</p>
+                                  <p>Date: {new Date(request.createdAt).toLocaleString()}</p>
+                                </div>
+                              </div>
+                              {request.status === 'pending' && (
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleRequestAction(request._id, 'approve', 'withdraw')}
+                                    className="flex items-center gap-1 px-3 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                                  >
+                                    <FaCheck className="text-sm" />
+                                    <span className="text-sm">Approve</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleRequestAction(request._id, 'reject', 'withdraw')}
+                                    className="flex items-center gap-1 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+                                  >
+                                    <FaReject className="text-sm" />
+                                    <span className="text-sm">Reject</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <FaArrowDown className="text-gray-500 text-4xl mx-auto mb-4" />
+                        <p className="text-gray-400">No withdraw requests found</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Add Payment Method Content */}
+                {activeTab === "addBalance" && (
+                  <div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <FaPlus className="text-blue-400 text-xl" />
+                      <h2 className="text-xl font-bold text-white">Add Payment Method</h2>
+                    </div>
+                    
+                    <div className="w-full">
+                      <button
+                        onClick={() => setShowPaymentMethodModal(true)}
+                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg"
+                      >
+                        <FaPlus className="text-xl" />
+                        <span className="text-lg">Add New Payment Method</span>
+                      </button>
+                      
+                      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-white/5 rounded-lg p-4 text-center">
+                          <FaWallet className="text-yellow-400 text-2xl mx-auto mb-2" />
+                          <p className="text-white text-sm font-medium">Mobile Banking</p>
+                          <p className="text-gray-400 text-xs">Bkash, Nagad, Rocket</p>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-4 text-center">
+                          <FaUniversity className="text-blue-400 text-2xl mx-auto mb-2" />
+                          <p className="text-white text-sm font-medium">Bank Transfer</p>
+                          <p className="text-gray-400 text-xs">All Banks</p>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-4 text-center">
+                          <FaWallet className="text-green-400 text-2xl mx-auto mb-2" />
+                          <p className="text-white text-sm font-medium">Digital Wallet</p>
+                          <p className="text-gray-400 text-xs">Upay, Tap, OkWallet</p>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-4 text-center">
+                          <FaWallet className="text-orange-400 text-2xl mx-auto mb-2" />
+                          <p className="text-white text-sm font-medium">Crypto</p>
+                          <p className="text-gray-400 text-xs">Bitcoin, USDT</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Send Balance Content */}
+                {activeTab === "sendBalance" && (
+                  <div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <FaPaperPlane className="text-orange-400 text-xl" />
+                      <h2 className="text-xl font-bold text-white">Send Balance</h2>
+                    </div>
+                    
+                    <form onSubmit={handleSendBalance} className="space-y-4 w-full">
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Receiver Username
+                        </label>
+                        <div className="relative">
+                          <FaUserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Enter username"
+                            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                            value={receiverUsername}
+                            onChange={e => setReceiverUsername(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Amount
+                        </label>
+                        <div className="relative">
+                          <FaMoneyBillWave className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="number"
+                            placeholder="Enter amount"
+                            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                            value={amount}
+                            onChange={e => setAmount(e.target.value)}
+                            min="1"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                        disabled={sendingBalance}
+                      >
+                        {sendingBalance ? (
+                          <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <FaPaperPlane />
+                            Send Balance
+                            <FaArrowRight />
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Send Balance Form - Only for cash-agent and sub-cash-agent */}
+            {["cash-agent", "sub-cash-agent"].includes(currentUser?.role) && (
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                <div className="flex items-center gap-3 mb-6">
+                  <FaPaperPlane className="text-yellow-400 text-xl" />
+                  <h2 className="text-xl font-bold text-white">Send Balance</h2>
+                </div>
+                
+                <form onSubmit={handleSendBalance} className="space-y-4">
+                  <div>
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
+                      Receiver Username
+                    </label>
+                    <div className="relative">
+                      <FaUserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Enter username"
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                        value={receiverUsername}
+                        onChange={e => setReceiverUsername(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
+                      Amount
+                    </label>
+                    <div className="relative">
+                      <FaMoneyBillWave className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="number"
+                        placeholder="Enter amount"
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                        value={amount}
+                        onChange={e => setAmount(e.target.value)}
+                        min="1"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                    disabled={sendingBalance}
+                  >
+                    {sendingBalance ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <FaPaperPlane />
+                        Send Balance
+                        <FaArrowRight />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1176,101 +1710,287 @@ const CashAgentPanel = () => {
             </div>
           </div>
         )}
-      </div>
 
-      {/* OTP Display Overlay for Cash Agent Panel */}
-      {showOtpDisplay && activeOtpData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 ease-out">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-4 rounded-t-xl flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <FaEye className="text-white text-sm" />
+        {/* Add Payment Method Modal - Only for wallet-agent */}
+        {showPaymentMethodModal && currentUser?.role === "wallet-agent" && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white p-8 rounded-xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Add Payment Method</h2>
+                <button
+                  onClick={() => setShowPaymentMethodModal(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1"
+                >
+                  <FaTimes className="text-xl" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmitPaymentMethod} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">Bank Type</label>
+                    <select
+                      value={bankType}
+                      onChange={(e) => setBankType(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Select Bank Type</option>
+                      <option value="Bkash">Bkash</option>
+                      <option value="Nagad">Nagad</option>
+                      <option value="Rocket">Rocket</option>
+                      <option value="Upay">Upay</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">Channel</label>
+                    <select
+                      value={channel}
+                      onChange={(e) => setChannel(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Select Channel</option>
+                      <option value="Send-Money">Send Money</option>
+                      <option value="Cash-In">Cash In</option>
+                      <option value="Make-Payment">Make Payment</option>
+                    </select>
+                  </div>
                 </div>
+
                 <div>
-                  <h3 className="font-bold text-lg">Active OTP</h3>
-                  <p className="text-yellow-100 text-sm">Current withdrawal OTP</p>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">Account Number</label>
+                  <input
+                    type="text"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter account number"
+                    required
+                  />
                 </div>
-              </div>
-              <button
-                onClick={closeOtpDisplay}
-                className="text-white/80 hover:text-white hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-              >
-                <FaTimes />
-              </button>
-            </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-4">
-              {/* OTP Display */}
-              <div className="text-center">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Current OTP Code:</label>
-                <div className="flex items-center justify-center gap-3 bg-gray-50 rounded-lg p-4">
-                  <div className="flex gap-1">
-                    {(activeOtpData.otp || "").split('').map((digit, index) => (
-                      <div
-                        key={index}
-                        className="w-10 h-10 bg-yellow-100 border border-yellow-300 rounded-md flex items-center justify-center text-xl font-bold text-yellow-700"
-                      >
-                        {otpVisible ? digit : "•"}
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">Daily Limit</label>
+                  <input
+                    type="number"
+                    value={dailyLimit}
+                    onChange={(e) => setDailyLimit(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter daily limit"
+                    required
+                    min="1"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">Purpose</label>
+                  <select
+                    value={purpose}
+                    onChange={(e) => setPurpose(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select Purpose</option>
+                    <option value="deposit">Deposit</option>
+                    <option value="withdraw">Withdraw</option>
+                    <option value="both">Both</option>
+                  </select>
+                </div>
+
+                {bankType === "Bank Transfer" && (
+                  <>
+                    <div>
+                      <label className="block text-gray-700 text-sm font-medium mb-2">Bank Name</label>
+                      <input
+                        type="text"
+                        value={bankName}
+                        onChange={(e) => setBankName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter bank name"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 text-sm font-medium mb-2">Branch Name</label>
+                      <input
+                        type="text"
+                        value={branchName}
+                        onChange={(e) => setBranchName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter branch name"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 text-sm font-medium mb-2">Account Holder Name</label>
+                      <input
+                        type="text"
+                        value={accountHolderName}
+                        onChange={(e) => setAccountHolderName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter account holder name"
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">District</label>
+                        <input
+                          type="text"
+                          value={districtName}
+                          onChange={(e) => setDistrictName(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter district"
+                          required
+                        />
                       </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setOtpVisible(!otpVisible)}
-                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md transition-colors"
-                      title={otpVisible ? "Hide OTP" : "Show OTP"}
-                    >
-                      {otpVisible ? <FaEyeSlash /> : <FaEye />}
-                    </button>
-                    <button
-                      onClick={copyOtpToClipboard}
-                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md transition-colors"
-                      title="Copy OTP"
-                    >
-                      <FaCopy />
-                    </button>
-                  </div>
-                </div>
-              </div>
 
-              {/* OTP Details */}
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Amount:</span>
-                  <span className="font-medium">{formatCurrency(activeOtpData.amount)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Attempts:</span>
-                  <span className="font-medium">{activeOtpData.attempts}/3</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Expires in:</span>
-                  <span className={`font-medium ${timeRemaining === "Expired" ? "text-red-600" : "text-green-600"}`}>
-                    {timeRemaining}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Created:</span>
-                  <span className="font-medium text-xs">
-                    {new Date(activeOtpData.createdAt).toLocaleTimeString()}
-                  </span>
-                </div>
-              </div>
+                      <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">Routing Number</label>
+                        <input
+                          type="text"
+                          value={routingNumber}
+                          onChange={(e) => setRoutingNumber(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter routing number"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
-              {/* Action Button */}
-              <button
-                onClick={closeOtpDisplay}
-                className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-medium py-3 rounded-lg transition-colors"
-              >
-                Dismiss
-              </button>
+                <div className="flex gap-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentMethodModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <FaPlus />
+                        Add Payment Method
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* OTP Display Overlay for Cash Agent Panel */}
+        {showOtpDisplay && activeOtpData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 ease-out">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-4 rounded-t-xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <FaEye className="text-white text-sm" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Active OTP</h3>
+                    <p className="text-yellow-100 text-sm">Current withdrawal OTP</p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeOtpDisplay}
+                  className="text-white/80 hover:text-white hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                {/* OTP Display */}
+                <div className="text-center">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Current OTP Code:</label>
+                  <div className="flex items-center justify-center gap-3 bg-gray-50 rounded-lg p-4">
+                    <div className="flex gap-1">
+                      {(activeOtpData.otp || "").split('').map((digit, index) => (
+                        <div
+                          key={index}
+                          className="w-10 h-10 bg-yellow-100 border border-yellow-300 rounded-md flex items-center justify-center text-xl font-bold text-yellow-700"
+                        >
+                          {otpVisible ? digit : "•"}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setOtpVisible(!otpVisible)}
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md transition-colors"
+                        title={otpVisible ? "Hide OTP" : "Show OTP"}
+                      >
+                        {otpVisible ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                      <button
+                        onClick={copyOtpToClipboard}
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md transition-colors"
+                        title="Copy OTP"
+                      >
+                        <FaCopy />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* OTP Details */}
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-medium">{formatCurrency(activeOtpData.amount)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Attempts:</span>
+                    <span className="font-medium">{activeOtpData.attempts}/3</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Expires in:</span>
+                    <span className={`font-medium ${timeRemaining === "Expired" ? "text-red-600" : "text-green-600"}`}>
+                      {timeRemaining}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Created:</span>
+                    <span className="font-medium text-xs">
+                      {new Date(activeOtpData.createdAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <button
+                  onClick={closeOtpDisplay}
+                  className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-medium py-3 rounded-lg transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -95,7 +95,7 @@ function App() {
   }, [pathname, dispatch, reloadUserData]);
 
   // If user is cash-agent or sub-cash-agent, always redirect to /cash-agent
-  if (user && ["cash-agent", "sub-cash-agent"].includes(user.role) && pathname !== "/cash-agent") {
+  if (user && ["cash-agent", "sub-cash-agent", "wallet-agent"].includes(user.role) && pathname !== "/cash-agent") {
     return <Navigate to="/cash-agent" replace />;
   }
 
