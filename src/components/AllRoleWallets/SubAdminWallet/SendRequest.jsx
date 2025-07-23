@@ -356,7 +356,7 @@ const DepositSection = () => {
       }
     };
     fetchWalletAgentBanks();
-  }, [axiosSecure, sortPaymentMethods]);
+  }, [axiosSecure, sortPaymentMethods,walletAgentBanks]);
 
   // Update bank list when method changes
   useEffect(() => {

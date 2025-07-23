@@ -9,20 +9,20 @@ import AdminSetting from "@/components/Admin Setting/AdminSetting";
 import AdminDashboard from "@/components/AdminDashboard/AdminDashboard";
 import AdminWallet from "@/components/AllRoleWallets/AdminWallet/AdminWallet";
 import DepositSection from "@/components/AllRoleWallets/SubAdminWallet/SendRequest";
-import Wallet from "@/components/AllRoleWallets/SubAdminWallet/Wallet";
+// import Wallet from "@/components/AllRoleWallets/SubAdminWallet/Wallet";
 import AllWithdraw from "@/components/AllWithdraw/AllWithdraw";
 import Banking from "@/components/Banking/Banking";
-import BetList from "@/components/BetList/BetList";
-import BetListLive from "@/components/BetListLive/BetListLive";
-import DeactiveGame from "@/components/DeactiveGame/DeactiveGame";
+// import BetList from "@/components/BetList/BetList";
+// import BetListLive from "@/components/BetListLive/BetListLive";
+// import DeactiveGame from "@/components/DeactiveGame/DeactiveGame";
 import Downlist from "@/components/Downlist/Downlist";
 import AllTransactions from "@/components/Finances/AllTransactions";
 import TransactionSummary from "@/components/Finances/TransactionSummary";
-import Game from "@/components/GameApi/Game";
+// import Game from "@/components/GameApi/Game";
 import GameControl from "@/components/GameControl/GameControl";
 import HomeControl from "@/components/HomeControl/HomeControl";
 import ImageControl from "@/components/ImageControl/ImageControl";
-import LiveGame from "@/components/LiveGame/LiveGame";
+// import LiveGame from "@/components/LiveGame/LiveGame";
 import MyAccount from "@/components/MyAccount/MyAccount";
 import MyAccountDownList from "@/components/MyAccountComponents/MyAccountDownList";
 import MyAccountStatementtabs from "@/components/MyAccountComponents/MyAccountStatementtabs";
@@ -39,24 +39,23 @@ import TransactionHistory from "@/components/TransactionHistory/TransactionHisto
 import Withdraw from "@/components/Withdraw/Withdraw";
 import DashboardLayout from "@/layout/DashboardLayout";
 import MainLayout from "@/layout/MainLayout";
-import SportsLeaguesLayout from "@/layout/SportsLeaguesLayout";
 import ActivityLog from "@/pages/activity-log/ActivityLog";
 import AllBetsHistory from "@/pages/all-bets-history/AllBetsHistory";
 import BalanceOverview from "@/pages/balance-overview/BalanceOverview";
 import Banner from "@/pages/Banner";
 import BetsHistory from "@/pages/bets-history/BetsHistory";
 import CurrentBets from "@/pages/current-bets/CurrentBets";
-import Casino from "@/pages/home/Casino/Casino";
+// import Casino from "@/pages/home/Casino/Casino";
 import GameLauncher from "@/pages/home/GameLauncher/GameLauncher";
 import Home from "@/pages/home/Home/Home";
-import Kyc from "@/pages/home/Kyc/Kyc";
-import Leagues from "@/pages/home/Leagues/Leagues";
+// import Kyc from "@/pages/home/Kyc/Kyc";
+// import Leagues from "@/pages/home/Leagues/Leagues";
 import Login from "@/pages/home/Login/Login";
 import PrivacyPolicy from "@/pages/home/PrivacyPolicy/PrivacyPolicy";
 import Register from "@/pages/home/Register/Register";
 import ResponsibleGaming from "@/pages/home/ResponsibleGaming/ResponsibleGaming";
 import RulesRegulation from "@/pages/home/RulesRegulation/RulesRegulation";
-import Sports from "@/pages/home/Sports/Sports";
+// import Sports from "@/pages/home/Sports/Sports";
 import TermsAndCondition from "@/pages/home/TermsAndCondition/TermsAndCondition";
 import MyProfile from "@/pages/my-profile/MyProfile";
 
@@ -95,7 +94,7 @@ const router = createBrowserRouter([
           { path: "/terms-conditions", element: <TermsAndCondition /> },
           { path: "/privacy-policy", element: <PrivacyPolicy /> },
           { path: "/rules-regulation", element: <RulesRegulation /> },
-          { path: "/kyc", element: <Kyc /> },
+          // { path: "/kyc", element: <Kyc /> },
           { path: "/responsible-gaming", element: <ResponsibleGaming /> },
           // Protected routes for authenticated users only
           {
@@ -119,36 +118,36 @@ const router = createBrowserRouter([
           },
         ],
       },
-      {
-        path: "/leagues",
-        element: <SportsLeaguesLayout />,
-        children: [
-          {
-            path: "",
-            element: <Leagues />,
-          },
-        ],
-      },
-      {
-        path: "/sports",
-        element: <SportsLeaguesLayout />,
-        children: [
-          {
-            path: "",
-            element: <Sports />,
-          },
-        ],
-      },
-      {
-        path: "/casino",
-        element: <SportsLeaguesLayout />,
-        children: [
-          {
-            path: "",
-            element: <Casino />,
-          },
-        ],
-      },
+      // {
+      //   path: "/leagues",
+      //   element: <SportsLeaguesLayout />,
+      //   children: [
+      //     {
+      //       path: "",
+      //       element: <Leagues />,
+      //     },
+      //   ],
+      // },
+      // {
+      //   path: "/sports",
+      //   element: <SportsLeaguesLayout />,
+      //   children: [
+      //     {
+      //       path: "",
+      //       element: <Sports />,
+      //     },
+      //   ],
+      // },
+      // {
+      //   path: "/casino",
+      //   element: <SportsLeaguesLayout />,
+      //   children: [
+      //     {
+      //       path: "",
+      //       element: <Casino />,
+      //     },
+      //   ],
+      // },
       {
         path: "admindashboard",
         element: (
@@ -160,9 +159,9 @@ const router = createBrowserRouter([
           { path: "", element: <AdminDashboard /> },
           { path: "generalsetting", element: <Setting /> },
           { path: "adminsetting", element: <AdminSetting /> },
-          { path: "gameapi", element: <Game /> },
+          // { path: "gameapi", element: <Game /> },
           { path: "homecontrol", element: <HomeControl /> },
-          { path: "gamecontrol", element: <GameControl /> },
+          { path: "gamecontrol", element: <GameControl /> }, 
           { path: "gameimagecontrol", element: <ImageControl /> },
           { path: "gamestatuschanges", element: <GameStatusChanges /> },
           { path: "mostplayedgamescontrol", element: <MostPlayedGamesMonitor /> },
@@ -192,15 +191,15 @@ const router = createBrowserRouter([
               },
             ],
           },
-          { path: "betlist", element: <BetList /> },
-          { path: "betlive", element: <BetListLive /> },
+          // { path: "betlist", element: <BetList /> },
+          // { path: "betlive", element: <BetListLive /> },
           { path: "banking", element: <Banking /> },
           { path: "activegame", element: <ActiveGame /> },
-          { path: "deactivegame", element: <DeactiveGame /> },
-          { path: "livegame", element: <LiveGame /> },
+          // { path: "deactivegame", element: <DeactiveGame /> },
+          // { path: "livegame", element: <LiveGame /> },
           { path: "usersdata/:role", element: <UsersData /> },
           { path: "depositewallet", element: <AdminWallet /> },
-          { path: "wallet", element: <Wallet /> },
+          // { path: "wallet", element: <Wallet /> },
           { path: "addBank", element: <AddBank /> },
           { path: "addbalance", element: <SuperAdminBalanceAdd /> },
           { path: "userprofile/:id", element: <UserProfile /> },

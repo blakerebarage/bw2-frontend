@@ -37,6 +37,7 @@ const usersApi = baseApi.injectEndpoints({
     // get all users
     getUsers: builder.query({
       query: (params = {}) => {
+        console.log(params)
         const { referredBy, page, limit } = params;
         
         const urlParams = new URLSearchParams({

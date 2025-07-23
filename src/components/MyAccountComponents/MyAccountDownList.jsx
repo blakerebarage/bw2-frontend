@@ -1,7 +1,7 @@
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import { FaHouseUser } from "react-icons/fa";
+import { FaExclamationTriangle, FaHouseUser, FaInfoCircle, FaRedo } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import logo from "../../../public/logoBlack.png";
@@ -10,25 +10,56 @@ const MyAccountDownList = () => {
   const { user } = useSelector((state) => state.auth);
   const [referredUsers, setReferredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [errorMessage, setErrorMessage] = useState("");
   const usersPerPage = 20;
   
   // Build query parameters based on user role
   const queryParams = {
     page: currentPage,
-    limit: usersPerPage, // Get all users for client-side filtering
-    ...( user?.referralCode && { referredBy: user.referralCode })
+    limit: usersPerPage,
+    ...(user?.referralCode && { referredBy: user.referralCode })
   };
   
-  const { data: users, isLoading, error } = useGetUsersQuery(queryParams);
-
+  const { data: users, isLoading, error, refetch } = useGetUsersQuery(queryParams, {
+    // Skip the query if no user or referral code
+    skip: !user?.referralCode,
+    // Retry configuration
+    refetchOnMountOrArgChange: true,
+    refetchOnReconnect: true,
+  });
+ 
   useEffect(() => {
     if (!isLoading && !error && user && users?.data?.users) {
       const filteredUsers = users.data.users.filter(
         (u) => u.referredBy === user?.referralCode
       );
       setReferredUsers(filteredUsers);
+      setErrorMessage(""); // Clear any previous error messages
     }
   }, [user, users, isLoading, error]);
+
+  // Handle errors
+  useEffect(() => {
+    if (error) {
+      console.error("API Error:", error);
+      
+      // Handle different types of errors
+      if (error.status === 404) {
+        setErrorMessage("No users found. The requested data is not available.");
+      } else if (error.status === 401) {
+        setErrorMessage("Authentication required. Please log in again.");
+      } else if (error.status === 403) {
+        setErrorMessage("Access denied. You don't have permission to view this data.");
+      } else if (error.status >= 500) {
+        setErrorMessage("Server error. Please try again later.");
+      } else {
+        setErrorMessage("Failed to load users. Please check your connection and try again.");
+      }
+      
+      // Clear users on error
+      setReferredUsers([]);
+    }
+  }, [error]);
 
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
@@ -39,6 +70,11 @@ const MyAccountDownList = () => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
+  };
+
+  const handleRetry = () => {
+    setErrorMessage("");
+    refetch();
   };
 
   const renderPageNumbers = () => {
@@ -69,18 +105,74 @@ const MyAccountDownList = () => {
     return pages;
   };
 
-  if (error) {
+  // Show error state
+  if (error && !isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen text-red-600 font-semibold">
-        Error loading users
+      <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen  w-full">
+        {/* Header */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm">
+          <h2 className="text-2xl font-bold text-gray-900">My Referred Users</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            View users you have referred
+          </p>
+        </div>
+
+        {/* Error Display */}
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+              <FaExclamationTriangle className="w-8 h-8 text-gray-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">Unable to load users</h3>
+              <p className="text-gray-500">{errorMessage}</p>
+              
+              
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+                <button
+                  onClick={handleRetry}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                >
+                  <FaRedo className="w-4 h-4" />
+                  Try Again
+                </button>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen w-full">
+        {/* Header */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm">
+          <h2 className="text-2xl font-bold text-gray-900">My Referred Users</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Loading your referred users...
+          </p>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="flex flex-col justify-center items-center space-y-3">
+            <div className="w-12 h-12 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+            <img src={logo} alt="Loading" className="w-20 rounded-2xl" />
+            <p className="text-gray-500">Loading users...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen p-4 w-full">
+    <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen w-full">
       {/* Header */}
-      <div className="mb-6 bg-white rounded-lg p-4 shadow-sm">
+      <div className="mb-6 bg-white rounded-lg shadow-sm">
         <h2 className="text-2xl font-bold text-gray-900">My Referred Users</h2>
         <p className="mt-1 text-sm text-gray-600">
           View users you have referred ({referredUsers.length} total)
@@ -112,17 +204,7 @@ const MyAccountDownList = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {isLoading ? (
-                <tr>
-                  <td colSpan="8" className="px-4 py-8">
-                    <div className="flex flex-col justify-center items-center space-y-3">
-                      <div className="w-12 h-12 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
-                      <img src={logo} alt="Loading" className="w-20 rounded-2xl" />
-                      <p className="text-gray-500">Loading users...</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : currentUsers.length > 0 ? (
+              {currentUsers.length > 0 ? (
                 currentUsers.map((row, index) => (
                   <tr key={row._id || index} className="hover:bg-yellow-50 transition-colors duration-200">
                     <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
@@ -177,6 +259,17 @@ const MyAccountDownList = () => {
                       <div>
                         <h3 className="text-lg font-medium text-gray-900 mb-1">No referred users found</h3>
                         <p className="text-gray-500">You haven't referred any users yet.</p>
+                        {user?.referralCode && (
+                          <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-2 text-blue-800">
+                              <FaInfoCircle className="w-4 h-4" />
+                              <span className="text-sm font-medium">Your Referral Code: {user.referralCode}</span>
+                            </div>
+                            <p className="text-xs text-blue-600 mt-1">
+                              Share this code with others to start building your network!
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>

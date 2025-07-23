@@ -1,16 +1,37 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
-import { useAddUserMutation, useCompleteWithdrawalMutation, useGetUserTransactionsQuery, useInitiateWithdrawalMutation, useLazyGetActiveOtpQuery, useSendBalanceMutation } from "@/redux/features/allApis/usersApi/usersApi";
+import {
+  useAddUserMutation,
+  useCompleteWithdrawalMutation,
+  useGetUserTransactionsQuery,
+  useInitiateWithdrawalMutation,
+  useLazyGetActiveOtpQuery,
+  useSendBalanceMutation
+} from "@/redux/features/allApis/usersApi/usersApi";
 import { logout } from "@/redux/slices/authSlice";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { FaArrowDown, FaArrowRight, FaBell, FaCopy, FaEye, FaEyeSlash, FaHistory, FaMoneyBillWave, FaPaperPlane, FaPlus, FaTimes, FaUserCheck, FaUserPlus, FaWallet } from "react-icons/fa";
+import {
+  FaArrowDown,
+  FaArrowRight,
+  FaBell,
+  FaCopy,
+  FaEye,
+  FaEyeSlash,
+  FaHistory,
+  FaMoneyBillWave,
+  FaPaperPlane,
+  FaPlus,
+  FaTimes,
+  FaUserCheck,
+  FaUserPlus,
+  FaWallet
+} from "react-icons/fa";
 import { RiLogoutCircleLine } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
-import Swal from "sweetalert2";
 import LanguageSwitcher from "./LanguageSwitcher/LanguageSwitcher";
 import WalletAgentDepositRequests from "./WalletAgentDepositRequests";
 import WalletAgentPaymentMethods from "./WalletAgentPaymentMethods";
@@ -54,31 +75,11 @@ const CashAgentPanel = () => {
   const [timeRemaining, setTimeRemaining] = useState("");
 
   // Wallet Agent specific states
-  const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
-  // const [showDepositRequests, setShowDepositRequests] = useState(false);
-  // const [showWithdrawRequests, setShowWithdrawRequests] = useState(false);
   const [depositRequests, setDepositRequests] = useState([]);
   const [withdrawRequests, setWithdrawRequests] = useState([]);
   const [depositNotificationCount, setDepositNotificationCount] = useState(0);
   const [withdrawNotificationCount, setWithdrawNotificationCount] = useState(0);
   const [requestsLoading, setRequestsLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Payment method states (for wallet-agent)
-  const [bankType, setBankType] = useState("");
-  const [channel, setChannel] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [dailyLimit, setDailyLimit] = useState("");
-  const [purpose, setPurpose] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [branchName, setBranchName] = useState("");
-  const [accountHolderName, setAccountHolderName] = useState("");
-  const [districtName, setDistrictName] = useState("");
-  const [routingNumber, setRoutingNumber] = useState("");
-
-  // User banks states
-  const [userBanks, setUserBanks] = useState([]);
-  const [banksLoading, setBanksLoading] = useState(false);
 
   // Use RTK Query mutations and queries
   const [sendBalance, { isLoading: sendingBalance }] = useSendBalanceMutation();
@@ -141,91 +142,7 @@ const CashAgentPanel = () => {
 
   
 
-  // Handle payment method submission for wallet-agent
-  const handleSubmitPaymentMethod = async (e) => {
-    e.preventDefault();
 
-    if (bankType === "Bank Transfer") {
-      if (!bankName || !branchName || !accountNumber || !accountHolderName || !districtName || !routingNumber || !purpose) {
-        addToast("All bank fields are required!", {
-          appearance: "error",
-          autoDismiss: true,
-        });
-        return;
-      }
-    } else {
-      if (!bankType || !channel || !accountNumber || !purpose) {
-        addToast("All fields are required!", {
-          appearance: "error",
-          autoDismiss: true,
-        });
-        return;
-      }
-    }
-
-    const newBank = bankType === "Bank Transfer" ? {
-      username: user?.username,
-      bankType,
-      bankName,
-      branchName,
-      accountNumber,
-      accountHolderName,
-      districtName,
-      routingNumber,
-      channel: "Bank-Transfer",
-      dailyLimit: dailyLimit || "0",
-      purpose,
-      isWalletAgent: true
-    } : {
-      username: user?.username,
-      bankType,
-      channel,
-      accountNumber,
-      dailyLimit: dailyLimit || "0",
-      purpose,
-      isWalletAgent: true
-    };
-
-    try {
-      setLoading(true);
-      const res = await axiosSecure.post("/api/v1/finance/create-bank", newBank);
-      
-      if (res.data.success) {
-        Swal.fire({
-          title: "Success!",
-          text: "Payment method added successfully.",
-          icon: "success",
-          confirmButtonText: "OK",
-        });
-        resetPaymentMethodForm();
-        setShowPaymentMethodModal(false);
-        fetchUserBanks(); // Refresh user banks after adding new one
-      }
-    } catch (error) {
-      Swal.fire({
-        title: "Error!",
-        text: error.response?.data?.message || "Something went wrong. Please try again.",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Reset payment method form
-  const resetPaymentMethodForm = () => {
-    setBankType("");
-    setChannel("");
-    setAccountNumber("");
-    setBankName("");
-    setBranchName("");
-    setAccountHolderName("");
-    setDistrictName("");
-    setRoutingNumber("");
-    setDailyLimit("");
-    setPurpose("");
-  };
 
   // Save withdrawal state to localStorage
   const saveWithdrawalState = (state) => {
@@ -487,11 +404,53 @@ const CashAgentPanel = () => {
   const fetchCommissions = async () => {
     try {
       setCommissionsLoading(true);
-      const response = await axiosSecure.get(`/api/v1/finance/cash-agent-commissions?page=${commissionsPage}&limit=10`);
       
-      if (response.data.success) {
-        setCommissionsData(response.data.data.commissions || response.data.data || []);
-        setCommissionsPagination(response.data.data.pagination || null);
+      if (user?.role === "wallet-agent") {
+        // For wallet-agent, fetch from both APIs
+        const [walletAgentResponse, cashAgentResponse] = await Promise.all([
+          axiosSecure.get(`/api/v1/finance/wallet-agent-commissions?page=${commissionsPage}&limit=10`),
+          axiosSecure.get(`/api/v1/finance/cash-agent-commissions?page=${commissionsPage}&limit=10`)
+        ]);
+        
+        // Combine results from both APIs
+        const walletAgentData = walletAgentResponse.data.success ? 
+          (walletAgentResponse.data.data.commissions || walletAgentResponse.data.data || []).map(item => ({
+            ...item,
+            source: 'wallet-agent'
+          })) : [];
+        const cashAgentData = cashAgentResponse.data.success ? 
+          (cashAgentResponse.data.data.commissions || cashAgentResponse.data.data || []).map(item => ({
+            ...item,
+            source: 'cash-agent'
+          })) : [];
+        
+        // Merge and sort by creation date
+        const combinedData = [...walletAgentData, ...cashAgentData].sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        
+        setCommissionsData(combinedData);
+        
+        // Use pagination from the first successful response or create a combined one
+        const pagination = walletAgentResponse.data.success ? 
+          walletAgentResponse.data.data.pagination : 
+          cashAgentResponse.data.success ? 
+            cashAgentResponse.data.data.pagination : null;
+        setCommissionsPagination(pagination);
+      } else {
+        // For cash-agent and sub-cash-agent, use only the original cash-agent API
+        const response = await axiosSecure.get(`/api/v1/finance/cash-agent-commissions?page=${commissionsPage}&limit=10`);
+        
+        if (response.data.success) {
+          const commissions = response.data.data.commissions || response.data.data || [];
+          // Add source field for consistency
+          const commissionsWithSource = commissions.map(item => ({
+            ...item,
+            source: 'cash-agent'
+          }));
+          setCommissionsData(commissionsWithSource);
+          setCommissionsPagination(response.data.data.pagination || null);
+        }
       }
     } catch (error) {
       addToast("Failed to fetch commissions", { appearance: "error", autoDismiss: true });
@@ -718,38 +677,7 @@ const CashAgentPanel = () => {
   // Tab system for wallet agent
   const [activeTab, setActiveTab] = useState("deposits"); // deposits, withdraws, addBalance, sendBalance
 
-  // Fetch user's banks
-  const fetchUserBanks = useCallback(async () => {
-    if (user?.role !== "wallet-agent") return;
-    
-    try {
-      setBanksLoading(true);
-      const params = new URLSearchParams({
-        username: user?.username || '',
-        limit: '50'
-      });
-      
-      const res = await axiosSecure.get(`/api/v1/finance/bank-list?${params.toString()}`);
-      
-      if (res.data.success) {
-        setUserBanks(res.data.data.results || []);
-      } else {
-        setUserBanks([]);
-      }
-    } catch (err) {
-      console.error("Failed to fetch user banks:", err);
-      setUserBanks([]);
-    } finally {
-      setBanksLoading(false);
-    }
-  }, [axiosSecure, user?.username, user?.role]);
 
-  // Fetch user banks when component mounts or when payment method is added
-  useEffect(() => {
-    if (user?.role === "wallet-agent") {
-      fetchUserBanks();
-    }
-  }, [fetchUserBanks, user?.role]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4">
@@ -1145,6 +1073,51 @@ const CashAgentPanel = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Additional summary cards for wallet-agent */}
+                  {user?.role === "wallet-agent" && (
+                    <>
+                      <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-purple-400 text-sm font-medium">Wallet Agent Commissions</p>
+                            <p className="text-white text-2xl font-bold">
+                              {formatCurrency(commissionsData
+                                .filter(c => c.source === 'wallet-agent')
+                                .reduce((sum, c) => sum + c.commissionAmount, 0)
+                              )}
+                            </p>
+                            <p className="text-purple-400/70 text-xs">
+                              {commissionsData.filter(c => c.source === 'wallet-agent').length} transactions
+                            </p>
+                          </div>
+                          <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
+                            <FaWallet className="text-purple-400" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-indigo-400 text-sm font-medium">Cash Agent Commissions</p>
+                            <p className="text-white text-2xl font-bold">
+                              {formatCurrency(commissionsData
+                                .filter(c => c.source === 'cash-agent')
+                                .reduce((sum, c) => sum + c.commissionAmount, 0)
+                              )}
+                            </p>
+                            <p className="text-indigo-400/70 text-xs">
+                              {commissionsData.filter(c => c.source === 'cash-agent').length} transactions
+                            </p>
+                          </div>
+                          <div className="w-10 h-10 bg-indigo-500/20 rounded-full flex items-center justify-center">
+                            <FaUserCheck className="text-indigo-400" />
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -1164,6 +1137,9 @@ const CashAgentPanel = () => {
                         <th className="text-left py-3 px-4 text-gray-300 font-medium">Commission</th>
                         <th className="text-left py-3 px-4 text-gray-300 font-medium">Rate</th>
                         <th className="text-left py-3 px-4 text-gray-300 font-medium">Client</th>
+                        {user?.role === "wallet-agent" && (
+                          <th className="text-left py-3 px-4 text-gray-300 font-medium">Source</th>
+                        )}
                         <th className="text-left py-3 px-4 text-gray-300 font-medium">Description</th>
                       </tr>
                     </thead>
@@ -1198,6 +1174,17 @@ const CashAgentPanel = () => {
                             {commission.commissionRate}%
                           </td>
                           <td className="py-3 px-4 text-gray-300">{commission.clientUsername || 'N/A'}</td>
+                          {user?.role === "wallet-agent" && (
+                            <td className="py-3 px-4 text-gray-300">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                commission.source === 'wallet-agent' ? 'bg-purple-500/20 text-purple-400' :
+                                commission.source === 'cash-agent' ? 'bg-blue-500/20 text-blue-400' :
+                                'bg-gray-500/20 text-gray-400'
+                              }`}>
+                                {commission.source || 'Unknown'}
+                              </span>
+                            </td>
+                          )}
                           <td className="py-3 px-4 text-gray-400 text-sm">
                             <div className="max-w-xs truncate" title={commission.description}>
                               {commission.description || `${commission.type} commission`}
@@ -1559,191 +1546,7 @@ const CashAgentPanel = () => {
           </div>
         )}
 
-        {/* Add Payment Method Modal - Only for wallet-agent */}
-        {showPaymentMethodModal && currentUser?.role === "wallet-agent" && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-8 rounded-xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Add Payment Method</h2>
-                <button
-                  onClick={() => setShowPaymentMethodModal(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1"
-                >
-                  <FaTimes className="text-xl" />
-                </button>
-              </div>
 
-              <form onSubmit={handleSubmitPaymentMethod} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-2">Bank Type</label>
-                    <select
-                      value={bankType}
-                      onChange={(e) => setBankType(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Select Bank Type</option>
-                      <option value="Bkash">Bkash</option>
-                      <option value="Nagad">Nagad</option>
-                      <option value="Rocket">Rocket</option>
-                      <option value="Upay">Upay</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-2">Channel</label>
-                    <select
-                      value={channel}
-                      onChange={(e) => setChannel(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Select Channel</option>
-                      <option value="Send-Money">Send Money</option>
-                      <option value="Cash-In">Cash In</option>
-                      <option value="Make-Payment">Make Payment</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-2">Account Number</label>
-                  <input
-                    type="text"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter account number"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-2">Daily Limit</label>
-                  <input
-                    type="number"
-                    value={dailyLimit}
-                    onChange={(e) => setDailyLimit(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter daily limit"
-                    required
-                    min="1"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-2">Purpose</label>
-                  <select
-                    value={purpose}
-                    onChange={(e) => setPurpose(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="">Select Purpose</option>
-                    <option value="Deposit">Deposit</option>
-                    <option value="Withdraw">Withdraw</option>
-                    <option value="Deposit-Withdraw">Both</option>
-                  </select>
-                </div>
-
-                {bankType === "Bank Transfer" && (
-                  <>
-                    <div>
-                      <label className="block text-gray-700 text-sm font-medium mb-2">Bank Name</label>
-                      <input
-                        type="text"
-                        value={bankName}
-                        onChange={(e) => setBankName(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter bank name"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-700 text-sm font-medium mb-2">Branch Name</label>
-                      <input
-                        type="text"
-                        value={branchName}
-                        onChange={(e) => setBranchName(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter branch name"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-700 text-sm font-medium mb-2">Account Holder Name</label>
-                      <input
-                        type="text"
-                        value={accountHolderName}
-                        onChange={(e) => setAccountHolderName(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter account holder name"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-2">District</label>
-                        <input
-                          type="text"
-                          value={districtName}
-                          onChange={(e) => setDistrictName(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter district"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-2">Routing Number</label>
-                        <input
-                          type="text"
-                          value={routingNumber}
-                          onChange={(e) => setRoutingNumber(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter routing number"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="flex gap-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowPaymentMethodModal(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <FaPlus />
-                        Add Payment Method
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         {/* OTP Display Overlay for Cash Agent Panel */}
         {showOtpDisplay && activeOtpData && (

@@ -4,14 +4,13 @@ import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { FaHouseUser } from "react-icons/fa";
-import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import logo from "../../../public/logoBlack.png";
 import AccountTabs from "../AccountTabs/AccountTabs";
 import CommonNavMenu from "../CommonNavMenu/CommonNavMenu";
 
 const Downlist = () => {
-  const { user } = useSelector((state) => state.auth);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserLoading, setSelectedUserLoading] = useState(false);
@@ -36,7 +35,7 @@ const Downlist = () => {
     } finally {
       setSelectedUserLoading(false);
     }
-  }, [axiosSecure, setSelectedUser]);
+  }, [axiosSecure, setSelectedUser]); 
 
   // Fetch selected user when ID changes
   useEffect(() => {
@@ -50,7 +49,7 @@ const Downlist = () => {
     page: currentPage,
     limit: usersPerPage,
     // Filter by selectedUser's referral code if available
-    ...(selectedUser?.referralCode && { referredBy: selectedUser.referralCode })
+     referredBy: selectedUser?.referralCode
   };
 
   // Only fetch users if we have a selectedUser with referralCode
@@ -120,7 +119,7 @@ const Downlist = () => {
   };
 
   const loading = selectedUserLoading || isLoading;
-  
+  console.log(error)
   return (
     <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen">
       <CommonNavMenu />
