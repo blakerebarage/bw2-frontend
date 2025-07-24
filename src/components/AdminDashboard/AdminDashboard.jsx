@@ -128,11 +128,12 @@ const AdminDashboard = () => {
         }
         
         // Add referredBy filter for non-super-admin users
-        if (user?.role !== 'super-admin' && user?.referralCode) {
+        if (user?.role !== 'super-admin' || user?.role !== 'admin' && user?.referralCode) {
           params.append('referredBy', user.referralCode);
         }
-         
+        
         const res = await axiosSecure.get(`/api/v1/user/all?${params.toString()}`);
+        console.log(res)
         if (res.data.success) {
           // Filter out super-admin data for non-super-admin users
           let filteredData = res.data.data.users || [];

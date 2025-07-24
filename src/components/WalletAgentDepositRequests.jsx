@@ -1,46 +1,21 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
-import { useCallback, useEffect, useState } from "react";
+import { useSocket } from "@/contexts/SocketContext";
 import { FaArrowDown, FaCheck, FaTimes } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 
-const WalletAgentDepositRequests = () => {
+const WalletAgentDepositRequests = ({ 
+  depositRequests = [], 
+  depositNotificationCount = 0, 
+  requestsLoading = false,
+  onRequestAction 
+}) => {
   const { user } = useSelector((state) => state.auth);
   const { addToast } = useToasts();
   const { formatCurrency } = useCurrency();
   const axiosSecure = useAxiosSecure();
-  
-  const [depositRequests, setDepositRequests] = useState([]);
-  const [depositNotificationCount, setDepositNotificationCount] = useState(0);
-  const [requestsLoading, setRequestsLoading] = useState(false);
-
-  // Fetch deposit requests
-  const fetchDepositRequests = useCallback(async () => {
-    try {
-      setRequestsLoading(true);
-      
-      const depositRes = await axiosSecure.get(`/api/v1/finance/all-recharge-request?walletAgentUsername=${user?.username}`);
-      if (depositRes.data.success) {
-        const depositData = depositRes.data.data?.results || depositRes.data.data || [];
-        setDepositRequests(depositData);
-        setDepositNotificationCount(depositData.filter(req => req.status === "pending")?.length || 0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch deposit requests:", error);
-    } finally {
-      setRequestsLoading(false);
-    }
-  }, [axiosSecure, user?.username]);
-
-  // Fetch requests on component mount and set up interval
-  useEffect(() => {
-    fetchDepositRequests();
-    
-    // Refresh requests every 30 seconds
-    const interval = setInterval(fetchDepositRequests, 30000);
-    return () => clearInterval(interval);
-  }, [fetchDepositRequests]);
+  const { socket, isConnected } = useSocket();
 
   // Handle deposit request actions
   const handleRequestAction = async (requestId, action) => {
@@ -50,11 +25,23 @@ const WalletAgentDepositRequests = () => {
       });
       
       if (res.data.success) {
+        // Emit socket event to notify other users
+        if (socket && isConnected) {
+          socket.emit('request_status_updated', {
+            requestId: requestId,
+            status: action === "approve" ? "approved" : "cancelled",
+            timestamp: new Date().toISOString()
+          });
+        }
+        
         addToast(`Deposit request ${action}ed successfully!`, {
           appearance: "success",
           autoDismiss: true,
         });
-        fetchDepositRequests(); // Refresh requests
+        // Call the parent callback to refresh data
+        if (onRequestAction) {
+          onRequestAction();
+        }
       }
     } catch (error) {
       addToast(`Failed to ${action} deposit request`, {

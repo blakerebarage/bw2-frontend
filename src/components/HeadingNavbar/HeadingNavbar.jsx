@@ -1,6 +1,6 @@
 import Logo from "@/components/Logo/Logo";
 import usePendingRequests from "@/Hook/usePendingRequests";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoNotifications } from "react-icons/io5";
 import { PiHandDepositFill } from "react-icons/pi";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,7 +22,7 @@ const HeadingNavbar = () => {
   const { pendingDeposits, pendingWithdraws } = usePendingRequests();
   const navRef = useRef(null);
 
-  const menuItems = useCallback(() => [
+  const menuItems = useMemo(() => [
     {
       label: "Dashboard",
       path: "/admindashboard",
@@ -155,25 +155,27 @@ const HeadingNavbar = () => {
   }, [dispatch, navigate]);
 
   // Filter menu items based on user role
-  const filteredMenuItems = menuItems().filter(item => {
-    // If user has no role, show nothing
-    if (!user?.role) return false;
+  const filteredMenuItems = useMemo(() => {
+    return menuItems.filter(item => {
+      // If user has no role, show nothing
+      if (!user?.role) return false;
 
-    // Check if the item has roles and if user's role is included
-    if (item.roles && !item.roles.includes(user.role)) return false;
+      // Check if the item has roles and if user's role is included
+      if (item.roles && !item.roles.includes(user.role)) return false;
 
-    // If item has subItems, filter them based on roles
-    if (item.subItems) {
-      const filteredSubItems = item.subItems.filter(subItem => 
-        subItem.roles && subItem.roles.includes(user.role)
-      );
-      
-      // Only show menu items that have accessible subitems
-      return filteredSubItems.length > 0;
-    }
+      // If item has subItems, filter them based on roles
+      if (item.subItems) {
+        const filteredSubItems = item.subItems.filter(subItem => 
+          subItem.roles && subItem.roles.includes(user.role)
+        );
+        
+        // Only show menu items that have accessible subitems
+        return filteredSubItems.length > 0;
+      }
 
-    return true;
-  });
+      return true;
+    });
+  }, [menuItems, user?.role]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

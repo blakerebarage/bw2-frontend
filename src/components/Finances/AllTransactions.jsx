@@ -1,5 +1,6 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
+import { useSocket } from "@/contexts/SocketContext";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { FaList, FaTable } from "react-icons/fa";
@@ -11,6 +12,7 @@ const AllTransactions = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useSelector((state) => state.auth);
   const { addToast } = useToasts();
+  const { socket, isConnected } = useSocket();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,6 +27,78 @@ const AllTransactions = () => {
   useEffect(() => {
     fetchTransactions();
   }, [currentPage, filter, startDate, endDate]);
+
+  // Socket event listeners for real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected || !user) {
+      return;
+    }
+
+    // Listen for transaction updates
+    const handleTransactionUpdate = (payload) => {
+      console.log('📥 AllTransactions: Received transaction update:', payload);
+      
+      if (payload && payload.data) {
+        let transactionData = [];
+        
+        // Handle different response structures
+        if (Array.isArray(payload.data)) {
+          transactionData = payload.data;
+        } else if (payload.data.results && Array.isArray(payload.data.results)) {
+          transactionData = payload.data.results;
+        } else if (payload.data.data && payload.data.data.results && Array.isArray(payload.data.data.results)) {
+          transactionData = payload.data.data.results;
+        }
+        
+        if (transactionData.length > 0) {
+          // Apply current filters
+          let filteredTransactions = transactionData;
+          
+          if (filter !== "all") {
+            filteredTransactions = transactionData.filter(t => t.type === filter);
+          }
+          
+          if (startDate) {
+            filteredTransactions = filteredTransactions.filter(t => 
+              new Date(t.createdAt) >= new Date(startDate)
+            );
+          }
+          
+          if (endDate) {
+            filteredTransactions = filteredTransactions.filter(t => 
+              new Date(t.createdAt) <= new Date(endDate)
+            );
+          }
+          
+          setTransactions(filteredTransactions);
+        }
+      }
+    };
+
+    // Listen for request status updates
+    const handleRequestStatusUpdate = (payload) => {
+      console.log('📥 AllTransactions: Received request status update:', payload);
+      
+      if (payload && payload.requestId && payload.status) {
+        setTransactions(prev => {
+          return prev.map(transaction => {
+            if (transaction._id === payload.requestId) {
+              return { ...transaction, status: payload.status };
+            }
+            return transaction;
+          });
+        });
+      }
+    };
+
+    socket.on('transaction_update', handleTransactionUpdate);
+    socket.on('request_status_updated', handleRequestStatusUpdate);
+
+    return () => {
+      socket.off('transaction_update', handleTransactionUpdate);
+      socket.off('request_status_updated', handleRequestStatusUpdate);
+    };
+  }, [socket, isConnected, user, filter, startDate, endDate]);
 
   const fetchTransactions = async () => {
     try {

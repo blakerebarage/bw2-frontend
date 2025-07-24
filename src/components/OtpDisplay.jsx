@@ -1,5 +1,5 @@
-import { useLazyGetActiveOtpQuery } from "@/redux/features/allApis/usersApi/usersApi";
-import { useEffect, useState } from "react";
+import useOtpSocket from "@/Hook/useOtpSocket";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaCopy, FaEye, FaEyeSlash, FaTimes } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -8,63 +8,101 @@ const OtpDisplay = () => {
   const { user } = useSelector((state) => state.auth);
   const { addToast } = useToasts();
   const [showOtpDisplay, setShowOtpDisplay] = useState(false);
-  const [activeOtpData, setActiveOtpData] = useState(null);
   const [otpVisible, setOtpVisible] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState("");
-  const [getActiveOtp] = useLazyGetActiveOtpQuery();
+  
+  
+  // Use socket hook for real-time OTP updates
+  const { 
+    activeOtpData, 
+     
+    lastEvent,
+    clearNewOtpFlag, 
+    clearLastEvent,
+    isSocketConnected 
+  } = useOtpSocket();
 
-  // Check for active OTP when component mounts and user is logged in
-  useEffect(() => {
-    if (user && ["super-admin", "admin", "agent", "user"].includes(user.role)) {
-      const checkForActiveOtp = async () => {
-        try {
-          const result = await getActiveOtp();
-          if (result.data && result.data.success) {
-            setActiveOtpData(result.data.data);
-            setShowOtpDisplay(true);
-          }
-        } catch (error) {
-          console.error("Failed to fetch active OTP:", error);
-        }
-      };
+  // Memoize user role check to prevent re-renders
+  const isAuthorizedUser = useMemo(() => {
+    return user && ["super-admin", "admin", "agent", "user"].includes(user.role);
+  }, [user?.role]);
 
-      // Check immediately
-      checkForActiveOtp();
-
-      // Check every 30 seconds for new OTPs
-      const interval = setInterval(checkForActiveOtp, 30000);
-
-      return () => clearInterval(interval);
+  // Handle socket events and show notifications - use useCallback to prevent re-renders
+  const handleLastEvent = useCallback(() => {
+    if (lastEvent) {
+      switch (lastEvent.type) {
+        case 'active_otp_update':
+          addToast('New OTP received!', {
+            appearance: 'info',
+            autoDismiss: true,
+          });
+          break;
+        case 'otp_expired':
+          addToast('OTP has expired', {
+            appearance: 'warning',
+            autoDismiss: true,
+          });
+          break;
+        case 'otp_completed':
+          addToast('OTP transaction completed', {
+            appearance: 'success',
+            autoDismiss: true,
+          });
+          break;
+        default:
+          break;
+      }
+      clearLastEvent();
     }
-  }, [user, getActiveOtp]);
+  }, [lastEvent, addToast, clearLastEvent]);
 
-  // Update countdown timer
   useEffect(() => {
+    handleLastEvent();
+  }, [handleLastEvent]);
+
+  // Check for active OTP when component mounts and user is logged in - only run once
+  useEffect(() => {
+    // Removed manual API call - now handled by useOtpSocket hook
+  }, [isAuthorizedUser]); // Only depend on authorization status
+
+  // Show OTP display when socket data is available - use useCallback
+  const handleActiveOtpData = useCallback(() => {
+    if (activeOtpData) {
+      setShowOtpDisplay(true);
+      clearNewOtpFlag(); // Clear the new OTP flag when displaying
+    }
+  }, [activeOtpData, clearNewOtpFlag]);
+
+  useEffect(() => {
+    handleActiveOtpData();
+  }, [handleActiveOtpData]);
+
+  // Update countdown timer - memoized to prevent re-renders
+  const updateTimer = useCallback(() => {
     if (activeOtpData?.expiresAt && showOtpDisplay) {
-      const updateTimer = () => {
-        const now = new Date();
-        const expiry = new Date(activeOtpData.expiresAt);
-        const diff = expiry - now;
+      const now = new Date();
+      const expiry = new Date(activeOtpData.expiresAt);
+      const diff = expiry - now;
 
-        if (diff <= 0) {
-          setTimeRemaining("Expired");
-          setTimeout(() => setShowOtpDisplay(false), 2000); // Auto hide after showing expired
-        } else {
-          const minutes = Math.floor(diff / 60000);
-          const seconds = Math.floor((diff % 60000) / 1000);
-          setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        }
-      };
-
-      updateTimer(); // Initial update
-      const timer = setInterval(updateTimer, 1000);
-
-      return () => clearInterval(timer);
+      if (diff <= 0) {
+        setTimeRemaining("Expired");
+        setTimeout(() => setShowOtpDisplay(false), 2000); // Auto hide after showing expired
+      } else {
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      }
     }
-  }, [activeOtpData, showOtpDisplay]);
+  }, [activeOtpData?.expiresAt, showOtpDisplay]);
+
+  useEffect(() => {
+    updateTimer(); // Initial update
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, [updateTimer]);
 
   // Copy OTP to clipboard
-  const copyOtpToClipboard = async () => {
+  const copyOtpToClipboard = useCallback(async () => {
     if (activeOtpData?.otp) {
       try {
         await navigator.clipboard.writeText(activeOtpData.otp);
@@ -73,21 +111,84 @@ const OtpDisplay = () => {
         addToast("Failed to copy OTP", { appearance: "error", autoDismiss: true });
       }
     }
+  }, [activeOtpData?.otp, addToast]);
+
+  // Close OTP display - use useCallback to prevent re-renders
+  const closeOtpDisplay = useCallback(() => {
+    setShowOtpDisplay(false);
+  }, []);
+
+  // Handle ESC key to close
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && showOtpDisplay) {
+        closeOtpDisplay();
+      }
+    };
+
+    if (showOtpDisplay) {
+      document.addEventListener('keydown', handleEscKey);
+      return () => document.removeEventListener('keydown', handleEscKey);
+    }
+  }, [showOtpDisplay, closeOtpDisplay]);
+
+  // Handle click outside to close
+  const handleBackdropClick = useCallback((e) => {
+    if (e.target === e.currentTarget) {
+      closeOtpDisplay();
+    }
+  }, [closeOtpDisplay]);
+
+  // Debug socket connection
+  const testSocketConnection = () => {
+    if (socket) {
+      console.log('Socket state:', {
+        connected: socket.connected,
+        id: socket.id,
+        transport: socket.io.engine.transport.name
+      });
+      
+      // Test emit a custom event
+      socket.emit('test_event', { message: 'Testing socket connection' });
+      console.log('Emitted test_event');
+    } else {
+      console.log('Socket not available');
+    }
   };
 
-  // Close OTP display
-  const closeOtpDisplay = () => {
-    setShowOtpDisplay(false);
-    setActiveOtpData(null);
+  // Debug function to manually trigger recharge request update
+  const testRechargeRequestUpdate = () => {
+    if (socket) {
+      // Simulate the backend emitting a recharge request update
+      socket.emit('recharge_request_update', {
+        timestamp: new Date().toISOString(),
+        data: [
+          {
+            _id: 'test_id',
+            status: 'pending',
+            amount: 1000,
+            username: 'test_user',
+            referralCode: user?.referralCode
+          }
+        ]
+      });
+      console.log('Emitted test recharge_request_update');
+    }
   };
+
 
   // Don't render if no user or not authorized or no OTP to show
-  if (!user || !["super-admin", "admin", "agent", "user"].includes(user.role) || !showOtpDisplay || !activeOtpData) {
+  if (!user || !isAuthorizedUser || !showOtpDisplay || !activeOtpData) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+      onClick={handleBackdropClick}
+    >
+      {/* Debug Section - Only in Development */}
+     
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-xl flex items-center justify-between">
@@ -97,12 +198,16 @@ const OtpDisplay = () => {
             </div>
             <div>
               <h3 className="font-bold text-lg">Active OTP</h3>
-             
+              <div className="flex items-center gap-2 text-xs">
+                <span className={`w-2 h-2 rounded-full ${isSocketConnected ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                <span>{isSocketConnected ? 'Real-time' : 'Polling'}</span>
+              </div>
             </div>
           </div>
           <button
             onClick={closeOtpDisplay}
             className="text-white/80 hover:text-white hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+            title="Close OTP Display"
           >
             <FaTimes />
           </button>
@@ -167,13 +272,18 @@ const OtpDisplay = () => {
             </div>
           </div>
 
-          {/* Warning */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-yellow-800 text-sm">
-              <strong>⚠️ Admin Only:</strong> This OTP display is for testing/admin purposes. 
-              It will automatically refresh every 30 seconds to show new OTPs.
+          {/* Socket Status */}
+          <div className={`rounded-lg p-3 text-sm ${isSocketConnected ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+            <p className={isSocketConnected ? 'text-green-800' : 'text-yellow-800'}>
+              <strong>{isSocketConnected ? '🟢' : '🟡'}</strong> 
+              {isSocketConnected 
+                ? ' Real-time updates enabled via WebSocket' 
+                : ' Using fallback polling method'
+              }
             </p>
           </div>
+
+          
 
           {/* Action Button */}
           <button

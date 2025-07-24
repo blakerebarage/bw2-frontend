@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import "./App.css";
@@ -14,13 +14,16 @@ import { WelcomeProvider } from './UserContext/WelcomeContext';
 const RouteChangeHandler = () => {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
-  const { refetch: fetchPendingRequests } = usePendingRequests();
+  const { fetchPendingRequests } = usePendingRequests();
+
+  // Memoize the user role to prevent unnecessary re-renders
+  const userRole = useMemo(() => user?.role, [user?.role]);
 
   useEffect(() => {
-    if (user?.role && user.role !== "user") {
+    if (userRole && userRole !== "user") {
       fetchPendingRequests();
     }
-  }, [location.pathname, user?.role, fetchPendingRequests]);
+  }, [location.pathname, userRole, fetchPendingRequests]);
 
   return null;
 };

@@ -7,6 +7,7 @@ import { RouterProvider } from "react-router-dom";
 import { ToastProvider } from "react-toast-notifications";
 import { PersistGate } from "redux-persist/integration/react";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { SocketProvider } from "./contexts/SocketContext";
 import "./index.css";
 import { clearAllCaches, persistor, store } from "./redux/store";
 import router from "./routes/Router.jsx";
@@ -22,6 +23,7 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
+        <SocketProvider>
         <ToastProvider>
           <UserProvider>
             <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID_HERE">
@@ -31,6 +33,7 @@ createRoot(document.getElementById("root")).render(
             </GoogleOAuthProvider>
           </UserProvider>
         </ToastProvider>
+        </SocketProvider>
       </PersistGate>
     </Provider>
   </StrictMode>

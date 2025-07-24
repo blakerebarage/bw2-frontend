@@ -1,46 +1,21 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
-import { useCallback, useEffect, useState } from "react";
+import { useSocket } from "@/contexts/SocketContext";
 import { FaArrowDown, FaCheck, FaTimes } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 
-const WalletAgentWithdrawRequests = () => {
+const WalletAgentWithdrawRequests = ({ 
+  withdrawRequests = [], 
+  withdrawNotificationCount = 0, 
+  requestsLoading = false,
+  onRequestAction 
+}) => {
   const { user } = useSelector((state) => state.auth);
   const { addToast } = useToasts();
   const { formatCurrency } = useCurrency();
   const axiosSecure = useAxiosSecure();
-  
-  const [withdrawRequests, setWithdrawRequests] = useState([]);
-  const [withdrawNotificationCount, setWithdrawNotificationCount] = useState(0);
-  const [requestsLoading, setRequestsLoading] = useState(false);
-
-  // Fetch withdraw requests
-  const fetchWithdrawRequests = useCallback(async () => {
-    try {
-      setRequestsLoading(true);
-      
-      const withdrawRes = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?walletAgentUsername=${user?.username}`);
-      if (withdrawRes.data.success) {
-        const withdrawData = withdrawRes.data.data?.results || withdrawRes.data.data || [];
-        setWithdrawRequests(withdrawData);
-        setWithdrawNotificationCount(withdrawData.filter(req => req.status === "pending")?.length || 0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch withdraw requests:", error);
-    } finally {
-      setRequestsLoading(false);
-    }
-  }, [axiosSecure, user?.username]);
-
-  // Fetch requests on component mount and set up interval
-  useEffect(() => {
-    fetchWithdrawRequests();
-    
-    // Refresh requests every 30 seconds
-    const interval = setInterval(fetchWithdrawRequests, 30000);
-    return () => clearInterval(interval);
-  }, [fetchWithdrawRequests]);
+  const { socket, isConnected } = useSocket();
 
   // Handle withdraw request actions
   const handleRequestAction = async (requestId, action) => {
@@ -50,11 +25,23 @@ const WalletAgentWithdrawRequests = () => {
       });
       
       if (res.data.success) {
+        // Emit socket event to notify other users
+        if (socket && isConnected) {
+          socket.emit('request_status_updated', {
+            requestId: requestId,
+            status: action === "approve" ? "approved" : "cancelled",
+            timestamp: new Date().toISOString()
+          });
+        }
+        
         addToast(`Withdraw request ${action}ed successfully!`, {
           appearance: "success",
           autoDismiss: true,
         });
-        fetchWithdrawRequests(); // Refresh requests
+        // Call the parent callback to refresh data
+        if (onRequestAction) {
+          onRequestAction();
+        }
       }
     } catch (error) {
       addToast(`Failed to ${action} withdraw request`, {

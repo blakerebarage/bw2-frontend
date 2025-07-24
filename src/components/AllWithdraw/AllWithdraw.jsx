@@ -1,3 +1,4 @@
+import { useSocket } from "@/contexts/SocketContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
@@ -17,41 +18,181 @@ const AllWithdraw = () => {
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [lastSocketUpdate, setLastSocketUpdate] = useState(null);
   const itemsPerPage = 50;
   const { reloadUserData } = useManualUserDataReload();
+  
+  // Get socket using the useSocket hook
+  const { socket, isConnected } = useSocket();
 
   // Check if user is admin or super-admin
   const isAdminOrSuperAdmin = user?.role === "admin" || user?.role === "super-admin";
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-       
-        const res = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}&${
-          statusFilter === "all" ? "" : `status=${statusFilter}`
-        }`);
-        
-        // Filter by referral code only if user is not admin or super-admin
-        const filteredWithdraws = isAdminOrSuperAdmin 
-          ? res?.data?.data?.results 
-          : res?.data?.data?.results.filter(
-              (item) => item?.referralCode === user?.referralCode
-            );
-        
-        setWithdraws(filteredWithdraws);
-        setTotalPages((res.data.data.pageCount));
-      } catch (error) {
-        
-      } finally {
-        setLoading(false);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      let apiUrl = '/api/v1/finance/all-withdraw-request';
+      
+      // Add pagination
+      apiUrl += `&page=${currentPage}&limit=${itemsPerPage}`;
+      
+      // For admin/super-admin, show all requests
+      if (isAdminOrSuperAdmin) {
+        // No additional filters needed for admin/super-admin
+      } else if (user?.role === "wallet-agent") {
+        // For wallet agent, filter by walletAgentUsername
+        apiUrl += `&walletAgentUsername=${user.username}`;
+      } else if (user?.referralCode) {
+        // For upline users, filter by referral code (requests from their downline)
+        apiUrl += `&referralCode=${user.referralCode}`;
       }
-    };
+      
+      // Add status filter if not "all"
+      if (statusFilter !== "all") {
+        apiUrl += `&status=${statusFilter}`;
+      }
+      
+      console.log('🔍 AllWithdraw: Fetching with URL:', apiUrl);
+      console.log('👤 AllWithdraw: User details:', {
+        role: user?.role,
+        username: user?.username,
+        referralCode: user?.referralCode,
+        isAdminOrSuperAdmin
+      });
+     
+      const res = await axiosSecure.get(apiUrl);
+      
+      if (res.data.success) {
+        const results = res.data.data.results || [];
+        console.log('📊 AllWithdraw: Setting withdraws:', results.length, 'items');
+        setWithdraws(results);
+        setTotalPages(res.data.data.pageCount || 1);
+      } else {
+        console.log('❌ AllWithdraw: API returned success: false');
+        setWithdraws([]);
+        setTotalPages(1);
+      }
+    } catch (error) {
+      console.error("Error fetching withdraw requests:", error);
+      setWithdraws([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (user?.referralCode || isAdminOrSuperAdmin) {
       fetchData();
     }
   }, [axiosSecure, user?.referralCode, currentPage, statusFilter, isAdminOrSuperAdmin]);
+
+  // Socket event listeners for real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected || !user || user.role === "user") {
+      return;
+    }
+
+    // Listen for withdraw request updates
+    const handleWithdrawRequestUpdate = (payload) => {
+      console.log('📥 AllWithdraw: Received withdraw_request_update:', payload);
+      
+      if (payload && payload.data && Array.isArray(payload.data)) {
+        let filteredResults = payload.data;
+        
+        // Filter based on user type
+        if (isAdminOrSuperAdmin) {
+          // Admin/super-admin sees all requests
+          filteredResults = payload.data;
+        } else if (user?.role === "wallet-agent") {
+          // Wallet agent sees only their assigned requests
+          filteredResults = payload.data.filter(req => req.walletAgentUsername === user.username);
+        } else if (user?.referralCode) {
+          // Upline users see requests from their downline
+          filteredResults = payload.data.filter(req => req.referralCode === user.referralCode);
+        }
+        
+        // Apply status filter if set
+        if (statusFilter !== "all") {
+          filteredResults = filteredResults.filter(req => req.status === statusFilter);
+        }
+        
+        console.log('🔍 AllWithdraw: Filtered results:', {
+          total: payload.data.length,
+          filtered: filteredResults.length,
+          userType: isAdminOrSuperAdmin ? 'admin' : user?.role === "wallet-agent" ? 'wallet-agent' : 'upline'
+        });
+        
+        setWithdraws(filteredResults);
+        setLastSocketUpdate(new Date().toISOString());
+      } else if (payload && payload.data && payload.data.results && Array.isArray(payload.data.results)) {
+        // Handle paginated response structure
+        let filteredResults = payload.data.results;
+        
+        if (isAdminOrSuperAdmin) {
+          filteredResults = payload.data.results;
+        } else if (user?.role === "wallet-agent") {
+          filteredResults = payload.data.results.filter(req => req.walletAgentUsername === user.username);
+        } else if (user?.referralCode) {
+          filteredResults = payload.data.results.filter(req => req.referralCode === user.referralCode);
+        }
+        
+        if (statusFilter !== "all") {
+          filteredResults = filteredResults.filter(req => req.status === statusFilter);
+        }
+        
+        setWithdraws(filteredResults);
+        setLastSocketUpdate(new Date().toISOString());
+      } else if (payload && payload.data && payload.data.data && payload.data.data.results && Array.isArray(payload.data.data.results)) {
+        // Handle double-nested response structure
+        let filteredResults = payload.data.data.results;
+        
+        if (isAdminOrSuperAdmin) {
+          filteredResults = payload.data.data.results;
+        } else if (user?.role === "wallet-agent") {
+          filteredResults = payload.data.data.results.filter(req => req.walletAgentUsername === user.username);
+        } else if (user?.referralCode) {
+          filteredResults = payload.data.data.results.filter(req => req.referralCode === user.referralCode);
+        }
+        
+        if (statusFilter !== "all") {
+          filteredResults = filteredResults.filter(req => req.status === statusFilter);
+        }
+        
+        setWithdraws(filteredResults);
+        setLastSocketUpdate(new Date().toISOString());
+      }
+    };
+
+    // Listen for request status updates
+    const handleRequestStatusUpdate = (payload) => {
+      // Update the specific request in the list
+      setWithdraws(prev => {
+        const updated = prev.map(req => {
+          if (req._id === payload.requestId) {
+            return { ...req, status: payload.status };
+          }
+          return req;
+        });
+        
+        // Remove requests that are no longer pending if status filter is set
+        if (statusFilter === "pending") {
+          return updated.filter(req => req.status === "pending");
+        }
+        
+        return updated;
+      });
+    };
+
+    socket.on('withdraw_request_update', handleWithdrawRequestUpdate);
+    socket.on('request_status_updated', handleRequestStatusUpdate);
+
+    return () => {
+      socket.off('withdraw_request_update', handleWithdrawRequestUpdate);
+      socket.off('request_status_updated', handleRequestStatusUpdate);
+    };
+  }, [socket, isConnected, user, statusFilter, isAdminOrSuperAdmin]);
 
   const handleApprove = async (id) => {
     try {
@@ -96,6 +237,16 @@ const AllWithdraw = () => {
         await axiosSecure.patch(`/api/v1/finance/update-withdraw-request-status/${id}`, {
           status: "approved"
         });
+        
+        // Emit socket event to notify other users
+        if (socket && isConnected) {
+          socket.emit('request_status_updated', {
+            requestId: id,
+            status: 'approved',
+            timestamp: new Date().toISOString()
+          });
+        }
+        
         const updatedWithdraws = withdraws.map((item) =>
           item._id === id ? { ...item, status: "success" } : item
         );
@@ -140,6 +291,15 @@ const AllWithdraw = () => {
             status: "cancelled"
           }
         );
+
+        // Emit socket event to notify other users
+        if (socket && isConnected) {
+          socket.emit('request_status_updated', {
+            requestId: id,
+            status: 'cancelled',
+            timestamp: new Date().toISOString()
+          });
+        }
 
         const updatedWithdraws = withdraws.map((item) =>
           item._id === id ? { ...item, status: "rejected" } : item
@@ -203,9 +363,14 @@ const AllWithdraw = () => {
             <p className="text-gray-300 text-center mt-2">
               {isAdminOrSuperAdmin 
                 ? "Manage and update all user withdraw requests efficiently" 
-                : "Manage and update user withdraw requests efficiently"
+                : "aiit25"
               }
             </p>
+            {lastSocketUpdate && (
+              <p className="text-green-400 text-center mt-1 text-sm">
+                🔄 Last updated: {new Date(lastSocketUpdate).toLocaleTimeString()}
+              </p>
+            )}
             {isAdminOrSuperAdmin && (
               <p className="text-gray-400 text-center mt-1 text-sm">
                 Showing all requests (Admin/Super-Admin view)

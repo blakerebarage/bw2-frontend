@@ -1,3 +1,4 @@
+import { useSocket } from "@/contexts/SocketContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
@@ -45,6 +46,10 @@ const CashAgentPanel = () => {
   const navigate = useNavigate();
   const { reloadUserData } = useManualUserDataReload();
   const axiosSecure = useAxiosSecure();
+  
+  // Get socket using the useSocket hook
+  const { socket, isConnected } = useSocket();
+  
   // Balance sending states
   const [receiverUsername, setReceiverUsername] = useState("");
   const [amount, setAmount] = useState("");
@@ -81,6 +86,7 @@ const CashAgentPanel = () => {
   const [withdrawNotificationCount, setWithdrawNotificationCount] = useState(0);
   const [requestsLoading, setRequestsLoading] = useState(false);
 
+
   // Use RTK Query mutations and queries
   const [sendBalance, { isLoading: sendingBalance }] = useSendBalanceMutation();
   const [addUser, { isLoading: creatingUser }] = useAddUserMutation();
@@ -106,39 +112,256 @@ const CashAgentPanel = () => {
     
     try {
       setRequestsLoading(true);
+      console.log('🔄 CashAgentPanel: Fetching requests for wallet agent:', user.username);
       
-      // Fetch deposit requests
+      // Fetch deposit requests - get all requests for wallet agent
       const depositRes = await axiosSecure.get(`/api/v1/finance/all-recharge-request?walletAgentUsername=${user?.username}`);
       if (depositRes.data.success) {
         const depositData = depositRes.data.data?.results || depositRes.data.data || [];
+        const pendingCount = depositData.filter(req => req.status === "pending")?.length || 0;
+        console.log('📊 CashAgentPanel: API Response - depositData:', depositData);
+        console.log('📊 CashAgentPanel: API Response - pending requests:', depositData.filter(req => req.status === "pending"));
         setDepositRequests(depositData);
-        setDepositNotificationCount(depositData.filter(req => req.status === "pending")?.length || 0);
+        setDepositNotificationCount(pendingCount);
+        console.log('📊 CashAgentPanel: Fetched deposit requests:', depositData.length, 'pending:', pendingCount);
+      } else {
+        console.error('❌ CashAgentPanel: Deposit API returned success: false');
       }
       
-      // Fetch withdraw requests
+      // Fetch withdraw requests - get all requests for wallet agent
       const withdrawRes = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?walletAgentUsername=${user?.username}`);
       if (withdrawRes.data.success) {
         const withdrawData = withdrawRes.data.data?.results || withdrawRes.data.data || [];
+        const pendingCount = withdrawData.filter(req => req.status === "pending")?.length || 0;
         setWithdrawRequests(withdrawData);
-        setWithdrawNotificationCount(withdrawData.filter(req => req.status === "pending")?.length || 0);
+        setWithdrawNotificationCount(pendingCount);
+        console.log('📊 CashAgentPanel: Fetched withdraw requests:', withdrawData.length, 'pending:', pendingCount);
+      } else {
+        console.error('❌ CashAgentPanel: Withdraw API returned success: false');
       }
     } catch (error) {
       console.error("Failed to fetch requests:", error);
     } finally {
       setRequestsLoading(false);
     }
-  }, [axiosSecure, user?.role]);
+  }, [axiosSecure, user?.role, user?.username]);
 
-  // Fetch requests on component mount and set up interval
+  // Fetch requests for wallet agents - only on mount and when user changes
   useEffect(() => {
     if (user?.role === "wallet-agent") {
+      console.log('🔄 CashAgentPanel: Fetching requests for wallet agent:', user.username);
       fetchRequests();
-      
-      // Refresh requests every 30 seconds
-      const interval = setInterval(fetchRequests, 30000);
-      return () => clearInterval(interval);
     }
-  }, [fetchRequests, user?.role]);
+  }, [user?.role, user?.username]); // Removed fetchRequests from dependency to prevent auto-refresh
+
+
+
+  // Socket event listeners for real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected || !user) {
+      console.log('🔌 CashAgentPanel: Socket not ready or user not available', {
+        socket: !!socket,
+        isConnected,
+        userRole: user?.role,
+        username: user?.username
+      });
+      return;
+    }
+
+    console.log('🔌 CashAgentPanel: Setting up socket listeners for user:', user.username, 'Role:', user.role);
+    console.log('🔌 CashAgentPanel: Socket connection status:', {
+      socketId: socket.id,
+      isConnected,
+      userRole: user.role
+    });
+
+    // Listen for deposit request updates
+    const handleDepositRequestUpdate = (payload) => {
+      console.log('📥 CashAgentPanel: Received recharge_request_update:', payload);
+      console.log('👤 CashAgentPanel: Current user:', { username: user.username, role: user.role });
+      
+      if (payload && payload.data) {
+        let depositData = [];
+        
+        // Handle different response structures
+        if (Array.isArray(payload.data)) {
+          depositData = payload.data;
+        } else if (payload.data.results && Array.isArray(payload.data.results)) {
+          depositData = payload.data.results;
+        } else if (payload.data.data && payload.data.data.results && Array.isArray(payload.data.data.results)) {
+          depositData = payload.data.data.results;
+        }
+        
+        if (depositData.length > 0) {
+          let filteredDeposits = depositData;
+          
+          // Apply role-based filtering
+          if (user.role === "wallet-agent") {
+            filteredDeposits = depositData.filter(req => req.walletAgentUsername === user.username);
+          } else if (user.referralCode) {
+            // Upline users see requests from their downline
+            filteredDeposits = depositData.filter(req => req.referralCode === user.referralCode);
+          }
+          
+          console.log('🔍 CashAgentPanel: Filtered deposits:', {
+            total: depositData.length,
+            filtered: filteredDeposits.length,
+            userRole: user.role,
+            username: user.username
+          });
+          
+          setDepositRequests(filteredDeposits);
+          const pendingCount = filteredDeposits.filter(req => req.status === "pending").length;
+          console.log('📊 CashAgentPanel: Setting deposit pending count:', pendingCount);
+          setDepositNotificationCount(pendingCount);
+        }
+      }
+    };
+
+    // Listen for withdraw request updates
+    const handleWithdrawRequestUpdate = (payload) => {
+      console.log('📥 CashAgentPanel: Received withdraw_request_update:', payload);
+      console.log('👤 CashAgentPanel: Current user:', { username: user.username, role: user.role });
+      
+      if (payload && payload.data) {
+        let withdrawData = [];
+        
+        // Handle different response structures
+        if (Array.isArray(payload.data)) {
+          withdrawData = payload.data;
+        } else if (payload.data.results && Array.isArray(payload.data.results)) {
+          withdrawData = payload.data.results;
+        } else if (payload.data.data && payload.data.data.results && Array.isArray(payload.data.data.results)) {
+          withdrawData = payload.data.data.results;
+        }
+        
+        if (withdrawData.length > 0) {
+          let filteredWithdraws = withdrawData;
+          
+          // Apply role-based filtering
+          if (user.role === "wallet-agent") {
+            filteredWithdraws = withdrawData.filter(req => req.walletAgentUsername === user.username);
+          } else if (user.referralCode) {
+            // Upline users see requests from their downline
+            filteredWithdraws = withdrawData.filter(req => req.referralCode === user.referralCode);
+          }
+          
+          console.log('🔍 CashAgentPanel: Filtered withdraws:', {
+            total: withdrawData.length,
+            filtered: filteredWithdraws.length,
+            userRole: user.role,
+            username: user.username
+          });
+          
+          setWithdrawRequests(filteredWithdraws);
+          const pendingCount = filteredWithdraws.filter(req => req.status === "pending").length;
+          console.log('📊 CashAgentPanel: Setting withdraw pending count:', pendingCount);
+          setWithdrawNotificationCount(pendingCount);
+        }
+      }
+    };
+
+    // Listen for request status updates
+    const handleRequestStatusUpdate = (payload) => {
+      console.log('📥 CashAgentPanel: Received request_status_updated:', payload);
+      
+      if (payload && payload.requestId && payload.status) {
+        // Update deposit requests
+        setDepositRequests(prev => {
+          const updated = prev.map(req => {
+            if (req._id === payload.requestId) {
+              console.log('🔄 CashAgentPanel: Updating deposit request status:', {
+                requestId: payload.requestId,
+                oldStatus: req.status,
+                newStatus: payload.status
+              });
+              return { ...req, status: payload.status };
+            }
+            return req;
+          });
+          const pendingCount = updated.filter(req => req.status === "pending").length;
+          console.log('📊 CashAgentPanel: Updated deposit pending count:', pendingCount);
+          setDepositNotificationCount(pendingCount);
+          return updated;
+        });
+
+        // Update withdraw requests
+        setWithdrawRequests(prev => {
+          const updated = prev.map(req => {
+            if (req._id === payload.requestId) {
+              console.log('🔄 CashAgentPanel: Updating withdraw request status:', {
+                requestId: payload.requestId,
+                oldStatus: req.status,
+                newStatus: payload.status
+              });
+              return { ...req, status: payload.status };
+            }
+            return req;
+          });
+          const pendingCount = updated.filter(req => req.status === "pending").length;
+          console.log('📊 CashAgentPanel: Updated withdraw pending count:', pendingCount);
+          setWithdrawNotificationCount(pendingCount);
+          return updated;
+        });
+      }
+    };
+
+    // Listen for socket connection events
+    const handleSocketConnect = () => {
+      console.log('✅ CashAgentPanel: Socket connected, setting up listeners');
+      // Refetch data when socket connects to ensure we have latest data
+      if (user?.role === "wallet-agent") {
+        // Use setTimeout to avoid calling fetchRequests during render
+        setTimeout(() => {
+          fetchRequests();
+        }, 100);
+      }
+    };
+
+    const handleSocketDisconnect = (reason) => {
+      console.log('❌ CashAgentPanel: Socket disconnected:', reason);
+    };
+
+    const handleSocketError = (error) => {
+      console.error('❌ CashAgentPanel: Socket error:', error);
+    };
+
+    // Clean up any existing listeners first
+    socket.off('recharge_request_update');
+    socket.off('withdraw_request_update');
+    socket.off('request_status_updated');
+    socket.off('connect');
+    socket.off('disconnect');
+    socket.off('error');
+
+    // Set up socket event listeners
+    socket.on('recharge_request_update', handleDepositRequestUpdate);
+    socket.on('withdraw_request_update', handleWithdrawRequestUpdate);
+    socket.on('request_status_updated', handleRequestStatusUpdate);
+    socket.on('connect', handleSocketConnect);
+    socket.on('disconnect', handleSocketDisconnect);
+    socket.on('error', handleSocketError);
+
+    console.log('✅ CashAgentPanel: Socket listeners set up successfully');
+    console.log('🔌 CashAgentPanel: Listening for events:', [
+      'recharge_request_update',
+      'withdraw_request_update', 
+      'request_status_updated',
+      'connect',
+      'disconnect',
+      'error'
+    ]);
+
+    return () => {
+      console.log('🧹 CashAgentPanel: Cleaning up socket listeners');
+      socket.off('recharge_request_update', handleDepositRequestUpdate);
+      socket.off('withdraw_request_update', handleWithdrawRequestUpdate);
+      socket.off('request_status_updated', handleRequestStatusUpdate);
+      socket.off('connect', handleSocketConnect);
+      socket.off('disconnect', handleSocketDisconnect);
+      socket.off('error', handleSocketError);
+    };
+  }, [socket, isConnected, user, fetchRequests]);
 
   
 
@@ -279,56 +502,65 @@ const CashAgentPanel = () => {
     }
   };
 
-  // Check for active OTP for cash-agent, sub-cash-agent, and wallet-agent
+  // Check for active OTP
   useEffect(() => {
-    
-    if (user && ["cash-agent", "sub-cash-agent", "wallet-agent"].includes(user.role)) {
-      const checkForActiveOtp = async () => {
-        try {
-          const result = await getActiveOtp();
-          if (result.data && result.data.success) {
-            setActiveOtpData(result.data.data);
-            setShowOtpDisplay(true);
+    if (!user?.username) return;
+
+    const checkForActiveOtp = async () => {
+      try {
+        const res = await getActiveOtp({ username: user.username }).unwrap();
+        
+        if (res?.success && res?.data) {
+          setActiveOtpData(res.data);
+          setShowOtpDisplay(true);
+          
+          // Calculate time remaining
+          const expiresAt = new Date(res.data.expiresAt);
+          const now = new Date();
+          const timeDiff = expiresAt.getTime() - now.getTime();
+          
+          if (timeDiff > 0) {
+            const minutes = Math.floor(timeDiff / 60000);
+            const seconds = Math.floor((timeDiff % 60000) / 1000);
+            setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+          } else {
+            setTimeRemaining("Expired");
           }
-        } catch (error) {
-          console.error("Failed to fetch active OTP:", error);
         }
-      };
+      } catch (error) {
+        // Only log if it's not a 404 error (which is expected when no OTP exists)
+        if (error?.status !== 404) {
+          console.error("Error checking for active OTP:", error);
+        }
+      }
+    };
 
-      // Check immediately
-      checkForActiveOtp();
-
-      // Check every 30 seconds for new OTPs
-      const interval = setInterval(checkForActiveOtp, 30000);
-
-      return () => clearInterval(interval);
-    }
-  }, [user, getActiveOtp]);
-
-  // Update countdown timer for OTP display
-  useEffect(() => {
-    if (activeOtpData?.expiresAt && showOtpDisplay) {
-      const updateTimer = () => {
+    const updateTimer = () => {
+      if (activeOtpData?.expiresAt) {
+        const expiresAt = new Date(activeOtpData.expiresAt);
         const now = new Date();
-        const expiry = new Date(activeOtpData.expiresAt);
-        const diff = expiry - now;
-
-        if (diff <= 0) {
-          setTimeRemaining("Expired");
-          setTimeout(() => setShowOtpDisplay(false), 2000);
-        } else {
-          const minutes = Math.floor(diff / 60000);
-          const seconds = Math.floor((diff % 60000) / 1000);
+        const timeDiff = expiresAt.getTime() - now.getTime();
+        
+        if (timeDiff > 0) {
+          const minutes = Math.floor(timeDiff / 60000);
+          const seconds = Math.floor((timeDiff % 60000) / 1000);
           setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        } else {
+          setTimeRemaining("Expired");
+          setShowOtpDisplay(false);
+          setActiveOtpData(null);
         }
-      };
+      }
+    };
 
-      updateTimer();
-      const timer = setInterval(updateTimer, 1000);
+    // Check for active OTP on component mount
+    checkForActiveOtp();
 
-      return () => clearInterval(timer);
-    }
-  }, [activeOtpData, showOtpDisplay]);
+    // Set up timer to update countdown
+    const timer = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(timer);
+  }, [user?.username, getActiveOtp, activeOtpData?.expiresAt]);
 
   // Copy OTP to clipboard for Cash Agent Panel
   const copyOtpToClipboard = async () => {
@@ -411,6 +643,7 @@ const CashAgentPanel = () => {
           axiosSecure.get(`/api/v1/finance/wallet-agent-commissions?page=${commissionsPage}&limit=10`),
           axiosSecure.get(`/api/v1/finance/cash-agent-commissions?page=${commissionsPage}&limit=10`)
         ]);
+       
         
         // Combine results from both APIs
         const walletAgentData = walletAgentResponse.data.success ? 
@@ -697,6 +930,7 @@ const CashAgentPanel = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
+
               <LanguageSwitcher variant="navbar" />
               <button
                 onClick={handleLogout}
@@ -862,12 +1096,22 @@ const CashAgentPanel = () => {
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                 {/* Deposit Requests Content */}
                 {activeTab === "deposits" && (
-                  <WalletAgentDepositRequests />
+                  <WalletAgentDepositRequests 
+                    depositRequests={currentDepositRequests}
+                    depositNotificationCount={currentDepositCount}
+                    requestsLoading={requestsLoading}
+                    onRequestAction={fetchRequests}
+                  />
                 )}
 
                 {/* Withdraw Requests Content */}
                 {activeTab === "withdraws" && (
-                  <WalletAgentWithdrawRequests />
+                  <WalletAgentWithdrawRequests 
+                    withdrawRequests={currentWithdrawRequests}
+                    withdrawNotificationCount={currentWithdrawCount}
+                    requestsLoading={requestsLoading}
+                    onRequestAction={fetchRequests}
+                  />
                 )}
 
                 {/* Add Payment Method Content */}

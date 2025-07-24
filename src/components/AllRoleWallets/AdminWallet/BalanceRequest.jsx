@@ -1,7 +1,8 @@
+import { useSocket } from "@/contexts/SocketContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaMoneyBillWave } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -14,6 +15,7 @@ const BalanceRequest = () => {
   const [requestData, setRequestData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastSocketUpdate, setLastSocketUpdate] = useState(null);
   const { addToast } = useToasts();
   const [limit] = useState(50);
   const [page, setPage] = useState(1);
@@ -21,20 +23,46 @@ const BalanceRequest = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const {formatCurrency} = useCurrency();
   const { reloadUserData } = useManualUserDataReload();
+  
+  // Get socket using the useSocket hook
+  const { socket, isConnected } = useSocket();
 
   // Check if user is admin or super-admin
   const isAdminOrSuperAdmin = user?.role === "admin" || user?.role === "super-admin";
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
      
-      const res = await axiosSecure.get(
-        `/api/v1/finance/all-recharge-request?page=${page}&limit=${limit}&${
-          statusFilter === "all" ? "" : `status=${statusFilter}`
-        }`
-      );
+      let apiUrl = '/api/v1/finance/all-recharge-request?status=pending';
+      
+      // For admin/super-admin, show all requests
+      if (isAdminOrSuperAdmin) {
+        // Add pagination for admin/super-admin
+        apiUrl += `&page=${page}&limit=${limit}`;
+      } else if (user?.role === "wallet-agent") {
+        // For wallet agent, filter by walletAgentUsername
+        apiUrl += `&walletAgentUsername=${user.username}`;
+      } else if (user?.referralCode) {
+        // For upline users, filter by referral code (requests from their downline)
+        apiUrl += `&referralCode=${user.referralCode}`;
+      }
+      
+      // Add status filter if not "all"
+      if (statusFilter !== "all") {
+        apiUrl = apiUrl.replace('status=pending', `status=${statusFilter}`);
+      }
+      
+      console.log('🔍 BalanceRequest: Fetching with URL:', apiUrl);
+      console.log('👤 BalanceRequest: User details:', {
+        role: user?.role,
+        username: user?.username,
+        referralCode: user?.referralCode,
+        isAdminOrSuperAdmin
+      });
+     
+      const res = await axiosSecure.get(apiUrl);
 
       if (!res.data.success) {
         throw new Error(res.data.message || "Failed to fetch recharge requests");
@@ -42,13 +70,9 @@ const BalanceRequest = () => {
 
       const { results } = res?.data?.data;
       
-      // Filter by referral code only if user is not admin or super-admin
-      const filteredRequests = isAdminOrSuperAdmin 
-        ? results 
-        : results.filter((data) => data?.referralCode === user?.referralCode);
-
-      setRequestData(filteredRequests || []);
-      setTotalPages(res.data.data.pageCount);
+      console.log('📊 BalanceRequest: Setting requests:', results?.length || 0, 'items');
+      setRequestData(results || []);
+      setTotalPages(res.data.data.pageCount || 1);
     } catch (err) {
       setError(err.message || "Failed to fetch recharge requests. Please try again later.");
       
@@ -57,11 +81,124 @@ const BalanceRequest = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit, statusFilter, isAdminOrSuperAdmin, user?.role, user?.username, user?.referralCode, axiosSecure]);
 
   useEffect(() => {
     fetchRequests();
-  }, [page, statusFilter, isAdminOrSuperAdmin]);
+  }, [page, statusFilter, isAdminOrSuperAdmin, fetchRequests]);
+
+  // Socket event listeners for real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected || !user || user.role === "user") {
+      return;
+    }
+
+    // Listen for recharge request updates
+    const handleRechargeRequestUpdate = (payload) => {
+      console.log('📥 BalanceRequest: Received recharge_request_update:', payload);
+      
+      if (payload && payload.data && Array.isArray(payload.data)) {
+        let filteredResults = payload.data;
+        
+        // Filter based on user type
+        if (isAdminOrSuperAdmin) {
+          // Admin/super-admin sees all requests
+          filteredResults = payload.data;
+        } else if (user?.role === "wallet-agent") {
+          // Wallet agent sees only their assigned requests
+          filteredResults = payload.data.filter(req => req.walletAgentUsername === user.username);
+        } else if (user?.referralCode) {
+          // Upline users see requests from their downline
+          filteredResults = payload.data.filter(req => req.referralCode === user.referralCode);
+        }
+        
+        // Apply status filter if set
+        if (statusFilter !== "all") {
+          filteredResults = filteredResults.filter(req => req.status === statusFilter);
+        }
+        
+        console.log('🔍 BalanceRequest: Filtered results:', {
+          total: payload.data.length,
+          filtered: filteredResults.length,
+          userType: isAdminOrSuperAdmin ? 'admin' : user?.role === "wallet-agent" ? 'wallet-agent' : 'upline'
+        });
+        
+        setRequestData(filteredResults);
+        setLastSocketUpdate(new Date().toISOString());
+      } else if (payload && payload.data && payload.data.results && Array.isArray(payload.data.results)) {
+        // Handle paginated response structure
+        let filteredResults = payload.data.results;
+        
+        if (isAdminOrSuperAdmin) {
+          filteredResults = payload.data.results;
+        } else if (user?.role === "wallet-agent") {
+          filteredResults = payload.data.results.filter(req => req.walletAgentUsername === user.username);
+        } else if (user?.referralCode) {
+          filteredResults = payload.data.results.filter(req => req.referralCode === user.referralCode);
+        }
+        
+        if (statusFilter !== "all") {
+          filteredResults = filteredResults.filter(req => req.status === statusFilter);
+        }
+        
+        setRequestData(filteredResults);
+        setLastSocketUpdate(new Date().toISOString());
+      } else if (payload && payload.data && payload.data.data && payload.data.data.results && Array.isArray(payload.data.data.results)) {
+        // Handle double-nested response structure
+        let filteredResults = payload.data.data.results;
+        
+        if (isAdminOrSuperAdmin) {
+          filteredResults = payload.data.data.results;
+        } else if (user?.role === "wallet-agent") {
+          filteredResults = payload.data.data.results.filter(req => req.walletAgentUsername === user.username);
+        } else if (user?.referralCode) {
+          filteredResults = payload.data.data.results.filter(req => req.referralCode === user.referralCode);
+        }
+        
+        if (statusFilter !== "all") {
+          filteredResults = filteredResults.filter(req => req.status === statusFilter);
+        }
+        
+        setRequestData(filteredResults);
+        setLastSocketUpdate(new Date().toISOString());
+      }
+    };
+
+    // Listen for general request updates
+    const handleGeneralRequestUpdate = () => {
+      fetchRequests();
+    };
+
+    // Listen for request status updates
+    const handleRequestStatusUpdate = (payload) => {
+      // Update the specific request in the list
+      setRequestData(prev => {
+        const updated = prev.map(req => {
+          if (req._id === payload.requestId) {
+            return { ...req, status: payload.status };
+          }
+          return req;
+        });
+        
+        // Remove requests that are no longer pending if status filter is set
+        if (statusFilter === "pending") {
+          return updated.filter(req => req.status === "pending");
+        }
+        
+        return updated;
+      });
+    };
+
+    socket.on('recharge_request_update', handleRechargeRequestUpdate);
+    socket.on('request_update', handleGeneralRequestUpdate);
+    socket.on('request_status_updated', handleRequestStatusUpdate);
+
+    return () => {
+      socket.off('recharge_request_update', handleRechargeRequestUpdate);
+      socket.off('request_update', handleGeneralRequestUpdate);
+      socket.off('request_status_updated', handleRequestStatusUpdate);
+    };
+  }, [socket, isConnected, user, fetchRequests, statusFilter, isAdminOrSuperAdmin]);
 
   const handleApproveBtn = async (id, txnId) => {
     try {
@@ -73,14 +210,28 @@ const BalanceRequest = () => {
         throw new Error(res.data.message || "Failed to approve request");
       }
 
+      // Update local state
       setRequestData((prev) => prev.filter((req) => req.txnId !== txnId));
+      
+      // Emit socket event to notify other users
+      if (socket && isConnected) {
+        socket.emit('request_status_updated', {
+          requestId: id,
+          status: 'approved',
+          timestamp: new Date().toISOString()
+        });
+      }
+      
       addToast("Request approved successfully", {
         appearance: "success",
         autoDismiss: true,
       });
       reloadUserData();
     } catch (err) {
-      
+      addToast(err.message || "Failed to approve request", {
+        appearance: "error",
+        autoDismiss: true,
+      });
     }
   };
 
@@ -96,17 +247,29 @@ const BalanceRequest = () => {
         confirmButtonText: 'Yes, reject it!'
       });
       if (!result.isConfirmed) return;
+      
       const response = await axiosSecure.patch(`/api/v1/finance/update-recharge-request-status/${id}`, {
         status: "cancelled"
       });
+      
       if (response.data.success) {
+        // Update local state
+        setRequestData(prev => prev.filter(request => request._id !== id));
+        
+        // Emit socket event to notify other users
+        if (socket && isConnected) {
+          socket.emit('request_status_updated', {
+            requestId: id,
+            status: 'cancelled',
+            timestamp: new Date().toISOString()
+          });
+        }
+        
         Swal.fire(
           'Rejected!',
           'The request has been rejected.',
           'success'
         );
-        // Update the local state to remove the rejected request
-        setRequestData(prev => prev.filter(request => request._id !== id));
         reloadUserData();
       } else {
         throw new Error(response.data.message || 'Failed to reject request');
@@ -137,6 +300,11 @@ const BalanceRequest = () => {
                 : "Manage user balance requests"
               }
             </p>
+            {lastSocketUpdate && (
+              <p className="text-green-400 text-center mt-1 text-sm">
+                🔄 Last updated: {new Date(lastSocketUpdate).toLocaleTimeString()}
+              </p>
+            )}
             {isAdminOrSuperAdmin && (
               <p className="text-gray-400 text-center mt-1 text-sm">
                 Showing all requests (Admin/Super-Admin view)
