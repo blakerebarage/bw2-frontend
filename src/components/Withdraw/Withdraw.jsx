@@ -370,10 +370,10 @@ export default function Withdraw() {
   // Update isWalletAgentMethod when method changes
   useEffect(() => {
     if (selectedMethod.method) {
-      const walletAgentMethod = walletAgentBanks.find(bank => bank.bankType === selectedMethod.method);
-      setIsWalletAgentMethod(!!walletAgentMethod);
+      // Determine if it's a wallet agent method based on the selected type, not by checking if it exists in walletAgentBanks
+      setIsWalletAgentMethod(selectedMethod.type === 'agent');
     }
-  }, [selectedMethod, walletAgentBanks]);
+  }, [selectedMethod]);
 
   // Fetch payment methods
   useEffect(() => {

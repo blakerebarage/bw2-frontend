@@ -94,6 +94,81 @@ const AllWithdraw = () => {
       return;
     }
 
+    // Debug listener to capture all socket events
+    const handleAnyEvent = (eventName, ...args) => {
+      console.log('🔍 AllWithdraw: Received socket event:', eventName, args);
+    };
+
+    // Handle individual request updates
+    const handleIndividualRequestUpdate = (payload) => {
+      console.log('📥 AllWithdraw: Received individual request update:', payload);
+      console.log('📥 AllWithdraw: Individual update payload structure:', JSON.stringify(payload, null, 2));
+
+      if (payload && payload.data) {
+        const updatedRequest = payload.data;
+        console.log('📥 AllWithdraw: Processing individual request update:', {
+          requestId: updatedRequest._id,
+          requestStatus: updatedRequest.status,
+          requestAmount: updatedRequest.amount,
+          walletAgentUsername: updatedRequest.walletAgentUsername,
+          referralCode: updatedRequest.referralCode,
+          currentUser: user.username,
+          userRole: user.role
+        });
+
+        // Update withdraw requests
+        setWithdraws(prev => {
+          console.log('🔄 AllWithdraw: Current withdraw requests:', prev.length);
+          const existingIndex = prev.findIndex(req => req._id === updatedRequest._id);
+          console.log('🔄 AllWithdraw: Existing request index:', existingIndex);
+
+          if (existingIndex !== -1) {
+            console.log('🔄 AllWithdraw: Updating existing withdraw request:', {
+              oldStatus: prev[existingIndex].status,
+              newStatus: updatedRequest.status
+            });
+            const updated = [...prev];
+            updated[existingIndex] = { ...updated[existingIndex], ...updatedRequest };
+            
+            // Remove requests that are no longer pending if status filter is set
+            if (statusFilter === "pending") {
+              return updated.filter(req => req.status === "pending");
+            }
+            return updated;
+          } else {
+            const shouldShow = (user.role === "wallet-agent") ?
+              (updatedRequest.walletAgentUsername === user.username || updatedRequest.referralCode === user.referralCode) :
+              (isAdminOrSuperAdmin || updatedRequest.referralCode === user.referralCode);
+
+            console.log('🔄 AllWithdraw: Should show new request:', shouldShow, {
+              isWalletAgent: user.role === "wallet-agent",
+              isAdminOrSuperAdmin,
+              matchesWalletAgent: updatedRequest.walletAgentUsername === user.username,
+              matchesReferralCode: updatedRequest.referralCode === user.referralCode
+            });
+
+            if (shouldShow) {
+              console.log('🔄 AllWithdraw: Adding new withdraw request');
+              const updated = [...prev, updatedRequest];
+              
+              // Apply status filter if set
+              if (statusFilter !== "all") {
+                return updated.filter(req => req.status === statusFilter);
+              }
+              return updated;
+            }
+          }
+          return prev;
+        });
+      } else {
+        console.log('❌ AllWithdraw: Invalid individual request update payload:', {
+          hasPayload: !!payload,
+          hasData: payload?.data,
+          payloadKeys: payload ? Object.keys(payload) : 'no payload'
+        });
+      }
+    };
+
     // Listen for withdraw request updates
     const handleWithdrawRequestUpdate = (payload) => {
       console.log('📥 AllWithdraw: Received withdraw_request_update:', payload);
@@ -187,10 +262,39 @@ const AllWithdraw = () => {
 
     socket.on('withdraw_request_update', handleWithdrawRequestUpdate);
     socket.on('request_status_updated', handleRequestStatusUpdate);
+    socket.on('wallet_request_update', handleIndividualRequestUpdate);
+    socket.on('agent_request_update', handleIndividualRequestUpdate);
+    socket.on('request_update', handleIndividualRequestUpdate);
+    socket.on('status_update', handleIndividualRequestUpdate);
+    // Additional events for wallet-agent actions
+    socket.on('withdraw_approved', handleIndividualRequestUpdate);
+    socket.on('withdraw_rejected', handleIndividualRequestUpdate);
+    socket.on('recharge_approved', handleIndividualRequestUpdate);
+    socket.on('recharge_rejected', handleIndividualRequestUpdate);
+    socket.on('wallet_agent_action', handleIndividualRequestUpdate);
+    socket.on('upline_update', handleIndividualRequestUpdate);
+    socket.on('referral_code_room_update', handleIndividualRequestUpdate);
+    socket.on('user_room_update', handleIndividualRequestUpdate);
+
+    // Debug listener for all events
+    socket.onAny(handleAnyEvent);
 
     return () => {
       socket.off('withdraw_request_update', handleWithdrawRequestUpdate);
       socket.off('request_status_updated', handleRequestStatusUpdate);
+      socket.off('wallet_request_update', handleIndividualRequestUpdate);
+      socket.off('agent_request_update', handleIndividualRequestUpdate);
+      socket.off('request_update', handleIndividualRequestUpdate);
+      socket.off('status_update', handleIndividualRequestUpdate);
+      socket.off('withdraw_approved', handleIndividualRequestUpdate);
+      socket.off('withdraw_rejected', handleIndividualRequestUpdate);
+      socket.off('recharge_approved', handleIndividualRequestUpdate);
+      socket.off('recharge_rejected', handleIndividualRequestUpdate);
+      socket.off('wallet_agent_action', handleIndividualRequestUpdate);
+      socket.off('upline_update', handleIndividualRequestUpdate);
+      socket.off('referral_code_room_update', handleIndividualRequestUpdate);
+      socket.off('user_room_update', handleIndividualRequestUpdate);
+      socket.offAny(handleAnyEvent);
     };
   }, [socket, isConnected, user, statusFilter, isAdminOrSuperAdmin]);
 

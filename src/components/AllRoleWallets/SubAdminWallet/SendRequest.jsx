@@ -403,11 +403,10 @@ const DepositSection = () => {
       try {
         setLoading(true);
         
-        // Check if selected method exists in wallet agent banks
-        const walletAgentMethod = walletAgentBanks.find(bank => bank.bankType === selectedMethod.method);
-        setIsWalletAgentMethod(!!walletAgentMethod);
+        // Determine if it's a wallet agent method based on the selected type, not by checking if it exists in walletAgentBanks
+        setIsWalletAgentMethod(selectedMethod.type === 'agent');
         
-        if (walletAgentMethod) {
+        if (selectedMethod.type === 'agent') {
           // Use wallet agent banks for this method
           const methodBanks = walletAgentBanks.filter(bank => bank.bankType === selectedMethod.method);
           const channels = [...new Set(methodBanks.map(bank => bank.channel))];

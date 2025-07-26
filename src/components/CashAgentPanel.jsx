@@ -175,6 +175,51 @@ const CashAgentPanel = () => {
       userRole: user.role
     });
 
+    // Automatically join the wallet_user_name room for wallet agents
+    // since the join_wallet_user_name_room event is not being triggered
+    if (user.role === "wallet-agent" && user.username) {
+      
+      // Use emit instead of join since join is not available on client side
+      socket.emit('join_wallet_user_name_room', { walletUserName: user.username });
+      console.log(`🔌 CashAgentPanel: Emitted join_wallet_user_name_room for: ${user.username}`);
+    }
+
+    // Listen for wallet user name room joining
+    const handleJoinWalletUserNameRoom = (data) => {
+      const { walletUserName } = data;
+      if (walletUserName) {
+        // Use emit instead of join since join is not available on client side
+        socket.emit('join_wallet_user_name_room', { walletUserName });
+        console.log(`🔌 CashAgentPanel: Emitted join_wallet_user_name_room for: ${walletUserName}`);
+      }
+    };
+
+    // Listen for user room updates (since we see user_1pmv1l room being joined)
+    const handleUserRoomUpdate = (payload) => {
+      console.log('📥 CashAgentPanel: Received user room update:', payload);
+      // Handle updates sent to user rooms
+      if (payload && payload.data) {
+        handleDepositRequestUpdate(payload);
+        handleWithdrawRequestUpdate(payload);
+      }
+    };
+
+    // Listen for referral code room updates (since we see ref_code_lltpj6ou room being joined)
+    const handleReferralCodeRoomUpdate = (payload) => {
+      console.log('📥 CashAgentPanel: Received referral code room update:', payload);
+      // Handle updates sent to referral code rooms
+      if (payload && payload.data) {
+        handleDepositRequestUpdate(payload);
+        handleWithdrawRequestUpdate(payload);
+      }
+    };
+
+    // Listen for all possible update events that might be sent to wallet rooms
+    const handleWalletRoomUpdate = (payload) => {
+      console.log('📥 CashAgentPanel: Received wallet room update:', payload);
+      // Handle any updates sent to wallet user name rooms
+    };
+
     // Listen for deposit request updates
     const handleDepositRequestUpdate = (payload) => {
       console.log('📥 CashAgentPanel: Received recharge_request_update:', payload);
@@ -190,6 +235,24 @@ const CashAgentPanel = () => {
           depositData = payload.data.results;
         } else if (payload.data.data && payload.data.data.results && Array.isArray(payload.data.data.results)) {
           depositData = payload.data.data.results;
+        } else if (payload.data && typeof payload.data === 'object') {
+          // Handle single object case - convert to array
+          depositData = [payload.data];
+        }
+        
+        console.log('📊 CashAgentPanel: Processed deposit data:', {
+          totalItems: payload.data.totalItems || 0,
+          pendingRequests: payload.data.pendingRequests || 0,
+          resultsLength: depositData.length,
+          isEmpty: depositData.length === 0
+        });
+        
+        // If results are empty, clear the requests (no pending requests)
+        if (depositData.length === 0) {
+          console.log('📊 CashAgentPanel: No pending requests, clearing deposit requests');
+          setDepositRequests([]);
+          setDepositNotificationCount(0);
+          return;
         }
         
         if (depositData.length > 0) {
@@ -197,7 +260,11 @@ const CashAgentPanel = () => {
           
           // Apply role-based filtering
           if (user.role === "wallet-agent") {
-            filteredDeposits = depositData.filter(req => req.walletAgentUsername === user.username);
+            // For wallet agents, show requests where they are the wallet agent OR where they are the upline
+            filteredDeposits = depositData.filter(req => 
+              req.walletAgentUsername === user.username || 
+              req.referralCode === user.referralCode
+            );
           } else if (user.referralCode) {
             // Upline users see requests from their downline
             filteredDeposits = depositData.filter(req => req.referralCode === user.referralCode);
@@ -207,7 +274,9 @@ const CashAgentPanel = () => {
             total: depositData.length,
             filtered: filteredDeposits.length,
             userRole: user.role,
-            username: user.username
+            username: user.username,
+            walletAgentRequests: depositData.filter(req => req.walletAgentUsername === user.username).length,
+            uplineRequests: depositData.filter(req => req.referralCode === user.referralCode).length
           });
           
           setDepositRequests(filteredDeposits);
@@ -233,6 +302,24 @@ const CashAgentPanel = () => {
           withdrawData = payload.data.results;
         } else if (payload.data.data && payload.data.data.results && Array.isArray(payload.data.data.results)) {
           withdrawData = payload.data.data.results;
+        } else if (payload.data && typeof payload.data === 'object') {
+          // Handle single object case - convert to array
+          withdrawData = [payload.data];
+        }
+        
+        console.log('📊 CashAgentPanel: Processed withdraw data:', {
+          totalItems: payload.data.totalItems || 0,
+          pendingRequests: payload.data.pendingRequests || 0,
+          resultsLength: withdrawData.length,
+          isEmpty: withdrawData.length === 0
+        });
+        
+        // If results are empty, clear the requests (no pending requests)
+        if (withdrawData.length === 0) {
+          console.log('📊 CashAgentPanel: No pending requests, clearing withdraw requests');
+          setWithdrawRequests([]);
+          setWithdrawNotificationCount(0);
+          return;
         }
         
         if (withdrawData.length > 0) {
@@ -240,7 +327,11 @@ const CashAgentPanel = () => {
           
           // Apply role-based filtering
           if (user.role === "wallet-agent") {
-            filteredWithdraws = withdrawData.filter(req => req.walletAgentUsername === user.username);
+            // For wallet agents, show requests where they are the wallet agent OR where they are the upline
+            filteredWithdraws = withdrawData.filter(req => 
+              req.walletAgentUsername === user.username || 
+              req.referralCode === user.referralCode
+            );
           } else if (user.referralCode) {
             // Upline users see requests from their downline
             filteredWithdraws = withdrawData.filter(req => req.referralCode === user.referralCode);
@@ -250,7 +341,9 @@ const CashAgentPanel = () => {
             total: withdrawData.length,
             filtered: filteredWithdraws.length,
             userRole: user.role,
-            username: user.username
+            username: user.username,
+            walletAgentRequests: withdrawData.filter(req => req.walletAgentUsername === user.username).length,
+            uplineRequests: withdrawData.filter(req => req.referralCode === user.referralCode).length
           });
           
           setWithdrawRequests(filteredWithdraws);
@@ -273,7 +366,10 @@ const CashAgentPanel = () => {
               console.log('🔄 CashAgentPanel: Updating deposit request status:', {
                 requestId: payload.requestId,
                 oldStatus: req.status,
-                newStatus: payload.status
+                newStatus: payload.status,
+                walletAgentUsername: req.walletAgentUsername,
+                referralCode: req.referralCode,
+                currentUser: user.username
               });
               return { ...req, status: payload.status };
             }
@@ -292,7 +388,10 @@ const CashAgentPanel = () => {
               console.log('🔄 CashAgentPanel: Updating withdraw request status:', {
                 requestId: payload.requestId,
                 oldStatus: req.status,
-                newStatus: payload.status
+                newStatus: payload.status,
+                walletAgentUsername: req.walletAgentUsername,
+                referralCode: req.referralCode,
+                currentUser: user.username
               });
               return { ...req, status: payload.status };
             }
@@ -302,6 +401,109 @@ const CashAgentPanel = () => {
           console.log('📊 CashAgentPanel: Updated withdraw pending count:', pendingCount);
           setWithdrawNotificationCount(pendingCount);
           return updated;
+        });
+      }
+    };
+
+    // Handle individual request updates (when a single request is updated)
+    const handleIndividualRequestUpdate = (payload) => {
+      console.log('📥 CashAgentPanel: Received individual request update:', payload);
+      console.log('📥 CashAgentPanel: Individual update payload structure:', JSON.stringify(payload, null, 2));
+      
+      if (payload && payload.data) {
+        const updatedRequest = payload.data;
+        console.log('📥 CashAgentPanel: Processing individual request update:', {
+          requestId: updatedRequest._id,
+          requestStatus: updatedRequest.status,
+          requestAmount: updatedRequest.amount,
+          walletAgentUsername: updatedRequest.walletAgentUsername,
+          referralCode: updatedRequest.referralCode,
+          currentUser: user.username,
+          userRole: user.role
+        });
+        
+        // Update deposit requests
+        setDepositRequests(prev => {
+          console.log('🔄 CashAgentPanel: Current deposit requests:', prev.length);
+          const existingIndex = prev.findIndex(req => req._id === updatedRequest._id);
+          console.log('🔄 CashAgentPanel: Existing request index:', existingIndex);
+          
+          if (existingIndex !== -1) {
+            // Update existing request
+            console.log('🔄 CashAgentPanel: Updating existing deposit request:', {
+              oldStatus: prev[existingIndex].status,
+              newStatus: updatedRequest.status
+            });
+            const updated = [...prev];
+            updated[existingIndex] = { ...updated[existingIndex], ...updatedRequest };
+            const pendingCount = updated.filter(req => req.status === "pending").length;
+            console.log('📊 CashAgentPanel: Updated deposit pending count:', pendingCount);
+            setDepositNotificationCount(pendingCount);
+            return updated;
+          } else {
+            // Add new request if it matches our filters
+            const shouldShow = (user.role === "wallet-agent") ? 
+              (updatedRequest.walletAgentUsername === user.username || updatedRequest.referralCode === user.referralCode) :
+              (updatedRequest.referralCode === user.referralCode);
+            
+            console.log('🔄 CashAgentPanel: Should show new request:', shouldShow, {
+              isWalletAgent: user.role === "wallet-agent",
+              matchesWalletAgent: updatedRequest.walletAgentUsername === user.username,
+              matchesReferralCode: updatedRequest.referralCode === user.referralCode
+            });
+            
+            if (shouldShow) {
+              console.log('🔄 CashAgentPanel: Adding new deposit request');
+              const updated = [...prev, updatedRequest];
+              const pendingCount = updated.filter(req => req.status === "pending").length;
+              setDepositNotificationCount(pendingCount);
+              return updated;
+            }
+          }
+          return prev;
+        });
+
+        // Update withdraw requests
+        setWithdrawRequests(prev => {
+          console.log('🔄 CashAgentPanel: Current withdraw requests:', prev.length);
+          const existingIndex = prev.findIndex(req => req._id === updatedRequest._id);
+          console.log('🔄 CashAgentPanel: Existing withdraw request index:', existingIndex);
+          
+          if (existingIndex !== -1) {
+            // Update existing request
+            console.log('🔄 CashAgentPanel: Updating existing withdraw request:', {
+              oldStatus: prev[existingIndex].status,
+              newStatus: updatedRequest.status
+            });
+            const updated = [...prev];
+            updated[existingIndex] = { ...updated[existingIndex], ...updatedRequest };
+            const pendingCount = updated.filter(req => req.status === "pending").length;
+            console.log('📊 CashAgentPanel: Updated withdraw pending count:', pendingCount);
+            setWithdrawNotificationCount(pendingCount);
+            return updated;
+          } else {
+            // Add new request if it matches our filters
+            const shouldShow = (user.role === "wallet-agent") ? 
+              (updatedRequest.walletAgentUsername === user.username || updatedRequest.referralCode === user.referralCode) :
+              (updatedRequest.referralCode === user.referralCode);
+            
+            console.log('🔄 CashAgentPanel: Should show new withdraw request:', shouldShow);
+            
+            if (shouldShow) {
+              console.log('🔄 CashAgentPanel: Adding new withdraw request');
+              const updated = [...prev, updatedRequest];
+              const pendingCount = updated.filter(req => req.status === "pending").length;
+              setWithdrawNotificationCount(pendingCount);
+              return updated;
+            }
+          }
+          return prev;
+        });
+      } else {
+        console.log('❌ CashAgentPanel: Invalid individual request update payload:', {
+          hasPayload: !!payload,
+          hasData: payload?.data,
+          payloadKeys: payload ? Object.keys(payload) : 'no payload'
         });
       }
     };
@@ -327,26 +529,120 @@ const CashAgentPanel = () => {
     };
 
     // Clean up any existing listeners first
+    socket.off('join_wallet_user_name_room');
+    socket.off('wallet_room_update');
+    socket.off('user_room_update');
+    socket.off('referral_code_room_update');
     socket.off('recharge_request_update');
     socket.off('withdraw_request_update');
     socket.off('request_status_updated');
+    socket.off('wallet_request_update');
+    socket.off('agent_request_update');
+    socket.off('request_update');
+    socket.off('status_update');
     socket.off('connect');
     socket.off('disconnect');
     socket.off('error');
 
     // Set up socket event listeners
-    socket.on('recharge_request_update', handleDepositRequestUpdate);
-    socket.on('withdraw_request_update', handleWithdrawRequestUpdate);
+    socket.on('join_wallet_user_name_room', handleJoinWalletUserNameRoom);
+    socket.on('wallet_room_update', handleWalletRoomUpdate);
+    socket.on('user_room_update', handleUserRoomUpdate);
+    socket.on('referral_code_room_update', handleReferralCodeRoomUpdate);
+    socket.on('recharge_request_update', (payload) => {
+      console.log('📥 CashAgentPanel: Received recharge_request_update with timestamp:', payload);
+      console.log('📥 CashAgentPanel: Full payload structure:', JSON.stringify(payload, null, 2));
+      if (payload && payload.timestamp && payload.data) {
+        console.log('📥 CashAgentPanel: Processing recharge request update:', {
+          timestamp: payload.timestamp,
+          dataLength: Array.isArray(payload.data) ? payload.data.length : 'not array',
+          dataType: typeof payload.data,
+          isObject: typeof payload.data === 'object',
+          dataKeys: payload.data ? Object.keys(payload.data) : 'no data',
+          dataStructure: payload.data
+        });
+        handleDepositRequestUpdate(payload);
+      } else {
+        console.log('❌ CashAgentPanel: Invalid payload structure:', {
+          hasPayload: !!payload,
+          hasTimestamp: payload?.timestamp,
+          hasData: payload?.data,
+          payloadKeys: payload ? Object.keys(payload) : 'no payload'
+        });
+      }
+    });
+    socket.on('withdraw_request_update', (payload) => {
+      console.log('📥 CashAgentPanel: Received withdraw_request_update with timestamp:', payload);
+      console.log('📥 CashAgentPanel: Full payload structure:', JSON.stringify(payload, null, 2));
+      if (payload && payload.timestamp && payload.data) {
+        console.log('📥 CashAgentPanel: Processing withdraw request update:', {
+          timestamp: payload.timestamp,
+          dataLength: Array.isArray(payload.data) ? payload.data.length : 'not array',
+          dataType: typeof payload.data,
+          isObject: typeof payload.data === 'object',
+          dataKeys: payload.data ? Object.keys(payload.data) : 'no data',
+          dataStructure: payload.data
+        });
+        handleWithdrawRequestUpdate(payload);
+      } else {
+        console.log('❌ CashAgentPanel: Invalid payload structure:', {
+          hasPayload: !!payload,
+          hasTimestamp: payload?.timestamp,
+          hasData: payload?.data,
+          payloadKeys: payload ? Object.keys(payload) : 'no payload'
+        });
+      }
+    });
     socket.on('request_status_updated', handleRequestStatusUpdate);
+    socket.on('individual_request_update', handleIndividualRequestUpdate);
+    socket.on('wallet_request_update', (payload) => {
+      console.log('📥 CashAgentPanel: Received wallet_request_update:', payload);
+      // Handle wallet-specific request updates
+      handleIndividualRequestUpdate(payload);
+    });
+    socket.on('agent_request_update', (payload) => {
+      console.log('📥 CashAgentPanel: Received agent_request_update:', payload);
+      // Handle agent-specific request updates
+      handleIndividualRequestUpdate(payload);
+    });
+    socket.on('request_update', (payload) => {
+      console.log('📥 CashAgentPanel: Received request_update:', payload);
+      // Handle generic request updates
+      handleIndividualRequestUpdate(payload);
+    });
+    socket.on('status_update', (payload) => {
+      console.log('📥 CashAgentPanel: Received status_update:', payload);
+      // Handle status updates
+      handleIndividualRequestUpdate(payload);
+    });
     socket.on('connect', handleSocketConnect);
     socket.on('disconnect', handleSocketDisconnect);
     socket.on('error', handleSocketError);
 
+    // Add a catch-all listener to see what events are being received
+    const handleAnyEvent = (eventName, ...args) => {
+      console.log(`🔍 CashAgentPanel: Received ANY event: ${eventName}`, args);
+      // Don't handle it here, just log it so we can see what events are being sent
+    };
+
+    // Try to add a catch-all listener (if available)
+    if (socket.onAny) {
+      socket.onAny(handleAnyEvent);
+    }
+
     console.log('✅ CashAgentPanel: Socket listeners set up successfully');
     console.log('🔌 CashAgentPanel: Listening for events:', [
+      'join_wallet_user_name_room',
+      'wallet_room_update',
+      'user_room_update',
+      'referral_code_room_update',
       'recharge_request_update',
       'withdraw_request_update', 
       'request_status_updated',
+      'wallet_request_update',
+      'agent_request_update',
+      'request_update',
+      'status_update',
       'connect',
       'disconnect',
       'error'
@@ -354,9 +650,17 @@ const CashAgentPanel = () => {
 
     return () => {
       console.log('🧹 CashAgentPanel: Cleaning up socket listeners');
+      socket.off('join_wallet_user_name_room', handleJoinWalletUserNameRoom);
+      socket.off('wallet_room_update', handleWalletRoomUpdate);
+      socket.off('user_room_update', handleUserRoomUpdate);
+      socket.off('referral_code_room_update', handleReferralCodeRoomUpdate);
       socket.off('recharge_request_update', handleDepositRequestUpdate);
       socket.off('withdraw_request_update', handleWithdrawRequestUpdate);
       socket.off('request_status_updated', handleRequestStatusUpdate);
+      socket.off('wallet_request_update');
+      socket.off('agent_request_update');
+      socket.off('request_update');
+      socket.off('status_update');
       socket.off('connect', handleSocketConnect);
       socket.off('disconnect', handleSocketDisconnect);
       socket.off('error', handleSocketError);
@@ -912,6 +1216,8 @@ const CashAgentPanel = () => {
 
 
 
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4">
       <div className="max-w-6xl mx-auto">
@@ -1045,6 +1351,8 @@ const CashAgentPanel = () => {
                     {showCommissions ? 'Hide' : 'Show'} Commissions
                   </span>
                 </button>
+
+
               </div>
             )}
 
