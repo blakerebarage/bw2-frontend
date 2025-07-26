@@ -30,6 +30,7 @@ const OtpDisplay = () => {
   // Handle socket events and show notifications - use useCallback to prevent re-renders
   const handleLastEvent = useCallback(() => {
     if (lastEvent) {
+      console.log('OtpDisplay: Handling event:', lastEvent.type, lastEvent);
       switch (lastEvent.type) {
         case 'active_otp_update':
           addToast('New OTP received!', {
@@ -37,13 +38,33 @@ const OtpDisplay = () => {
             autoDismiss: true,
           });
           break;
+        case 'new_otp':
+          console.log('OtpDisplay: Setting showOtpDisplay to true for new_otp');
+          setShowOtpDisplay(true);
+          addToast('New OTP received!', {
+            appearance: 'info',
+            autoDismiss: true,
+          });
+          break;
+        case 'otp_used':
+          console.log('OtpDisplay: Setting showOtpDisplay to false for otp_used');
+          setShowOtpDisplay(false);
+          addToast('OTP has been used', {
+            appearance: 'success',
+            autoDismiss: true,
+          });
+          break;
         case 'otp_expired':
+          console.log('OtpDisplay: Setting showOtpDisplay to false for otp_expired');
+          setShowOtpDisplay(false);
           addToast('OTP has expired', {
             appearance: 'warning',
             autoDismiss: true,
           });
           break;
         case 'otp_completed':
+          console.log('OtpDisplay: Setting showOtpDisplay to false for otp_completed');
+          setShowOtpDisplay(false);
           addToast('OTP transaction completed', {
             appearance: 'success',
             autoDismiss: true,
@@ -68,14 +89,31 @@ const OtpDisplay = () => {
   // Show OTP display when socket data is available - use useCallback
   const handleActiveOtpData = useCallback(() => {
     if (activeOtpData) {
+      // Check if this is actually an otp_used event (has otpId but no otp/amount)
+      if (activeOtpData.otpId && !activeOtpData.otp && !activeOtpData.amount) {
+        console.log('OtpDisplay: Detected otp_used event in activeOtpData, closing modal');
+        setShowOtpDisplay(false);
+        return;
+      }
+      
       setShowOtpDisplay(true);
       clearNewOtpFlag(); // Clear the new OTP flag when displaying
     }
+    // Don't automatically close here - let the event handlers manage closing
   }, [activeOtpData, clearNewOtpFlag]);
 
   useEffect(() => {
     handleActiveOtpData();
   }, [handleActiveOtpData]);
+
+  // Close modal when OTP data becomes null - this is the main closing mechanism
+  useEffect(() => {
+    console.log('OtpDisplay: activeOtpData changed:', activeOtpData);
+    if (!activeOtpData) {
+      console.log('OtpDisplay: Setting showOtpDisplay to false because activeOtpData is null');
+      setShowOtpDisplay(false);
+    }
+  }, [activeOtpData]);
 
   // Update countdown timer - memoized to prevent re-renders
   const updateTimer = useCallback(() => {
@@ -140,47 +178,27 @@ const OtpDisplay = () => {
   }, [closeOtpDisplay]);
 
   // Debug socket connection
-  const testSocketConnection = () => {
-    if (socket) {
-      console.log('Socket state:', {
-        connected: socket.connected,
-        id: socket.id,
-        transport: socket.io.engine.transport.name
-      });
-      
-      // Test emit a custom event
-      socket.emit('test_event', { message: 'Testing socket connection' });
-      console.log('Emitted test_event');
-    } else {
-      console.log('Socket not available');
-    }
-  };
+  
 
   // Debug function to manually trigger recharge request update
-  const testRechargeRequestUpdate = () => {
-    if (socket) {
-      // Simulate the backend emitting a recharge request update
-      socket.emit('recharge_request_update', {
-        timestamp: new Date().toISOString(),
-        data: [
-          {
-            _id: 'test_id',
-            status: 'pending',
-            amount: 1000,
-            username: 'test_user',
-            referralCode: user?.referralCode
-          }
-        ]
-      });
-      console.log('Emitted test recharge_request_update');
-    }
-  };
+  
 
 
   // Don't render if no user or not authorized or no OTP to show
   if (!user || !isAuthorizedUser || !showOtpDisplay || !activeOtpData) {
+    console.log('OtpDisplay: Not rendering because:', {
+      noUser: !user,
+      notAuthorized: !isAuthorizedUser,
+      notShowOtpDisplay: !showOtpDisplay,
+      noActiveOtpData: !activeOtpData
+    });
     return null;
   }
+
+  console.log('OtpDisplay: Rendering modal with:', {
+    showOtpDisplay,
+    activeOtpData: activeOtpData ? 'has data' : 'no data'
+  });
 
   return (
     <div 
