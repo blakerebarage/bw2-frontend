@@ -35,7 +35,7 @@ const BalanceRequest = () => {
       setLoading(true);
       setError(null);
      
-      let apiUrl = '/api/v1/finance/all-recharge-request';
+      let apiUrl = '/api/v1/finance/all-recharge-request?status=pending';
       
       // For admin/super-admin, show all requests
       if (isAdminOrSuperAdmin) {
