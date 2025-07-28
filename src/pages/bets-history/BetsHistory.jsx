@@ -161,13 +161,7 @@ const BetsHistory = () => {
                   </div>
                 </div>
 
-                {/* Additional Info */}
-                <div className="border-t border-[#facc15]/10 pt-3">
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span>{t('serial')}: {bet.data.serial_number}</span>
-                    <span>{t('account')}: {bet.data.member_account}</span>
-                  </div>
-                </div>
+               
               </div>
             ))}
           </div>

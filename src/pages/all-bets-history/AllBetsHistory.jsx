@@ -29,6 +29,7 @@ const AllBetsHistory = () => {
       ) : await axiosSecure.get(
         `/api/v1/game/bet-history/${user?.username}?page=${currentPage}&limit=${limit}&search=${search}`
       );
+      
       if (response.data.success) {
         setBets(response.data.data.results);
         setTotalPages(response.data.data.pageCount);
@@ -121,7 +122,7 @@ const AllBetsHistory = () => {
                     <div className="flex items-center gap-1">
                       <FaCalendarAlt className="text-gray-500" />
                       <span className="font-medium">Time:</span>
-                      {moment(bet.createdAt).format("MMM D, YYYY h:mm A")}
+                      {moment(bet.createdAt).format("MMM D, YYYY h:mm:ss A")}
                     </div>
                   </div>
 

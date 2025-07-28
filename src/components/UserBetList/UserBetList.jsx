@@ -164,18 +164,11 @@ const UserBetList = () => {
                     <div className="flex items-center gap-1">
                       <FaCalendarAlt className="text-gray-500" />
                       <span className="font-medium">Time:</span>
-                      {moment(bet.createdAt).format("MMM D, YYYY h:mm A")}
+                      {moment(bet.createdAt).format("MMM D, YYYY h:mm:ss A")}
                     </div>
                   </div>
 
-                  {/* Additional Details */}
-                  <div className="mt-2 text-xs text-gray-500">
-                    <span className="font-medium">Game Round:</span> {bet.data.game_round}
-                    <span className="mx-2">•</span>
-                    <span className="font-medium">Serial Number:</span> {bet.data.serial_number}
-                    <span className="mx-2">•</span>
-                    <span className="font-medium">Member Account:</span> {bet.data.member_account}
-                  </div>
+                  
                 </div>
               </div>
             ))

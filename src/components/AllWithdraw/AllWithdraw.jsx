@@ -32,7 +32,7 @@ const AllWithdraw = () => {
     try {
       setLoading(true);
       
-      let apiUrl = '/api/v1/finance/all-withdraw-request';
+      let apiUrl = '/api/v1/finance/all-withdraw-request?status=pending';
       
       // Add pagination
       apiUrl += `&page=${currentPage}&limit=${itemsPerPage}`;
@@ -464,12 +464,7 @@ const AllWithdraw = () => {
             <h1 className="text-2xl font-bold text-white text-center">
               Withdraw Requests
             </h1>
-            <p className="text-gray-300 text-center mt-2">
-              {isAdminOrSuperAdmin 
-                ? "Manage and update all user withdraw requests efficiently" 
-                : "aiit25"
-              }
-            </p>
+            
             {lastSocketUpdate && (
               <p className="text-green-400 text-center mt-1 text-sm">
                 🔄 Last updated: {new Date(lastSocketUpdate).toLocaleTimeString()}
