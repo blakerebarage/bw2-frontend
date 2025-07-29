@@ -36,7 +36,7 @@ const AllTransactions = () => {
 
     // Listen for transaction updates
     const handleTransactionUpdate = (payload) => {
-      console.log('📥 AllTransactions: Received transaction update:', payload);
+ 
       
       if (payload && payload.data) {
         let transactionData = [];
@@ -77,7 +77,7 @@ const AllTransactions = () => {
 
     // Listen for request status updates
     const handleRequestStatusUpdate = (payload) => {
-      console.log('📥 AllTransactions: Received request status update:', payload);
+      
       
       if (payload && payload.requestId && payload.status) {
         setTransactions(prev => {

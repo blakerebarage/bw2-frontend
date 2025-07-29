@@ -112,18 +112,18 @@ const CashAgentPanel = () => {
     
     try {
       setRequestsLoading(true);
-      console.log('🔄 CashAgentPanel: Fetching requests for wallet agent:', user.username);
+      
       
       // Fetch deposit requests - get all requests for wallet agent
       const depositRes = await axiosSecure.get(`/api/v1/finance/all-recharge-request?walletAgentUsername=${user?.username}`);
       if (depositRes.data.success) {
         const depositData = depositRes.data.data?.results || depositRes.data.data || [];
         const pendingCount = depositData.filter(req => req.status === "pending")?.length || 0;
-        console.log('📊 CashAgentPanel: API Response - depositData:', depositData);
-        console.log('📊 CashAgentPanel: API Response - pending requests:', depositData.filter(req => req.status === "pending"));
+       
+        
         setDepositRequests(depositData);
         setDepositNotificationCount(pendingCount);
-        console.log('📊 CashAgentPanel: Fetched deposit requests:', depositData.length, 'pending:', pendingCount);
+       
       } else {
         console.error('❌ CashAgentPanel: Deposit API returned success: false');
       }
@@ -135,7 +135,7 @@ const CashAgentPanel = () => {
         const pendingCount = withdrawData.filter(req => req.status === "pending")?.length || 0;
         setWithdrawRequests(withdrawData);
         setWithdrawNotificationCount(pendingCount);
-        console.log('📊 CashAgentPanel: Fetched withdraw requests:', withdrawData.length, 'pending:', pendingCount);
+        
       } else {
         console.error('❌ CashAgentPanel: Withdraw API returned success: false');
       }
@@ -149,7 +149,7 @@ const CashAgentPanel = () => {
   // Fetch requests for wallet agents - only on mount and when user changes
   useEffect(() => {
     if (user?.role === "wallet-agent") {
-      console.log('🔄 CashAgentPanel: Fetching requests for wallet agent:', user.username);
+      
       fetchRequests();
     }
   }, [user?.role, user?.username]); // Removed fetchRequests from dependency to prevent auto-refresh
@@ -159,21 +159,12 @@ const CashAgentPanel = () => {
   // Socket event listeners for real-time updates
   useEffect(() => {
     if (!socket || !isConnected || !user) {
-      console.log('🔌 CashAgentPanel: Socket not ready or user not available', {
-        socket: !!socket,
-        isConnected,
-        userRole: user?.role,
-        username: user?.username
-      });
+      
       return;
     }
 
-    console.log('🔌 CashAgentPanel: Setting up socket listeners for user:', user.username, 'Role:', user.role);
-    console.log('🔌 CashAgentPanel: Socket connection status:', {
-      socketId: socket.id,
-      isConnected,
-      userRole: user.role
-    });
+   
+   
 
     // Automatically join the wallet_user_name room for wallet agents
     // since the join_wallet_user_name_room event is not being triggered
@@ -181,7 +172,7 @@ const CashAgentPanel = () => {
       
       // Use emit instead of join since join is not available on client side
       socket.emit('join_wallet_user_name_room', { walletUserName: user.username });
-      console.log(`🔌 CashAgentPanel: Emitted join_wallet_user_name_room for: ${user.username}`);
+      
     }
 
     // Listen for wallet user name room joining
@@ -190,13 +181,13 @@ const CashAgentPanel = () => {
       if (walletUserName) {
         // Use emit instead of join since join is not available on client side
         socket.emit('join_wallet_user_name_room', { walletUserName });
-        console.log(`🔌 CashAgentPanel: Emitted join_wallet_user_name_room for: ${walletUserName}`);
+        
       }
     };
 
     // Listen for user room updates (since we see user_1pmv1l room being joined)
     const handleUserRoomUpdate = (payload) => {
-      console.log('📥 CashAgentPanel: Received user room update:', payload);
+      
       // Handle updates sent to user rooms
       if (payload && payload.data) {
         handleDepositRequestUpdate(payload);
@@ -206,7 +197,7 @@ const CashAgentPanel = () => {
 
     // Listen for referral code room updates (since we see ref_code_lltpj6ou room being joined)
     const handleReferralCodeRoomUpdate = (payload) => {
-      console.log('📥 CashAgentPanel: Received referral code room update:', payload);
+      
       // Handle updates sent to referral code rooms
       if (payload && payload.data) {
         handleDepositRequestUpdate(payload);
@@ -216,14 +207,13 @@ const CashAgentPanel = () => {
 
     // Listen for all possible update events that might be sent to wallet rooms
     const handleWalletRoomUpdate = (payload) => {
-      console.log('📥 CashAgentPanel: Received wallet room update:', payload);
+     
       // Handle any updates sent to wallet user name rooms
     };
 
     // Listen for deposit request updates
     const handleDepositRequestUpdate = (payload) => {
-      console.log('📥 CashAgentPanel: Received recharge_request_update:', payload);
-      console.log('👤 CashAgentPanel: Current user:', { username: user.username, role: user.role });
+      
       
       if (payload && payload.data) {
         let depositData = [];
@@ -240,16 +230,11 @@ const CashAgentPanel = () => {
           depositData = [payload.data];
         }
         
-        console.log('📊 CashAgentPanel: Processed deposit data:', {
-          totalItems: payload.data.totalItems || 0,
-          pendingRequests: payload.data.pendingRequests || 0,
-          resultsLength: depositData.length,
-          isEmpty: depositData.length === 0
-        });
+        
         
         // If results are empty, clear the requests (no pending requests)
         if (depositData.length === 0) {
-          console.log('📊 CashAgentPanel: No pending requests, clearing deposit requests');
+          
           setDepositRequests([]);
           setDepositNotificationCount(0);
           return;
@@ -270,18 +255,11 @@ const CashAgentPanel = () => {
             filteredDeposits = depositData.filter(req => req.referralCode === user.referralCode);
           }
           
-          console.log('🔍 CashAgentPanel: Filtered deposits:', {
-            total: depositData.length,
-            filtered: filteredDeposits.length,
-            userRole: user.role,
-            username: user.username,
-            walletAgentRequests: depositData.filter(req => req.walletAgentUsername === user.username).length,
-            uplineRequests: depositData.filter(req => req.referralCode === user.referralCode).length
-          });
+          
           
           setDepositRequests(filteredDeposits);
           const pendingCount = filteredDeposits.filter(req => req.status === "pending").length;
-          console.log('📊 CashAgentPanel: Setting deposit pending count:', pendingCount);
+          
           setDepositNotificationCount(pendingCount);
         }
       }
@@ -289,8 +267,7 @@ const CashAgentPanel = () => {
 
     // Listen for withdraw request updates
     const handleWithdrawRequestUpdate = (payload) => {
-      console.log('📥 CashAgentPanel: Received withdraw_request_update:', payload);
-      console.log('👤 CashAgentPanel: Current user:', { username: user.username, role: user.role });
+      
       
       if (payload && payload.data) {
         let withdrawData = [];
@@ -307,16 +284,11 @@ const CashAgentPanel = () => {
           withdrawData = [payload.data];
         }
         
-        console.log('📊 CashAgentPanel: Processed withdraw data:', {
-          totalItems: payload.data.totalItems || 0,
-          pendingRequests: payload.data.pendingRequests || 0,
-          resultsLength: withdrawData.length,
-          isEmpty: withdrawData.length === 0
-        });
+        
         
         // If results are empty, clear the requests (no pending requests)
         if (withdrawData.length === 0) {
-          console.log('📊 CashAgentPanel: No pending requests, clearing withdraw requests');
+          
           setWithdrawRequests([]);
           setWithdrawNotificationCount(0);
           return;
@@ -337,18 +309,11 @@ const CashAgentPanel = () => {
             filteredWithdraws = withdrawData.filter(req => req.referralCode === user.referralCode);
           }
           
-          console.log('🔍 CashAgentPanel: Filtered withdraws:', {
-            total: withdrawData.length,
-            filtered: filteredWithdraws.length,
-            userRole: user.role,
-            username: user.username,
-            walletAgentRequests: withdrawData.filter(req => req.walletAgentUsername === user.username).length,
-            uplineRequests: withdrawData.filter(req => req.referralCode === user.referralCode).length
-          });
+          
           
           setWithdrawRequests(filteredWithdraws);
           const pendingCount = filteredWithdraws.filter(req => req.status === "pending").length;
-          console.log('📊 CashAgentPanel: Setting withdraw pending count:', pendingCount);
+         
           setWithdrawNotificationCount(pendingCount);
         }
       }
@@ -356,27 +321,20 @@ const CashAgentPanel = () => {
 
     // Listen for request status updates
     const handleRequestStatusUpdate = (payload) => {
-      console.log('📥 CashAgentPanel: Received request_status_updated:', payload);
+      
       
       if (payload && payload.requestId && payload.status) {
         // Update deposit requests
         setDepositRequests(prev => {
           const updated = prev.map(req => {
             if (req._id === payload.requestId) {
-              console.log('🔄 CashAgentPanel: Updating deposit request status:', {
-                requestId: payload.requestId,
-                oldStatus: req.status,
-                newStatus: payload.status,
-                walletAgentUsername: req.walletAgentUsername,
-                referralCode: req.referralCode,
-                currentUser: user.username
-              });
+              
               return { ...req, status: payload.status };
             }
             return req;
           });
           const pendingCount = updated.filter(req => req.status === "pending").length;
-          console.log('📊 CashAgentPanel: Updated deposit pending count:', pendingCount);
+          
           setDepositNotificationCount(pendingCount);
           return updated;
         });
@@ -385,20 +343,13 @@ const CashAgentPanel = () => {
         setWithdrawRequests(prev => {
           const updated = prev.map(req => {
             if (req._id === payload.requestId) {
-              console.log('🔄 CashAgentPanel: Updating withdraw request status:', {
-                requestId: payload.requestId,
-                oldStatus: req.status,
-                newStatus: payload.status,
-                walletAgentUsername: req.walletAgentUsername,
-                referralCode: req.referralCode,
-                currentUser: user.username
-              });
+              
               return { ...req, status: payload.status };
             }
             return req;
           });
           const pendingCount = updated.filter(req => req.status === "pending").length;
-          console.log('📊 CashAgentPanel: Updated withdraw pending count:', pendingCount);
+         
           setWithdrawNotificationCount(pendingCount);
           return updated;
         });
@@ -407,20 +358,11 @@ const CashAgentPanel = () => {
 
     // Handle individual request updates (when a single request is updated)
     const handleIndividualRequestUpdate = (payload) => {
-      console.log('📥 CashAgentPanel: Received individual request update:', payload);
-      console.log('📥 CashAgentPanel: Individual update payload structure:', JSON.stringify(payload, null, 2));
+      
       
       if (payload && payload.data) {
         const updatedRequest = payload.data;
-        console.log('📥 CashAgentPanel: Processing individual request update:', {
-          requestId: updatedRequest._id,
-          requestStatus: updatedRequest.status,
-          requestAmount: updatedRequest.amount,
-          walletAgentUsername: updatedRequest.walletAgentUsername,
-          referralCode: updatedRequest.referralCode,
-          currentUser: user.username,
-          userRole: user.role
-        });
+        
         
         // Update deposit requests
         setDepositRequests(prev => {

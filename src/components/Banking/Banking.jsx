@@ -21,7 +21,7 @@ const Banking = () => {
   });
   
   // Debug log to see if parameters are changing
-  console.log('Query params:', queryParams, 'Current page:', currentPage);
+ 
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
@@ -47,14 +47,14 @@ const Banking = () => {
 
   // Force refetch when page changes
   useEffect(() => {
-    console.log('Page changed to:', currentPage, 'Refetching...');
+   
     refetch();
   }, [currentPage, refetch]);
   
   const { formatCurrency } = useCurrency();
 
   
-console.log(users);
+
   const filteredUsers = users?.data?.users?.filter((row) => {
     // Role filtering is already done by the API based on referredBy query param
     const matchesSearch = searchTerm === "" || 

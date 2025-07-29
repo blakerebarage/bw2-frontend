@@ -91,7 +91,7 @@ export const translations = {
     lotteryGames: 'লটারি গেমস',
     arcadeGames: 'অর্কেড গেমস',
     allGames: 'সব গেমস',
-    gameProviders: 'গেম প্রদানকারী',
+    gameProviders: 'গেম প্রোভাইডার',
     backToProviders: 'প্রদানকারীদের কাছে ফিরে যান',
     noProvidersFound: 'কোনো প্রদানকারী পাওয়া যায়নি',
     tryDifferentSearch: 'ভিন্ন অনুসন্ধান চেষ্টা করুন',

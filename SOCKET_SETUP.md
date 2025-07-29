@@ -75,7 +75,7 @@ const MyComponent = () => {
   useEffect(() => {
     if (socket) {
       socket.on('custom_event', (data) => {
-        console.log('Received:', data);
+       
       });
     }
   }, [socket]);

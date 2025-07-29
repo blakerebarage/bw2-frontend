@@ -32,17 +32,14 @@ const AllWithdraw = () => {
     try {
       setLoading(true);
       
-      let apiUrl = '/api/v1/finance/all-withdraw-request?status=pending';
+      let apiUrl = '/api/v1/finance/all-withdraw-request';
       
       // Add pagination
-      apiUrl += `&page=${currentPage}&limit=${itemsPerPage}`;
+      apiUrl += `?page=${currentPage}&limit=${itemsPerPage}`;
       
       // For admin/super-admin, show all requests
       if (isAdminOrSuperAdmin) {
         // No additional filters needed for admin/super-admin
-      } else if (user?.role === "wallet-agent") {
-        // For wallet agent, filter by walletAgentUsername
-        apiUrl += `&walletAgentUsername=${user.username}`;
       } else if (user?.referralCode) {
         // For upline users, filter by referral code (requests from their downline)
         apiUrl += `&referralCode=${user.referralCode}`;
@@ -53,23 +50,14 @@ const AllWithdraw = () => {
         apiUrl += `&status=${statusFilter}`;
       }
       
-      console.log('🔍 AllWithdraw: Fetching with URL:', apiUrl);
-      console.log('👤 AllWithdraw: User details:', {
-        role: user?.role,
-        username: user?.username,
-        referralCode: user?.referralCode,
-        isAdminOrSuperAdmin
-      });
-     
       const res = await axiosSecure.get(apiUrl);
       
       if (res.data.success) {
         const results = res.data.data.results || [];
-        console.log('📊 AllWithdraw: Setting withdraws:', results.length, 'items');
+        
         setWithdraws(results);
         setTotalPages(res.data.data.pageCount || 1);
       } else {
-        console.log('❌ AllWithdraw: API returned success: false');
         setWithdraws([]);
         setTotalPages(1);
       }
@@ -96,37 +84,25 @@ const AllWithdraw = () => {
 
     // Debug listener to capture all socket events
     const handleAnyEvent = (eventName, ...args) => {
-      console.log('🔍 AllWithdraw: Received socket event:', eventName, args);
+      
     };
 
     // Handle individual request updates
     const handleIndividualRequestUpdate = (payload) => {
-      console.log('📥 AllWithdraw: Received individual request update:', payload);
-      console.log('📥 AllWithdraw: Individual update payload structure:', JSON.stringify(payload, null, 2));
+      
 
       if (payload && payload.data) {
         const updatedRequest = payload.data;
-        console.log('📥 AllWithdraw: Processing individual request update:', {
-          requestId: updatedRequest._id,
-          requestStatus: updatedRequest.status,
-          requestAmount: updatedRequest.amount,
-          walletAgentUsername: updatedRequest.walletAgentUsername,
-          referralCode: updatedRequest.referralCode,
-          currentUser: user.username,
-          userRole: user.role
-        });
+        
 
         // Update withdraw requests
         setWithdraws(prev => {
-          console.log('🔄 AllWithdraw: Current withdraw requests:', prev.length);
+         
           const existingIndex = prev.findIndex(req => req._id === updatedRequest._id);
-          console.log('🔄 AllWithdraw: Existing request index:', existingIndex);
+          
 
           if (existingIndex !== -1) {
-            console.log('🔄 AllWithdraw: Updating existing withdraw request:', {
-              oldStatus: prev[existingIndex].status,
-              newStatus: updatedRequest.status
-            });
+         
             const updated = [...prev];
             updated[existingIndex] = { ...updated[existingIndex], ...updatedRequest };
             
@@ -136,19 +112,10 @@ const AllWithdraw = () => {
             }
             return updated;
           } else {
-            const shouldShow = (user.role === "wallet-agent") ?
-              (updatedRequest.walletAgentUsername === user.username || updatedRequest.referralCode === user.referralCode) :
-              (isAdminOrSuperAdmin || updatedRequest.referralCode === user.referralCode);
-
-            console.log('🔄 AllWithdraw: Should show new request:', shouldShow, {
-              isWalletAgent: user.role === "wallet-agent",
-              isAdminOrSuperAdmin,
-              matchesWalletAgent: updatedRequest.walletAgentUsername === user.username,
-              matchesReferralCode: updatedRequest.referralCode === user.referralCode
-            });
+            const shouldShow = isAdminOrSuperAdmin || updatedRequest.referralCode === user.referralCode;
 
             if (shouldShow) {
-              console.log('🔄 AllWithdraw: Adding new withdraw request');
+              
               const updated = [...prev, updatedRequest];
               
               // Apply status filter if set
@@ -161,17 +128,13 @@ const AllWithdraw = () => {
           return prev;
         });
       } else {
-        console.log('❌ AllWithdraw: Invalid individual request update payload:', {
-          hasPayload: !!payload,
-          hasData: payload?.data,
-          payloadKeys: payload ? Object.keys(payload) : 'no payload'
-        });
+        
       }
     };
 
     // Listen for withdraw request updates
     const handleWithdrawRequestUpdate = (payload) => {
-      console.log('📥 AllWithdraw: Received withdraw_request_update:', payload);
+     
       
       if (payload && payload.data && Array.isArray(payload.data)) {
         let filteredResults = payload.data;
@@ -193,11 +156,7 @@ const AllWithdraw = () => {
           filteredResults = filteredResults.filter(req => req.status === statusFilter);
         }
         
-        console.log('🔍 AllWithdraw: Filtered results:', {
-          total: payload.data.length,
-          filtered: filteredResults.length,
-          userType: isAdminOrSuperAdmin ? 'admin' : user?.role === "wallet-agent" ? 'wallet-agent' : 'upline'
-        });
+       
         
         setWithdraws(filteredResults);
         setLastSocketUpdate(new Date().toISOString());
@@ -362,7 +321,7 @@ const AllWithdraw = () => {
           icon: "success"
         });
 
-        const refreshedWithdraws = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}`);
+        const refreshedWithdraws = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}${statusFilter !== "all" ? `&status=${statusFilter}` : ""}`);
         const filteredWithdraws = isAdminOrSuperAdmin 
           ? refreshedWithdraws?.data?.data?.results 
           : refreshedWithdraws?.data?.data?.results.filter(
@@ -416,7 +375,7 @@ const AllWithdraw = () => {
           icon: "success"
         });
 
-        const refreshedWithdraws = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}`);
+        const refreshedWithdraws = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}${statusFilter !== "all" ? `&status=${statusFilter}` : ""}`);
         const filteredWithdraws = isAdminOrSuperAdmin 
           ? refreshedWithdraws?.data?.data?.results 
           : refreshedWithdraws?.data?.data?.results.filter(

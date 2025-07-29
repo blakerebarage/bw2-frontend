@@ -60,7 +60,7 @@ const Downlist = () => {
     refetchOnMountOrArgChange: true,
     skip: !shouldFetchUsers, // Skip the query if no selectedUser
   });
-   console.log(users)
+   
   
   // Use API pagination data instead of client-side pagination
   const totalPages = users?.data?.pageCount || 0;
@@ -88,7 +88,7 @@ const Downlist = () => {
   // Force refetch when page changes or selectedUser changes
   useEffect(() => {
     if (selectedUser?.referralCode) {
-      console.log('Page or selectedUser changed, refetching...');
+      
       refetch();
     }
   }, [currentPage, selectedUser?.referralCode, refetch]);
@@ -119,7 +119,7 @@ const Downlist = () => {
   };
 
   const loading = selectedUserLoading || isLoading;
-  console.log(error)
+  
   return (
     <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen">
       <CommonNavMenu />

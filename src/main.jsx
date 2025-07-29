@@ -53,7 +53,7 @@ if ('serviceWorker' in navigator) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // New service worker is available
-                console.log('New service worker available');
+                
                 
                 // Ask the new service worker to skip waiting
                 newWorker.postMessage({ type: 'SKIP_WAITING' });
@@ -66,12 +66,12 @@ if ('serviceWorker' in navigator) {
         });
       })
       .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
+       
       });
       
     // Listen for service worker controller changes
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('Service worker controller changed');
+      
       // Reload page when service worker updates
       window.location.reload();
     });
@@ -80,13 +80,12 @@ if ('serviceWorker' in navigator) {
 
 // Add global cache clearing function
 window.clearAppCache = () => {
-  console.log('Clearing all application caches...');
+  
   clearAllCaches();
 };
 
 // Add debug info
-console.log('App initialized with cache clearing utilities');
-console.log('To clear all caches, run: window.clearAppCache()');
+
 
 // Prevent back button cache issues
 window.addEventListener('pageshow', (event) => {

@@ -35,15 +35,14 @@ const BalanceRequest = () => {
       setLoading(true);
       setError(null);
      
-      let apiUrl = '/api/v1/finance/all-recharge-request?status=pending';
+      let apiUrl = '/api/v1/finance/all-recharge-request';
+      
+      // Add pagination
+      apiUrl += `?page=${page}&limit=${limit}`;
       
       // For admin/super-admin, show all requests
       if (isAdminOrSuperAdmin) {
-        // Add pagination for admin/super-admin
-        apiUrl += `&page=${page}&limit=${limit}`;
-      } else if (user?.role === "wallet-agent") {
-        // For wallet agent, filter by walletAgentUsername
-        apiUrl += `&walletAgentUsername=${user.username}`;
+        // No additional filters needed for admin/super-admin
       } else if (user?.referralCode) {
         // For upline users, filter by referral code (requests from their downline)
         apiUrl += `&referralCode=${user.referralCode}`;
@@ -51,17 +50,9 @@ const BalanceRequest = () => {
       
       // Add status filter if not "all"
       if (statusFilter !== "all") {
-        apiUrl = apiUrl.replace('status=pending', `status=${statusFilter}`);
+        apiUrl += `&status=${statusFilter}`;
       }
       
-      console.log('🔍 BalanceRequest: Fetching with URL:', apiUrl);
-      console.log('👤 BalanceRequest: User details:', {
-        role: user?.role,
-        username: user?.username,
-        referralCode: user?.referralCode,
-        isAdminOrSuperAdmin
-      });
-     
       const res = await axiosSecure.get(apiUrl);
 
       if (!res.data.success) {
@@ -70,7 +61,6 @@ const BalanceRequest = () => {
 
       const { results } = res?.data?.data;
       
-      console.log('📊 BalanceRequest: Setting requests:', results?.length || 0, 'items');
       setRequestData(results || []);
       setTotalPages(res.data.data.pageCount || 1);
     } catch (err) {
@@ -95,37 +85,25 @@ const BalanceRequest = () => {
 
     // Debug listener to capture all socket events
     const handleAnyEvent = (eventName, ...args) => {
-      console.log('🔍 BalanceRequest: Received socket event:', eventName, args);
+     
     };
 
     // Handle individual request updates
     const handleIndividualRequestUpdate = (payload) => {
-      console.log('📥 BalanceRequest: Received individual request update:', payload);
-      console.log('📥 BalanceRequest: Individual update payload structure:', JSON.stringify(payload, null, 2));
+     
 
       if (payload && payload.data) {
         const updatedRequest = payload.data;
-        console.log('📥 BalanceRequest: Processing individual request update:', {
-          requestId: updatedRequest._id,
-          requestStatus: updatedRequest.status,
-          requestAmount: updatedRequest.amount,
-          walletAgentUsername: updatedRequest.walletAgentUsername,
-          referralCode: updatedRequest.referralCode,
-          currentUser: user.username,
-          userRole: user.role
-        });
+      
 
         // Update recharge requests
         setRequestData(prev => {
-          console.log('🔄 BalanceRequest: Current recharge requests:', prev.length);
+          
           const existingIndex = prev.findIndex(req => req._id === updatedRequest._id);
-          console.log('🔄 BalanceRequest: Existing request index:', existingIndex);
+         
 
           if (existingIndex !== -1) {
-            console.log('🔄 BalanceRequest: Updating existing recharge request:', {
-              oldStatus: prev[existingIndex].status,
-              newStatus: updatedRequest.status
-            });
+           
             const updated = [...prev];
             updated[existingIndex] = { ...updated[existingIndex], ...updatedRequest };
             
@@ -135,19 +113,10 @@ const BalanceRequest = () => {
             }
             return updated;
           } else {
-            const shouldShow = (user.role === "wallet-agent") ?
-              (updatedRequest.walletAgentUsername === user.username || updatedRequest.referralCode === user.referralCode) :
-              (isAdminOrSuperAdmin || updatedRequest.referralCode === user.referralCode);
-
-            console.log('🔄 BalanceRequest: Should show new request:', shouldShow, {
-              isWalletAgent: user.role === "wallet-agent",
-              isAdminOrSuperAdmin,
-              matchesWalletAgent: updatedRequest.walletAgentUsername === user.username,
-              matchesReferralCode: updatedRequest.referralCode === user.referralCode
-            });
+            const shouldShow = isAdminOrSuperAdmin || updatedRequest.referralCode === user.referralCode;
 
             if (shouldShow) {
-              console.log('🔄 BalanceRequest: Adding new recharge request');
+              
               const updated = [...prev, updatedRequest];
               
               // Apply status filter if set
@@ -160,17 +129,13 @@ const BalanceRequest = () => {
           return prev;
         });
       } else {
-        console.log('❌ BalanceRequest: Invalid individual request update payload:', {
-          hasPayload: !!payload,
-          hasData: payload?.data,
-          payloadKeys: payload ? Object.keys(payload) : 'no payload'
-        });
+       
       }
     };
 
     // Listen for recharge request updates
     const handleRechargeRequestUpdate = (payload) => {
-      console.log('📥 BalanceRequest: Received recharge_request_update:', payload);
+      
       
       if (payload && payload.data && Array.isArray(payload.data)) {
         let filteredResults = payload.data;
@@ -179,9 +144,6 @@ const BalanceRequest = () => {
         if (isAdminOrSuperAdmin) {
           // Admin/super-admin sees all requests
           filteredResults = payload.data;
-        } else if (user?.role === "wallet-agent") {
-          // Wallet agent sees only their assigned requests
-          filteredResults = payload.data.filter(req => req.walletAgentUsername === user.username);
         } else if (user?.referralCode) {
           // Upline users see requests from their downline
           filteredResults = payload.data.filter(req => req.referralCode === user.referralCode);
@@ -192,11 +154,7 @@ const BalanceRequest = () => {
           filteredResults = filteredResults.filter(req => req.status === statusFilter);
         }
         
-        console.log('🔍 BalanceRequest: Filtered results:', {
-          total: payload.data.length,
-          filtered: filteredResults.length,
-          userType: isAdminOrSuperAdmin ? 'admin' : user?.role === "wallet-agent" ? 'wallet-agent' : 'upline'
-        });
+        
         
         setRequestData(filteredResults);
         setLastSocketUpdate(new Date().toISOString());
@@ -206,8 +164,6 @@ const BalanceRequest = () => {
         
         if (isAdminOrSuperAdmin) {
           filteredResults = payload.data.results;
-        } else if (user?.role === "wallet-agent") {
-          filteredResults = payload.data.results.filter(req => req.walletAgentUsername === user.username);
         } else if (user?.referralCode) {
           filteredResults = payload.data.results.filter(req => req.referralCode === user.referralCode);
         }
@@ -224,8 +180,6 @@ const BalanceRequest = () => {
         
         if (isAdminOrSuperAdmin) {
           filteredResults = payload.data.data.results;
-        } else if (user?.role === "wallet-agent") {
-          filteredResults = payload.data.data.results.filter(req => req.walletAgentUsername === user.username);
         } else if (user?.referralCode) {
           filteredResults = payload.data.data.results.filter(req => req.referralCode === user.referralCode);
         }
@@ -270,15 +224,10 @@ const BalanceRequest = () => {
     socket.on('wallet_request_update', handleIndividualRequestUpdate);
     socket.on('agent_request_update', handleIndividualRequestUpdate);
     socket.on('status_update', handleIndividualRequestUpdate);
-    // Additional events for wallet-agent actions
     socket.on('withdraw_approved', handleIndividualRequestUpdate);
     socket.on('withdraw_rejected', handleIndividualRequestUpdate);
     socket.on('recharge_approved', handleIndividualRequestUpdate);
     socket.on('recharge_rejected', handleIndividualRequestUpdate);
-    socket.on('wallet_agent_action', handleIndividualRequestUpdate);
-    socket.on('upline_update', handleIndividualRequestUpdate);
-    socket.on('referral_code_room_update', handleIndividualRequestUpdate);
-    socket.on('user_room_update', handleIndividualRequestUpdate);
 
     // Debug listener for all events
     socket.onAny(handleAnyEvent);
@@ -294,10 +243,6 @@ const BalanceRequest = () => {
       socket.off('withdraw_rejected', handleIndividualRequestUpdate);
       socket.off('recharge_approved', handleIndividualRequestUpdate);
       socket.off('recharge_rejected', handleIndividualRequestUpdate);
-      socket.off('wallet_agent_action', handleIndividualRequestUpdate);
-      socket.off('upline_update', handleIndividualRequestUpdate);
-      socket.off('referral_code_room_update', handleIndividualRequestUpdate);
-      socket.off('user_room_update', handleIndividualRequestUpdate);
       socket.offAny(handleAnyEvent);
     };
   }, [socket, isConnected, user, statusFilter, isAdminOrSuperAdmin]);
@@ -516,7 +461,8 @@ const BalanceRequest = () => {
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
+                        request.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
                       }`}>
                         {request.status}
                       </span>
