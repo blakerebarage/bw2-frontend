@@ -19,6 +19,10 @@ export function SelectCategory() {
   
   const [displayGames, setDisplayGames] = useState([]);
   const [mostPlayedGames, setMostPlayedGames] = useState([]);
+  const [providers, setProviders] = useState([]);
+  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [providerPage, setProviderPage] = useState(1);
+  const [providerTotalPages, setProviderTotalPages] = useState(1);
   const { user } = useSelector((state) => state.auth);
  
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,10 +65,43 @@ export function SelectCategory() {
     return () => clearTimeout(timer);
   }, [popularSearchQuery]);
 
+  // Fetch active providers when "All" category is selected
+  useEffect(() => {
+    const fetchProviders = async () => {
+      if (selectedCategory.value === "allgames" && !selectedProvider) {
+        try {
+          setLoading(true);
+          const response = await axiosSecure.get('/api/v1/game/providers', {
+            params: {
+              page: providerPage,
+              limit: 30,
+              isActive: true,
+              search: debouncedSearchQuery || undefined
+            }
+          });
+          
+          if (response?.data?.data) {
+            setProviders(response.data.data.results);
+            setProviderTotalPages(response.data.data.pageCount || 1);
+          }
+        } catch (error) {
+          console.error('Error fetching providers:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProviders();
+  }, [selectedCategory.value, selectedProvider, debouncedSearchQuery, providerPage]);
+
   // Fetch all games data (consolidated with search functionality)
   useEffect(() => {
     const fetchAllGames = async () => {
       if (selectedCategory.value === "favourite") return;
+      
+      // If "All" category is selected but no provider is selected, don't fetch games
+      if (selectedCategory.value === "allgames" && !selectedProvider) return;
       
       try {
         setLoading(true);
@@ -75,7 +112,9 @@ export function SelectCategory() {
             isActive: true,
             // When searching, ignore category filter to search all games
             category: debouncedSearchQuery ? undefined : (selectedCategory.value === "allgames" ? undefined : selectedCategory.value.charAt(0).toUpperCase() + selectedCategory.value.slice(1)),
-            search: debouncedSearchQuery || undefined
+            search: debouncedSearchQuery || undefined,
+            // Add provider filter when a provider is selected
+            provider: selectedProvider ? selectedProvider.name : undefined
           }
         });
         
@@ -98,7 +137,7 @@ export function SelectCategory() {
     };
 
     fetchAllGames();
-  }, [currentPage, selectedCategory.value, categoryReloadKey, debouncedSearchQuery]);
+  }, [currentPage, selectedCategory.value, categoryReloadKey, debouncedSearchQuery, selectedProvider]);
 
   // Fetch favorites
   const fetchFavorites = async () => {
@@ -203,6 +242,22 @@ export function SelectCategory() {
     fetchMostPlayedGames();
   }, [popularPage, debouncedPopularSearchQuery]);
 
+  // Function to format provider name based on word count
+  const formatProviderName = (name) => {
+    if (!name) return '';
+    
+    // Check if the name contains spaces (multiple words)
+    if (name.includes(' ')) {
+      // Multiple words: capitalize first letter of each word
+      return name.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ');
+    } else {
+      // Single word: make it all uppercase
+      return name.toUpperCase();
+    }
+  };
+
   // Function to get translated category title
   const getCategoryTitle = (categoryValue) => {
     const categoryTitleMap = {
@@ -213,7 +268,7 @@ export function SelectCategory() {
       slot: t('slotGames'),
       crash: t('crashGames'),
       fishing: t('fishingGames'),
-      lottery: t('lotteryGames'),
+      Lottery: t('lotteryGames'),
       arcade: t('arcadeGames'),
       allgames: t('allGames'),
     };
@@ -222,7 +277,9 @@ export function SelectCategory() {
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
+    setSelectedProvider(null); // Reset selected provider when category changes
     setCurrentPage(1);
+    setProviderPage(1); // Reset provider page
     setDisplayGames([]);
     setSearchQuery("");
     setDebouncedSearchQuery(""); // Reset debounced search query
@@ -232,6 +289,23 @@ export function SelectCategory() {
     if (category.value === "favourite") {
       fetchFavorites();
     }
+  };
+
+  const handleProviderSelect = (provider) => {
+    setSelectedProvider(provider);
+    setCurrentPage(1);
+    setDisplayGames([]);
+    setSearchQuery("");
+    setDebouncedSearchQuery("");
+  };
+
+  const handleBackToProviders = () => {
+    setSelectedProvider(null);
+    setDisplayGames([]);
+    setCurrentPage(1);
+    setProviderPage(1); // Reset provider page
+    setSearchQuery("");
+    setDebouncedSearchQuery("");
   };
 
   const handleFavoriteToggle = async (game) => {
@@ -299,7 +373,7 @@ export function SelectCategory() {
       if (!gameDetails) {
         throw new Error('Game not found');
       }
-      const provider = await axiosSecure.get(`/api/v1/game/providers?page=1&limit=300`);
+      const provider = await axiosSecure.get(`/api/v1/game/providers?page=1&limit=1000`);
       const providerDetails = provider?.data?.data?.results?.find(p => p.name.toLowerCase() === gameDetails.provider.toLowerCase());
       if (!providerDetails) {
         throw new Error('Provider not found');
@@ -344,6 +418,18 @@ export function SelectCategory() {
   const handlePopularLoadMore = () => {
     setPopularPage(prev => prev + 1);
   };
+
+  // Handle provider pagination
+  const handleProviderPageChange = (newPage) => {
+    setProviderPage(newPage);
+  };
+
+  // Reset provider page when search changes
+  useEffect(() => {
+    if (debouncedSearchQuery) {
+      setProviderPage(1);
+    }
+  }, [debouncedSearchQuery]);
 
   // Calculate if there are more pages available
   const hasMorePages = selectedCategory.value === "allgames" 
@@ -424,7 +510,7 @@ export function SelectCategory() {
           )}
 
           {/* Most Played Games Section - Always show in Favourite view */}
-          <div className="mt-8">
+          <div className="mt-6">
             <MostPlayedGames
               games={mostPlayedGames}
               onGameLaunch={initGameLaunch}
@@ -445,13 +531,122 @@ export function SelectCategory() {
         </div>
       )}
 
-      {/* Regular Games Section */}
-      {selectedCategory.value !== "favourite" && (
+      {/* Providers Section - Show when "All" category is selected and no provider is selected */}
+      {selectedCategory.value === "allgames" && !selectedProvider && (
         <div className="space-y-4 px-3 pb-8">
           <div className="flex justify-between items-center">
             <h3 className="text-2xl font-bold text-white drop-shadow">
-              {getCategoryTitle(selectedCategory.value)}
+              {t('gameProviders')}
             </h3>
+            <SearchBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onClearSearch={() => {
+                setSearchQuery("");
+                setDebouncedSearchQuery("");
+              }}
+            />
+          </div>
+
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="grid gap-4 grid-cols-3">
+                {[...Array(6)].map((_, idx) => (
+                  <SkeletonCard key={idx} />
+                ))}
+              </div>
+            </div>
+          ) : providers?.length > 0 ? (
+            <div className="grid gap-4 grid-cols-3">
+              {providers.map((provider) => (
+                <div
+                  key={provider._id}
+                  onClick={() => handleProviderSelect(provider)}
+                  className="bg-[#22282e] rounded-lg p-4 cursor-pointer hover:bg-[#2a3038] transition-all duration-200 hover:scale-105 min-h-[80px] flex items-center justify-center"
+                >
+                  <div className="text-center w-full">
+                    <h3 className="text-white font-semibold text-xs leading-tight break-words overflow-hidden">
+                      {formatProviderName(provider.name)}
+                    </h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-gray-300 py-8">
+              <p className="text-lg">{t('noProvidersFound')}</p>
+              <p className="text-sm mt-2 text-gray-400">
+                {t('tryDifferentSearch')}
+              </p>
+            </div>
+          )}
+
+          {/* Provider Pagination */}
+          {providers?.length > 0 && providerTotalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <button
+                onClick={() => handleProviderPageChange(Math.max(providerPage - 1, 1))}
+                disabled={providerPage === 1}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                  providerPage === 1
+                    ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
+                    : 'bg-[#1a1f24] text-gray-300 hover:bg-[#22282e] border border-[#facc15]/20'
+                }`}
+              >
+                {t('previous')}
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-gray-300">{t('page')}</span>
+                <span className="font-semibold text-[#facc15]">{providerPage}</span>
+                <span className="text-gray-300">{t('of')}</span>
+                <span className="font-semibold text-[#facc15]">
+                  {providerTotalPages}
+                </span>
+              </div>
+
+              <button
+                onClick={() => handleProviderPageChange(providerPage + 1)}
+                disabled={providerPage >= providerTotalPages}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                  providerPage >= providerTotalPages
+                    ? 'bg-[#22282e] text-gray-400 cursor-not-allowed border border-[#facc15]/20'
+                    : 'bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800]'
+                }`}
+              >
+                {t('next')}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Games Section - Show when a provider is selected or for other categories */}
+      {((selectedCategory.value !== "favourite" && selectedCategory.value !== "allgames") || selectedProvider) && (
+        <div className="space-y-4 px-3 pb-8">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              {selectedProvider && (
+                <button
+                  onClick={handleBackToProviders}
+                  className="text-[#facc15] hover:text-[#e6b800] transition-colors duration-200 text-2xl"
+                >
+                  ←
+                </button>
+              )}
+              <div className="flex items-center gap-x-2">
+                {selectedProvider && (
+                  <h2 className="text-xl font-bold text-[#facc15] uppercase">
+                    {formatProviderName(selectedProvider.name)}
+                  </h2>
+                )}
+                <h3 className="text-2xl font-semibold text-white">
+                 {
+                  !selectedProvider  && getCategoryTitle(selectedCategory.value)
+                 } 
+                </h3>
+              </div>
+            </div>
             <SearchBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -558,9 +753,10 @@ export function SelectCategory() {
               </p>
             </div>
           )}
-
+         
         </div>
       )}
+      
     </div>
   );
 } 

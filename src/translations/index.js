@@ -91,6 +91,14 @@ export const translations = {
     lotteryGames: 'লটারি গেমস',
     arcadeGames: 'অর্কেড গেমস',
     allGames: 'সব গেমস',
+    gameProviders: 'গেম প্রদানকারী',
+    backToProviders: 'প্রদানকারীদের কাছে ফিরে যান',
+    noProvidersFound: 'কোনো প্রদানকারী পাওয়া যায়নি',
+    tryDifferentSearch: 'ভিন্ন অনুসন্ধান চেষ্টা করুন',
+    noGamesFound: 'কোনো গেম পাওয়া যায়নি',
+    tryDifferentSearchOrCategory: 'ভিন্ন অনুসন্ধান বা বিভাগ চেষ্টা করুন',
+    loadMore: 'আরও লোড করুন',
+    page: 'পৃষ্ঠা',
     
     // Sidebar Menu
     menu: 'মেনু',
@@ -419,6 +427,14 @@ export const translations = {
     lotteryGames: 'Lottery Games',
     arcadeGames: 'Arcade Games',
     allGames: 'All Games',
+    gameProviders: 'Game Providers',
+    backToProviders: 'Back to Providers',
+    noProvidersFound: 'No providers found',
+    tryDifferentSearch: 'Try a different search',
+    noGamesFound: 'No games found',
+    tryDifferentSearchOrCategory: 'Try a different search or category',
+    loadMore: 'Load More',
+    page: 'Page',
     
     // Sidebar Menu
     menu: 'Menu',

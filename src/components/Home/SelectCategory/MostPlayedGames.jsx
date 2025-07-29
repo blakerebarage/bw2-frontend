@@ -17,7 +17,7 @@ export const MostPlayedGames = ({
 }) => {
   const { t } = useLanguage();
   return (
-    <div className="space-y-4 px-3 pb-8">
+    <div className="space-y-4  pb-8">
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold text-white drop-shadow">
         {t('popularGames')}
