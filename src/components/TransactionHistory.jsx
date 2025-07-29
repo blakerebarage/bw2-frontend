@@ -16,6 +16,7 @@ const TransactionHistory = () => {
       setLoading(true);
       try {
         const res = await axiosSecure.get('/api/v1/transactions');
+        
         if (res.data.success) {
           setTransactions(res.data.data);
         }

@@ -331,7 +331,6 @@ const AllWithdraw = () => {
         reloadUserData();
       }
     } catch (error) {
-      
       Swal.fire("Error!", error.message || "Something went wrong while approving.", "error");
     }
   };
@@ -385,7 +384,6 @@ const AllWithdraw = () => {
         reloadUserData();
       }
     } catch (error) {
-      
       Swal.fire("Error!", error.message || "Something went wrong while rejecting.", "error");
     }
   };
@@ -405,13 +403,15 @@ const AllWithdraw = () => {
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-500/20 text-yellow-400";
       case "success":
-        return "bg-green-100 text-green-800";
+      case "approved":
+        return "bg-green-500/20 text-green-400";
       case "rejected":
-        return "bg-red-100 text-red-800";
+      case "cancelled":
+        return "bg-red-500/20 text-red-400";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-500/20 text-gray-400";
     }
   };
 
@@ -452,8 +452,8 @@ const AllWithdraw = () => {
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
-                <option value="success">Success</option>
-                <option value="rejected">Rejected</option>
+                <option value="approved">Approved</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
             <table className="min-w-full divide-y divide-gray-200">

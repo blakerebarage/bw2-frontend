@@ -19,7 +19,7 @@ const usePendingRequests = () => {
       if (user.role === "super-admin" || user.role === "admin") {
         // Fetch deposit requests
         const depositResponse = await axiosSecure.get('/api/v1/finance/all-recharge-request');
-        console.log(depositResponse.data);
+       
         if (depositResponse.data.success) {
           setPendingDeposits(depositResponse.data.data.pendingRequests || 0);
         }

@@ -133,7 +133,7 @@ const AdminDashboard = () => {
         }
         
         const res = await axiosSecure.get(`/api/v1/user/all?${params.toString()}`);
-        console.log(res)
+        
         if (res.data.success) {
           // Filter out super-admin data for non-super-admin users
           let filteredData = res.data.data.users || [];

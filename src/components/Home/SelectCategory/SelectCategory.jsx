@@ -117,7 +117,7 @@ export function SelectCategory() {
             provider: selectedProvider ? selectedProvider.name : undefined
           }
         });
-        
+        console.log(response)
         if (response?.data?.data) {
           setTotalGames(response.data.data.totalItems || 0);
           // For "allgames" category, always use pagination (replace results)
@@ -178,7 +178,7 @@ export function SelectCategory() {
               search: debouncedSearchQuery
             }
           });
-          
+         
           if (response?.data?.data) {
             setTotalGames(response.data.data.totalItems);
             // Always replace results for traditional pagination

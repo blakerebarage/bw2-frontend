@@ -366,20 +366,17 @@ const CashAgentPanel = () => {
         
         // Update deposit requests
         setDepositRequests(prev => {
-          console.log('🔄 CashAgentPanel: Current deposit requests:', prev.length);
+        
           const existingIndex = prev.findIndex(req => req._id === updatedRequest._id);
-          console.log('🔄 CashAgentPanel: Existing request index:', existingIndex);
+          
           
           if (existingIndex !== -1) {
             // Update existing request
-            console.log('🔄 CashAgentPanel: Updating existing deposit request:', {
-              oldStatus: prev[existingIndex].status,
-              newStatus: updatedRequest.status
-            });
+           
             const updated = [...prev];
             updated[existingIndex] = { ...updated[existingIndex], ...updatedRequest };
             const pendingCount = updated.filter(req => req.status === "pending").length;
-            console.log('📊 CashAgentPanel: Updated deposit pending count:', pendingCount);
+            
             setDepositNotificationCount(pendingCount);
             return updated;
           } else {
@@ -388,14 +385,10 @@ const CashAgentPanel = () => {
               (updatedRequest.walletAgentUsername === user.username || updatedRequest.referralCode === user.referralCode) :
               (updatedRequest.referralCode === user.referralCode);
             
-            console.log('🔄 CashAgentPanel: Should show new request:', shouldShow, {
-              isWalletAgent: user.role === "wallet-agent",
-              matchesWalletAgent: updatedRequest.walletAgentUsername === user.username,
-              matchesReferralCode: updatedRequest.referralCode === user.referralCode
-            });
+            
             
             if (shouldShow) {
-              console.log('🔄 CashAgentPanel: Adding new deposit request');
+            
               const updated = [...prev, updatedRequest];
               const pendingCount = updated.filter(req => req.status === "pending").length;
               setDepositNotificationCount(pendingCount);
@@ -407,20 +400,17 @@ const CashAgentPanel = () => {
 
         // Update withdraw requests
         setWithdrawRequests(prev => {
-          console.log('🔄 CashAgentPanel: Current withdraw requests:', prev.length);
+          
           const existingIndex = prev.findIndex(req => req._id === updatedRequest._id);
-          console.log('🔄 CashAgentPanel: Existing withdraw request index:', existingIndex);
+          
           
           if (existingIndex !== -1) {
             // Update existing request
-            console.log('🔄 CashAgentPanel: Updating existing withdraw request:', {
-              oldStatus: prev[existingIndex].status,
-              newStatus: updatedRequest.status
-            });
+           
             const updated = [...prev];
             updated[existingIndex] = { ...updated[existingIndex], ...updatedRequest };
             const pendingCount = updated.filter(req => req.status === "pending").length;
-            console.log('📊 CashAgentPanel: Updated withdraw pending count:', pendingCount);
+           
             setWithdrawNotificationCount(pendingCount);
             return updated;
           } else {
@@ -429,10 +419,10 @@ const CashAgentPanel = () => {
               (updatedRequest.walletAgentUsername === user.username || updatedRequest.referralCode === user.referralCode) :
               (updatedRequest.referralCode === user.referralCode);
             
-            console.log('🔄 CashAgentPanel: Should show new withdraw request:', shouldShow);
+            
             
             if (shouldShow) {
-              console.log('🔄 CashAgentPanel: Adding new withdraw request');
+              
               const updated = [...prev, updatedRequest];
               const pendingCount = updated.filter(req => req.status === "pending").length;
               setWithdrawNotificationCount(pendingCount);
@@ -442,17 +432,13 @@ const CashAgentPanel = () => {
           return prev;
         });
       } else {
-        console.log('❌ CashAgentPanel: Invalid individual request update payload:', {
-          hasPayload: !!payload,
-          hasData: payload?.data,
-          payloadKeys: payload ? Object.keys(payload) : 'no payload'
-        });
+        
       }
     };
 
     // Listen for socket connection events
     const handleSocketConnect = () => {
-      console.log('✅ CashAgentPanel: Socket connected, setting up listeners');
+     
       // Refetch data when socket connects to ensure we have latest data
       if (user?.role === "wallet-agent") {
         // Use setTimeout to avoid calling fetchRequests during render
@@ -463,11 +449,11 @@ const CashAgentPanel = () => {
     };
 
     const handleSocketDisconnect = (reason) => {
-      console.log('❌ CashAgentPanel: Socket disconnected:', reason);
+     
     };
 
     const handleSocketError = (error) => {
-      console.error('❌ CashAgentPanel: Socket error:', error);
+      
     };
 
     // Clean up any existing listeners first
@@ -492,68 +478,42 @@ const CashAgentPanel = () => {
     socket.on('user_room_update', handleUserRoomUpdate);
     socket.on('referral_code_room_update', handleReferralCodeRoomUpdate);
     socket.on('recharge_request_update', (payload) => {
-      console.log('📥 CashAgentPanel: Received recharge_request_update with timestamp:', payload);
-      console.log('📥 CashAgentPanel: Full payload structure:', JSON.stringify(payload, null, 2));
+      
       if (payload && payload.timestamp && payload.data) {
-        console.log('📥 CashAgentPanel: Processing recharge request update:', {
-          timestamp: payload.timestamp,
-          dataLength: Array.isArray(payload.data) ? payload.data.length : 'not array',
-          dataType: typeof payload.data,
-          isObject: typeof payload.data === 'object',
-          dataKeys: payload.data ? Object.keys(payload.data) : 'no data',
-          dataStructure: payload.data
-        });
+       
         handleDepositRequestUpdate(payload);
       } else {
-        console.log('❌ CashAgentPanel: Invalid payload structure:', {
-          hasPayload: !!payload,
-          hasTimestamp: payload?.timestamp,
-          hasData: payload?.data,
-          payloadKeys: payload ? Object.keys(payload) : 'no payload'
-        });
+       
       }
     });
     socket.on('withdraw_request_update', (payload) => {
-      console.log('📥 CashAgentPanel: Received withdraw_request_update with timestamp:', payload);
-      console.log('📥 CashAgentPanel: Full payload structure:', JSON.stringify(payload, null, 2));
+     
       if (payload && payload.timestamp && payload.data) {
-        console.log('📥 CashAgentPanel: Processing withdraw request update:', {
-          timestamp: payload.timestamp,
-          dataLength: Array.isArray(payload.data) ? payload.data.length : 'not array',
-          dataType: typeof payload.data,
-          isObject: typeof payload.data === 'object',
-          dataKeys: payload.data ? Object.keys(payload.data) : 'no data',
-          dataStructure: payload.data
-        });
+      
         handleWithdrawRequestUpdate(payload);
       } else {
-        console.log('❌ CashAgentPanel: Invalid payload structure:', {
-          hasPayload: !!payload,
-          hasTimestamp: payload?.timestamp,
-          hasData: payload?.data,
-          payloadKeys: payload ? Object.keys(payload) : 'no payload'
-        });
+       
       }
     });
     socket.on('request_status_updated', handleRequestStatusUpdate);
     socket.on('individual_request_update', handleIndividualRequestUpdate);
     socket.on('wallet_request_update', (payload) => {
-      console.log('📥 CashAgentPanel: Received wallet_request_update:', payload);
+      
       // Handle wallet-specific request updates
       handleIndividualRequestUpdate(payload);
     });
     socket.on('agent_request_update', (payload) => {
-      console.log('📥 CashAgentPanel: Received agent_request_update:', payload);
+      
       // Handle agent-specific request updates
       handleIndividualRequestUpdate(payload);
     });
     socket.on('request_update', (payload) => {
-      console.log('📥 CashAgentPanel: Received request_update:', payload);
+      
       // Handle generic request updates
       handleIndividualRequestUpdate(payload);
     });
     socket.on('status_update', (payload) => {
-      console.log('📥 CashAgentPanel: Received status_update:', payload);
+      
       // Handle status updates
       handleIndividualRequestUpdate(payload);
     });
@@ -563,7 +523,7 @@ const CashAgentPanel = () => {
 
     // Add a catch-all listener to see what events are being received
     const handleAnyEvent = (eventName, ...args) => {
-      console.log(`🔍 CashAgentPanel: Received ANY event: ${eventName}`, args);
+      
       // Don't handle it here, just log it so we can see what events are being sent
     };
 
@@ -572,26 +532,10 @@ const CashAgentPanel = () => {
       socket.onAny(handleAnyEvent);
     }
 
-    console.log('✅ CashAgentPanel: Socket listeners set up successfully');
-    console.log('🔌 CashAgentPanel: Listening for events:', [
-      'join_wallet_user_name_room',
-      'wallet_room_update',
-      'user_room_update',
-      'referral_code_room_update',
-      'recharge_request_update',
-      'withdraw_request_update', 
-      'request_status_updated',
-      'wallet_request_update',
-      'agent_request_update',
-      'request_update',
-      'status_update',
-      'connect',
-      'disconnect',
-      'error'
-    ]);
+    
 
     return () => {
-      console.log('🧹 CashAgentPanel: Cleaning up socket listeners');
+     
       socket.off('join_wallet_user_name_room', handleJoinWalletUserNameRoom);
       socket.off('wallet_room_update', handleWalletRoomUpdate);
       socket.off('user_room_update', handleUserRoomUpdate);
@@ -969,12 +913,12 @@ const CashAgentPanel = () => {
         amount: Number(amount),
       });
       
-      console.log("Full RTK Response:", response);
+      
       
       // Check if the response has data (successful HTTP call)
       if (response.data) {
         const result = response.data;
-        console.log("API Response Data:", result);
+        
         
         if (result.success) {
           addToast("Balance sent successfully!", { appearance: "success", autoDismiss: true });
@@ -988,12 +932,12 @@ const CashAgentPanel = () => {
         }
       } else if (response.error) {
         // Handle RTK Query error
-        console.log("RTK Error:", response.error);
+        
         const errorMessage = response.error?.data?.message || response.error?.message || "Error sending balance";
         addToast(errorMessage, { appearance: "error", autoDismiss: true });
       }
     } catch (err) {
-      console.log("Caught error:", err);
+      
       // Fallback error handling
       const errorMessage = err?.data?.message || err?.message || "Error sending balance";
       addToast(errorMessage, { appearance: "error", autoDismiss: true });
@@ -1091,7 +1035,7 @@ const CashAgentPanel = () => {
         });
       }
     } catch (error) {
-      console.log(error)
+      
       addToast(error?.data?.message || "Error initiating withdrawal", { appearance: "error", autoDismiss: true });
     }
   };

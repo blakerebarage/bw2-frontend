@@ -20,21 +20,21 @@ const useOtpSocket = () => {
 
   // Handle OTP used event
   const handleOtpUsed = useCallback((payload) => {
-    console.log('useOtpSocket: handleOtpUsed called with payload:', payload);
+   
     setActiveOtpData(null);
     setHasNewOtp(false);
     setLastEvent({ type: 'otp_used', payload });
   }, []);
 
   const handleOtpExpired = useCallback((payload) => {
-    console.log('useOtpSocket: handleOtpExpired called with payload:', payload);
+   
     setActiveOtpData(null);
     setHasNewOtp(false);
     setLastEvent({ type: 'otp_expired', payload });
   }, []);
 
   const handleOtpCompleted = useCallback((payload) => {
-    console.log('useOtpSocket: handleOtpCompleted called with payload:', payload);
+    
     setActiveOtpData(null);
     setHasNewOtp(false);
     setLastEvent({ type: 'otp_completed', payload });
@@ -42,7 +42,7 @@ const useOtpSocket = () => {
 
   // Handle new OTP event
   const handleNewOtp = useCallback((payload) => {
-    console.log('useOtpSocket: handleNewOtp called with payload:', payload);
+   
     if (payload && payload.data) {
       setActiveOtpData(payload.data);
       setHasNewOtp(true);
@@ -56,11 +56,11 @@ const useOtpSocket = () => {
 
   // Listen for active OTP updates
   const handleActiveOtpUpdate = useCallback((payload) => {
-    console.log('useOtpSocket: handleActiveOtpUpdate called with payload:', payload);
+    
     
     // Check if this is actually an otp_used event (has otpId but no otp/amount)
     if (payload && payload.otpId && !payload.otp && !payload.amount) {
-      console.log('useOtpSocket: Detected otp_used event in active_otp_update, ignoring');
+     
       return;
     }
     
