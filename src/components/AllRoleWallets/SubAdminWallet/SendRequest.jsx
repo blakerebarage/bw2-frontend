@@ -1,3 +1,5 @@
+import { useSocket } from "@/contexts/SocketContext";
+import useSoundNotification from "@/Hook/useSoundNotification";
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import { Check, Copy, CreditCard, Send } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -264,6 +266,12 @@ const DepositSection = () => {
   const [walletAgentBanks, setWalletAgentBanks] = useState([]);
   const [systemBanks, setSystemBanks] = useState([]);
   const [isWalletAgentMethod, setIsWalletAgentMethod] = useState(false);
+  
+  // Use sound notification hook
+  const { handleDepositEvent } = useSoundNotification();
+  
+  // Use socket hook
+  const { socket, isConnected } = useSocket();
 
   // Memoized utility functions
   const sortPaymentMethods = useCallback((methods) => {
@@ -538,6 +546,10 @@ const DepositSection = () => {
     try {
       const res = await axiosSecure.post(`/api/v1/finance/create-recharge-request`, rechargeData);
       if (res.data.success) {
+        // Play success sound for deposit request submission
+        console.log('Playing deposit pending sound for amount:', finalAmount);
+        handleDepositEvent('deposit_pending', { amount: finalAmount, method: selectedMethod.method });
+        
         Swal.fire({
           title: "Request Submitted!",
           text: `Amount: ৳${finalAmount}, Method: ${selectedMethod.method}`,
@@ -558,6 +570,10 @@ const DepositSection = () => {
         document.getElementById("deposit_modal")?.close();
       }
     } catch (err) {
+      // Play error sound for failed deposit request
+      console.log('Playing deposit error sound for amount:', finalAmount);
+      handleDepositEvent('deposit_error', { amount: finalAmount, method: selectedMethod.method });
+      
       Swal.fire({
         icon: "error",
         title: "Error",

@@ -1,4 +1,5 @@
 import Loading from '@/components/shared/Loading';
+import { useLanguage } from '@/contexts/LanguageContext';
 import useAxiosSecure from '@/Hook/useAxiosSecure';
 import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useState } from 'react';
@@ -8,11 +9,12 @@ import { useNavigate } from 'react-router-dom';
 import { useToasts } from 'react-toast-notifications';
 
 const ImageControl = () => {
+  const {currentLanguage} = useLanguage()
   const { user } = useSelector((state) => state.auth);
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
   const navigate = useNavigate();
-
+   
   // State Management
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -134,7 +136,7 @@ const ImageControl = () => {
           username: user?.username,
           currency: providerCurrency || 'NGN',
           gameId,
-          lang: 'en',
+          lang: currentLanguage,
           platform: 2,
         }
       );

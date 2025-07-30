@@ -1,4 +1,5 @@
 import useOtpSocket from "@/Hook/useOtpSocket";
+import useSoundNotification from "@/Hook/useSoundNotification";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaCopy, FaEye, FaEyeSlash, FaTimes } from "react-icons/fa";
 import { useSelector } from "react-redux";
@@ -21,6 +22,9 @@ const OtpDisplay = () => {
     isSocketConnected 
   } = useOtpSocket();
 
+  // Use sound notification hook
+  const { handleOtpEvent } = useSoundNotification();
+
   // Memoize user role check to prevent re-renders
   const isAuthorizedUser = useMemo(() => {
     return user && ["super-admin", "admin", "agent", "user"].includes(user.role);
@@ -29,6 +33,9 @@ const OtpDisplay = () => {
   // Handle socket events and show notifications - use useCallback to prevent re-renders
   const handleLastEvent = useCallback(() => {
     if (lastEvent) {
+      
+      // Play sound notification for OTP events
+      handleOtpEvent(lastEvent.type, lastEvent.payload);
       
       switch (lastEvent.type) {
         case 'active_otp_update':
@@ -70,7 +77,7 @@ const OtpDisplay = () => {
       }
       clearLastEvent();
     }
-  }, [lastEvent, addToast, clearLastEvent]);
+  }, [lastEvent, addToast, clearLastEvent, handleOtpEvent]);
 
   useEffect(() => {
     handleLastEvent();

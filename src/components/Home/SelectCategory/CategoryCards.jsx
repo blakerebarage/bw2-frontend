@@ -17,10 +17,11 @@ export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
     { title: t('table'), titleKey: 'table', image: <GiCardQueenSpades size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "table" },
     { title: t('slot'), titleKey: 'slot', image: <IoDiamondOutline size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "slot" },
     { title: t('crash'), titleKey: 'crash', image: <GiGroundbreaker size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "crash" },
+    { title: t('gameProviders'), titleKey: 'all', image: <RiGalleryView2 size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "allgames" },
     { title: t('fishing'), titleKey: 'fishing', image: <GiFishing  size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "fishing" },
     { title: t('lottery'), titleKey: 'lottery', image: <GiLuckyFisherman size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "Lottery" },
     { title: t('arcade'), titleKey: 'arcade', image: <PiJoystick size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: 'arcade' },
-    { title: t('all'), titleKey: 'all', image: <RiGalleryView2 size={40} className="group-hover:text-[#facc15] transition-all duration-300 text-gray-300" />, value: "allgames" },
+    
   ];
 
   const [currentPage, setCurrentPage] = useState(0);

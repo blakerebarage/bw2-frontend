@@ -15,7 +15,7 @@ import { MostPlayedGames } from "./MostPlayedGames";
 import { SearchBar } from "./SearchBar";
 
 export function SelectCategory() {
-  const { t } = useLanguage();
+  const { t,currentLanguage } = useLanguage();
   
   const [displayGames, setDisplayGames] = useState([]);
   const [mostPlayedGames, setMostPlayedGames] = useState([]);
@@ -117,7 +117,7 @@ export function SelectCategory() {
             provider: selectedProvider ? selectedProvider.name : undefined
           }
         });
-        console.log(response)
+       
         if (response?.data?.data) {
           setTotalGames(response.data.data.totalItems || 0);
           // For "allgames" category, always use pagination (replace results)
@@ -391,7 +391,7 @@ export function SelectCategory() {
           username: user?.username,
           currency: providerCurrency || 'NGN',
           gameId,
-          lang: 'en',
+          lang: currentLanguage,
           platform: 2,
         }
       );

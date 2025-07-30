@@ -1,4 +1,5 @@
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
+import { useLanguage } from '@/contexts/LanguageContext';
 import useAxiosSecure from '@/Hook/useAxiosSecure';
 import useManualUserDataReload from '@/Hook/useUserDataReload';
 import debounce from 'lodash.debounce';
@@ -19,6 +20,7 @@ import { useToasts } from 'react-toast-notifications';
  * - Pagination support
  */
 const GameControl = () => {
+  const { currentLanguage} = useLanguage();
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
   const { user } = useSelector((state) => state.auth);
@@ -53,7 +55,7 @@ const GameControl = () => {
     "Arcade",
     "Uncategorized"
   ];
-
+ console.log(currentLanguage)
   // Debounce the search query update
   const debouncedSetSearchQuery = useCallback(
     debounce((value) => setSearchQuery(value), 300),
@@ -243,7 +245,7 @@ const GameControl = () => {
           username: user?.username,
           currency: providerCurrency || 'NGN',
           gameId,
-          lang: 'en',
+          lang: currentLanguage,
         }
       );
       if (data?.result?.payload?.game_launch_url) {

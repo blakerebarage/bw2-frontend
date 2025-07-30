@@ -1,39 +1,41 @@
 import { useSocket } from "@/contexts/SocketContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
+import useSoundNotification from "@/Hook/useSoundNotification";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
 import {
-  useAddUserMutation,
-  useCompleteWithdrawalMutation,
-  useGetUserTransactionsQuery,
-  useInitiateWithdrawalMutation,
-  useLazyGetActiveOtpQuery,
-  useSendBalanceMutation
+    useAddUserMutation,
+    useCompleteWithdrawalMutation,
+    useGetUserTransactionsQuery,
+    useInitiateWithdrawalMutation,
+    useLazyGetActiveOtpQuery,
+    useSendBalanceMutation
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { logout } from "@/redux/slices/authSlice";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  FaArrowDown,
-  FaArrowRight,
-  FaBell,
-  FaCopy,
-  FaEye,
-  FaEyeSlash,
-  FaHistory,
-  FaMoneyBillWave,
-  FaPaperPlane,
-  FaPlus,
-  FaTimes,
-  FaUserCheck,
-  FaUserPlus,
-  FaWallet
+    FaArrowDown,
+    FaArrowRight,
+    FaBell,
+    FaCopy,
+    FaEye,
+    FaEyeSlash,
+    FaHistory,
+    FaMoneyBillWave,
+    FaPaperPlane,
+    FaPlus,
+    FaTimes,
+    FaUserCheck,
+    FaUserPlus,
+    FaWallet
 } from "react-icons/fa";
 import { RiLogoutCircleLine } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import LanguageSwitcher from "./LanguageSwitcher/LanguageSwitcher";
+import SoundSettings from "./SoundSettings";
 import WalletAgentDepositRequests from "./WalletAgentDepositRequests";
 import WalletAgentPaymentMethods from "./WalletAgentPaymentMethods";
 import WalletAgentWithdrawRequests from "./WalletAgentWithdrawRequests";
@@ -49,6 +51,9 @@ const CashAgentPanel = () => {
   
   // Get socket using the useSocket hook
   const { socket, isConnected } = useSocket();
+  
+  // Use sound notification hook
+  const { handleDepositEvent, handleWithdrawEvent } = useSoundNotification();
   
   // Balance sending states
   const [receiverUsername, setReceiverUsername] = useState("");
@@ -213,7 +218,7 @@ const CashAgentPanel = () => {
 
     // Listen for deposit request updates
     const handleDepositRequestUpdate = (payload) => {
-      
+      console.log('CashAgentPanel: Received recharge_request_update:', payload);
       
       if (payload && payload.data) {
         let depositData = [];
@@ -230,11 +235,8 @@ const CashAgentPanel = () => {
           depositData = [payload.data];
         }
         
-        
-        
         // If results are empty, clear the requests (no pending requests)
         if (depositData.length === 0) {
-          
           setDepositRequests([]);
           setDepositNotificationCount(0);
           return;
@@ -255,12 +257,24 @@ const CashAgentPanel = () => {
             filteredDeposits = depositData.filter(req => req.referralCode === user.referralCode);
           }
           
-          
-          
           setDepositRequests(filteredDeposits);
           const pendingCount = filteredDeposits.filter(req => req.status === "pending").length;
           
           setDepositNotificationCount(pendingCount);
+          
+          // Check for new pending requests and play sound
+          const newPendingRequests = filteredDeposits.filter(req => req.status === "pending");
+          if (newPendingRequests.length > 0) {
+            // Play sound for new pending requests
+            console.log('CashAgentPanel: Playing deposit pending sound for new requests');
+            handleDepositEvent('deposit_pending', { 
+              count: newPendingRequests.length,
+              requests: newPendingRequests 
+            });
+            
+            // Refresh the request list to show the new request
+            fetchRequests();
+          }
         }
       }
     };
@@ -315,6 +329,12 @@ const CashAgentPanel = () => {
           const pendingCount = filteredWithdraws.filter(req => req.status === "pending").length;
          
           setWithdrawNotificationCount(pendingCount);
+          
+          // Play sound notification for withdraw events
+          if (filteredWithdraws.length > 0) {
+            const latestWithdraw = filteredWithdraws[0]; // Get the latest withdraw
+            handleWithdrawEvent('withdraw_request_update', latestWithdraw);
+          }
         }
       }
     };
@@ -362,6 +382,13 @@ const CashAgentPanel = () => {
       
       if (payload && payload.data) {
         const updatedRequest = payload.data;
+        
+        // Play sound notification for individual request updates
+        if (updatedRequest.type === 'deposit') {
+          handleDepositEvent('deposit_request_update', updatedRequest);
+        } else if (updatedRequest.type === 'withdraw') {
+          handleWithdrawEvent('withdraw_request_update', updatedRequest);
+        }
         
         
         // Update deposit requests
@@ -435,6 +462,9 @@ const CashAgentPanel = () => {
         
       }
     };
+
+    // Handle new deposit request submissions
+
 
     // Listen for socket connection events
     const handleSocketConnect = () => {
@@ -539,10 +569,10 @@ const CashAgentPanel = () => {
       socket.off('join_wallet_user_name_room', handleJoinWalletUserNameRoom);
       socket.off('wallet_room_update', handleWalletRoomUpdate);
       socket.off('user_room_update', handleUserRoomUpdate);
-      socket.off('referral_code_room_update', handleReferralCodeRoomUpdate);
-      socket.off('recharge_request_update', handleDepositRequestUpdate);
-      socket.off('withdraw_request_update', handleWithdrawRequestUpdate);
-      socket.off('request_status_updated', handleRequestStatusUpdate);
+              socket.off('referral_code_room_update', handleReferralCodeRoomUpdate);
+        socket.off('recharge_request_update', handleDepositRequestUpdate);
+        socket.off('withdraw_request_update', handleWithdrawRequestUpdate);
+        socket.off('request_status_updated', handleRequestStatusUpdate);
       socket.off('wallet_request_update');
       socket.off('agent_request_update');
       socket.off('request_update');
@@ -1058,6 +1088,9 @@ const CashAgentPanel = () => {
       const result = await completeWithdrawal(payload).unwrap();
 
       if (result?.success) {
+        // Play success sound
+        handleWithdrawEvent('withdraw_success', { amount: withdrawAmount, username: withdrawUsername });
+        
         addToast(result?.message || "Amount withdrawn successfully!", { appearance: "success", autoDismiss: true });
         setWithdrawUsername("");
         setWithdrawAmount("");
@@ -1071,6 +1104,9 @@ const CashAgentPanel = () => {
         clearWithdrawalState();
       }
     } catch (error) {
+      // Play error sound
+      handleWithdrawEvent('withdraw_error', { amount: withdrawAmount, username: withdrawUsername });
+      
       addToast(error?.data?.message || "Error completing withdrawal", { appearance: "error", autoDismiss: true });
     }
   };
@@ -1122,7 +1158,7 @@ const CashAgentPanel = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-
+              <SoundSettings />
               <LanguageSwitcher variant="navbar" />
               <button
                 onClick={handleLogout}

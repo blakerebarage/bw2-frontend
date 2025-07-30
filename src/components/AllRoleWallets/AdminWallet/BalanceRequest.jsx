@@ -1,6 +1,7 @@
 import { useSocket } from "@/contexts/SocketContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
+import useSoundNotification from "@/Hook/useSoundNotification";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
 import { useCallback, useEffect, useState } from "react";
 import { FaMoneyBillWave } from "react-icons/fa";
@@ -26,6 +27,9 @@ const BalanceRequest = () => {
   
   // Get socket using the useSocket hook
   const { socket, isConnected } = useSocket();
+
+  // Use sound notification hook
+  const { handleDepositEvent } = useSoundNotification();
 
   // Check if user is admin or super-admin
   const isAdminOrSuperAdmin = user?.role === "admin" || user?.role === "super-admin";
@@ -94,7 +98,11 @@ const BalanceRequest = () => {
 
       if (payload && payload.data) {
         const updatedRequest = payload.data;
-      
+        
+        // Play sound notification for individual request updates
+        if (updatedRequest.type === 'deposit' || updatedRequest.type === 'recharge') {
+          handleDepositEvent('deposit_request_update', updatedRequest);
+        }
 
         // Update recharge requests
         setRequestData(prev => {
@@ -135,7 +143,7 @@ const BalanceRequest = () => {
 
     // Listen for recharge request updates
     const handleRechargeRequestUpdate = (payload) => {
-      
+      console.log('BalanceRequest: Received recharge_request_update:', payload);
       
       if (payload && payload.data && Array.isArray(payload.data)) {
         let filteredResults = payload.data;
@@ -154,7 +162,19 @@ const BalanceRequest = () => {
           filteredResults = filteredResults.filter(req => req.status === statusFilter);
         }
         
-        
+        // Check for new pending requests and play sound
+        const newPendingRequests = filteredResults.filter(req => req.status === "pending");
+        if (newPendingRequests.length > 0) {
+          // Play sound for new pending requests
+          console.log('BalanceRequest: Playing deposit pending sound for new requests');
+          handleDepositEvent('deposit_pending', { 
+            count: newPendingRequests.length,
+            requests: newPendingRequests 
+          });
+          
+          // Refresh the request list to show the new request
+          fetchRequests();
+        }
         
         setRequestData(filteredResults);
         setLastSocketUpdate(new Date().toISOString());
@@ -172,6 +192,20 @@ const BalanceRequest = () => {
           filteredResults = filteredResults.filter(req => req.status === statusFilter);
         }
         
+        // Check for new pending requests and play sound
+        const newPendingRequests = filteredResults.filter(req => req.status === "pending");
+        if (newPendingRequests.length > 0) {
+          // Play sound for new pending requests
+          console.log('BalanceRequest: Playing deposit pending sound for new requests');
+          handleDepositEvent('deposit_pending', { 
+            count: newPendingRequests.length,
+            requests: newPendingRequests 
+          });
+          
+          // Refresh the request list to show the new request
+          fetchRequests();
+        }
+        
         setRequestData(filteredResults);
         setLastSocketUpdate(new Date().toISOString());
       } else if (payload && payload.data && payload.data.data && payload.data.data.results && Array.isArray(payload.data.data.results)) {
@@ -186,6 +220,20 @@ const BalanceRequest = () => {
         
         if (statusFilter !== "all") {
           filteredResults = filteredResults.filter(req => req.status === statusFilter);
+        }
+        
+        // Check for new pending requests and play sound
+        const newPendingRequests = filteredResults.filter(req => req.status === "pending");
+        if (newPendingRequests.length > 0) {
+          // Play sound for new pending requests
+          console.log('BalanceRequest: Playing deposit pending sound for new requests');
+          handleDepositEvent('deposit_pending', { 
+            count: newPendingRequests.length,
+            requests: newPendingRequests 
+          });
+          
+          // Refresh the request list to show the new request
+          fetchRequests();
         }
         
         setRequestData(filteredResults);
@@ -218,6 +266,7 @@ const BalanceRequest = () => {
       });
     };
 
+    // Handle new deposit request submissions
     socket.on('recharge_request_update', handleRechargeRequestUpdate);
     socket.on('request_update', handleGeneralRequestUpdate);
     socket.on('request_status_updated', handleRequestStatusUpdate);
@@ -257,6 +306,9 @@ const BalanceRequest = () => {
         throw new Error(res.data.message || "Failed to approve request");
       }
 
+      // Play success sound
+      handleDepositEvent('deposit_success', { id, txnId });
+
       // Update local state
       setRequestData((prev) => prev.filter((req) => req.txnId !== txnId));
       
@@ -275,6 +327,9 @@ const BalanceRequest = () => {
       });
       reloadUserData();
     } catch (err) {
+      // Play error sound for failed approval
+      handleDepositEvent('deposit_error', { id, txnId });
+      
       addToast(err.message || "Failed to approve request", {
         appearance: "error",
         autoDismiss: true,
@@ -300,6 +355,9 @@ const BalanceRequest = () => {
       });
       
       if (response.data.success) {
+        // Play error sound for rejection
+        handleDepositEvent('deposit_error', { id });
+        
         // Update local state
         setRequestData(prev => prev.filter(request => request._id !== id));
         
@@ -322,6 +380,9 @@ const BalanceRequest = () => {
         throw new Error(response.data.message || 'Failed to reject request');
       }
     } catch (error) {
+      // Play error sound for failed rejection
+      handleDepositEvent('deposit_error', { id });
+      
       Swal.fire(
         'Error!',
         error?.response?.data?.message || 'Failed to reject the request.',

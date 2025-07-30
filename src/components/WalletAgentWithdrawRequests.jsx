@@ -1,6 +1,7 @@
+import { useSocket } from "@/contexts/SocketContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
-import { useSocket } from "@/contexts/SocketContext";
+import useSoundNotification from "@/Hook/useSoundNotification";
 import { FaArrowDown, FaCheck, FaTimes } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -16,6 +17,7 @@ const WalletAgentWithdrawRequests = ({
   const { formatCurrency } = useCurrency();
   const axiosSecure = useAxiosSecure();
   const { socket, isConnected } = useSocket();
+  const { handleWithdrawEvent } = useSoundNotification();
 
   // Handle withdraw request actions
   const handleRequestAction = async (requestId, action) => {
@@ -25,6 +27,13 @@ const WalletAgentWithdrawRequests = ({
       });
       
       if (res.data.success) {
+        // Play sound notification based on action
+        if (action === "approve") {
+          handleWithdrawEvent('withdraw_success', { requestId, action });
+        } else {
+          handleWithdrawEvent('withdraw_error', { requestId, action });
+        }
+        
         // Emit socket event to notify other users
         if (socket && isConnected) {
           socket.emit('request_status_updated', {
@@ -44,6 +53,9 @@ const WalletAgentWithdrawRequests = ({
         }
       }
     } catch (error) {
+      // Play error sound for failed actions
+      handleWithdrawEvent('withdraw_error', { requestId, action });
+      
       addToast(`Failed to ${action} withdraw request`, {
         appearance: "error",
         autoDismiss: true,

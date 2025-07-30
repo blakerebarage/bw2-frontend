@@ -53,53 +53,47 @@ export const SocketProvider = ({ children }) => {
 
     // Socket event listeners
     newSocket.on('connect', () => {
-      console.log('✅ Socket connected successfully');
-      console.log('🆔 Socket ID:', newSocket.id);
+      
       setIsConnected(true);
       
       // Join user-specific room using the correct event name
       newSocket.emit('join_user_room', { username: user.username });
-      console.log('👤 Joining user room:', `user_${user.username}`);
+      
       
       // For admin/super-admin, join admin room to receive all updates
       if (user.role === "admin" || user.role === "super-admin") {
         newSocket.emit('join_admin_room', { role: user.role });
-        console.log('👑 Joining admin room for role:', user.role);
+       
       }
       
       // For wallet agents, join wallet agent room to receive their specific updates
       if (user.role === "wallet-agent") {
         newSocket.emit('join_wallet_agent_room', { username: user.username });
-        console.log('💼 Joining wallet agent room for:', user.username);
+        
       }
       
       // Also join referral code room for recharge request events
       if (user.referralCode) {
-        console.log('🔗 Joining referral room:', `ref_code_${user.referralCode}`);
-        console.log('👤 User details:', { 
-          username: user.username, 
-          referralCode: user.referralCode, 
-          role: user.role 
-        });
+       
         
         // Try the standard room join event
         newSocket.emit('join_room', { room: `ref_code_${user.referralCode}` });
-        console.log('📤 Emitted join_room event for:', `ref_code_${user.referralCode}`);
+       
         
         // Try the correct event name that matches backend
         newSocket.emit('join_referral_code_room', { referralCode: user.referralCode });
-        console.log('📤 Emitted join_referral_code_room event for:', user.referralCode);
+        
         
         // Keep the alternative for compatibility
         newSocket.emit('join_ref_code_room', { referralCode: user.referralCode });
-        console.log('📤 Emitted join_ref_code_room event for:', user.referralCode);
+        
       } else {
-        console.log('⚠️ No referralCode found for user:', user.username);
+       
       }
     });
 
     newSocket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+      
       setIsConnected(false);
     });
 
@@ -109,8 +103,7 @@ export const SocketProvider = ({ children }) => {
     });
 
     newSocket.on('reconnect', (attemptNumber) => {
-      console.log('Socket reconnected on attempt:', attemptNumber);
-      setIsConnected(true);
+      
       
       // Rejoin user-specific room after reconnection
       newSocket.emit('join_user_room', { username: user.username });
@@ -143,17 +136,17 @@ export const SocketProvider = ({ children }) => {
 
     // Listen for room join confirmation
     newSocket.on('room_joined', (data) => {
-      console.log('✅ Room joined successfully:', data);
+      
     });
 
     // Listen for referral code room join confirmation
     newSocket.on('referral_room_joined', (data) => {
-      console.log('✅ Referral code room joined successfully:', data);
+      
     });
 
     // Listen for any room join events
     newSocket.on('room_join_success', (data) => {
-      console.log('✅ Room join success:', data);
+      
     });
 
     // Listen for any errors
@@ -163,12 +156,12 @@ export const SocketProvider = ({ children }) => {
 
     // Listen for any message events (debugging)
     newSocket.on('message', (data) => {
-      console.log('📨 Socket message received:', data);
+      
     });
 
     // Listen for transport changes
     newSocket.on('upgrade', () => {
-      console.log('⬆️ Socket upgraded to WebSocket');
+      
     });
 
     newSocket.on('upgradeError', (error) => {

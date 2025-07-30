@@ -1,6 +1,7 @@
+import { useSocket } from "@/contexts/SocketContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
-import { useSocket } from "@/contexts/SocketContext";
+import useSoundNotification from "@/Hook/useSoundNotification";
 import { FaArrowDown, FaCheck, FaTimes } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -16,6 +17,7 @@ const WalletAgentDepositRequests = ({
   const { formatCurrency } = useCurrency();
   const axiosSecure = useAxiosSecure();
   const { socket, isConnected } = useSocket();
+  const { handleDepositEvent } = useSoundNotification();
 
   // Handle deposit request actions
   const handleRequestAction = async (requestId, action) => {
@@ -25,6 +27,13 @@ const WalletAgentDepositRequests = ({
       });
       
       if (res.data.success) {
+        // Play sound notification based on action
+        if (action === "approve") {
+          handleDepositEvent('deposit_success', { requestId, action });
+        } else {
+          handleDepositEvent('deposit_error', { requestId, action });
+        }
+        
         // Emit socket event to notify other users
         if (socket && isConnected) {
           socket.emit('request_status_updated', {
@@ -44,6 +53,9 @@ const WalletAgentDepositRequests = ({
         }
       }
     } catch (error) {
+      // Play error sound for failed actions
+      handleDepositEvent('deposit_error', { requestId, action });
+      
       addToast(`Failed to ${action} deposit request`, {
         appearance: "error",
         autoDismiss: true,

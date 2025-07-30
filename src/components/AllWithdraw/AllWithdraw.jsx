@@ -1,6 +1,7 @@
 import { useSocket } from "@/contexts/SocketContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
+import useSoundNotification from "@/Hook/useSoundNotification";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { useEffect, useState } from "react";
@@ -24,6 +25,9 @@ const AllWithdraw = () => {
   
   // Get socket using the useSocket hook
   const { socket, isConnected } = useSocket();
+
+  // Use sound notification hook
+  const { handleWithdrawEvent } = useSoundNotification();
 
   // Check if user is admin or super-admin
   const isAdminOrSuperAdmin = user?.role === "admin" || user?.role === "super-admin";
@@ -94,6 +98,10 @@ const AllWithdraw = () => {
       if (payload && payload.data) {
         const updatedRequest = payload.data;
         
+        // Play sound notification for individual request updates
+        if (updatedRequest.type === 'withdraw') {
+          handleWithdrawEvent('withdraw_request_update', updatedRequest);
+        }
 
         // Update withdraw requests
         setWithdraws(prev => {
@@ -315,6 +323,9 @@ const AllWithdraw = () => {
         );
         setWithdraws(updatedWithdraws);
 
+        // Play success sound
+        handleWithdrawEvent('withdraw_success', { id, amount: withdrawRequest.amount });
+
         Swal.fire({
           title: "Approved!",
           html: `<p>The withdraw request has been approved.</p>`,
@@ -367,6 +378,9 @@ const AllWithdraw = () => {
           item._id === id ? { ...item, status: "rejected" } : item
         );
         setWithdraws(updatedWithdraws);
+
+        // Play error sound for rejection
+        handleWithdrawEvent('withdraw_error', { id });
 
         Swal.fire({
           title: "Rejected!",
@@ -453,7 +467,7 @@ const AllWithdraw = () => {
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="cancelled  ">Cancelled</option>
               </select>
             </div>
             <table className="min-w-full divide-y divide-gray-200">
