@@ -117,6 +117,7 @@ export function SelectCategory() {
             provider: selectedProvider ? selectedProvider.name : undefined
           }
         });
+        
        
         if (response?.data?.data) {
           setTotalGames(response.data.data.totalItems || 0);

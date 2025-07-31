@@ -114,6 +114,16 @@ const HeadingNavbar = () => {
           path: "/admindashboard/transaction-summary",
           roles: ["super-admin"],
         },
+        {
+          label: "All Commission Cashagent",
+          path: "/admindashboard/all-commission-cashagent",
+          roles: ["super-admin"],
+        },
+        {
+          label: "All Commission Wallet Agent",
+          path: "/admindashboard/all-commission-walletagent",
+          roles: ["super-admin"],
+        },
       ],
     },
     {

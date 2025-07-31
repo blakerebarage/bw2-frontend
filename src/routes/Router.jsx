@@ -16,6 +16,8 @@ import Banking from "@/components/Banking/Banking";
 // import BetListLive from "@/components/BetListLive/BetListLive";
 // import DeactiveGame from "@/components/DeactiveGame/DeactiveGame";
 import Downlist from "@/components/Downlist/Downlist";
+import AllCommissionCashagent from "@/components/Finances/AllCommissionCashagent";
+import AllCommissionWalletagent from "@/components/Finances/AllCommissionWalletagent";
 import AllTransactions from "@/components/Finances/AllTransactions";
 import TransactionSummary from "@/components/Finances/TransactionSummary";
 // import Game from "@/components/GameApi/Game";
@@ -206,6 +208,8 @@ const router = createBrowserRouter([
           { path: "allwithdrawrequest", element: <AllWithdraw /> },
           { path: "all-transactions", element: <AllTransactions /> },
           { path: "transaction-summary", element: <TransactionSummary /> },
+          { path: "all-commission-cashagent", element: <AllCommissionCashagent /> },
+          { path: "all-commission-walletagent", element: <AllCommissionWalletagent /> },
           { path: "all-bets-history", element: <AllBetsHistory /> },
           { path: "turnover-management", element: <AdminTurnOver /> },
           { path: "bank-details/:accountNumber", element: <BankDetails /> },
