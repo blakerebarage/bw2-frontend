@@ -24,7 +24,7 @@ const MyAccountSummary = () => {
         
         if (transactionsResponse.data.success) {
           const data = Array.isArray(transactionsResponse?.data?.data?.results) ? transactionsResponse?.data?.data?.results : [];
-          const recentTransactions = data.slice(0, 3); // Get last 3 transactions
+          const recentTransactions = data.slice(0, 10); // Get last 3 transactions
           setRecentTransactions(recentTransactions);
         }
       } catch (error) {

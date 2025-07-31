@@ -90,6 +90,8 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
             // Define colors for specific menu items
             const isDeposit = labelKey === "depositeBalance";
             const isWithdraw = labelKey === "withdrawBalance";
+            const isDepositRequests = labelKey === "depositRequests";
+            const isWithdrawRequests = labelKey === "withdrawRequests";
             
             const getItemClasses = () => {
               if (isDeposit) {
@@ -98,12 +100,20 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
               if (isWithdraw) {
                 return "flex items-center justify-between p-4 text-red-700 hover:bg-red-50/80 transition-all duration-200 active:scale-[0.99] bg-red-50/30";
               }
+              if (isDepositRequests) {
+                return "flex items-center justify-between p-4 text-blue-700 hover:bg-blue-50/80 transition-all duration-200 active:scale-[0.99] bg-blue-50/30";
+              }
+              if (isWithdrawRequests) {
+                return "flex items-center justify-between p-4 text-purple-700 hover:bg-purple-50/80 transition-all duration-200 active:scale-[0.99] bg-purple-50/30";
+              }
               return "flex items-center justify-between p-4 text-gray-700 hover:bg-gray-50/80 transition-all duration-200 active:scale-[0.99]";
             };
 
             const getIconClasses = () => {
               if (isDeposit) return "text-xl text-green-600";
               if (isWithdraw) return "text-xl text-red-600";
+              if (isDepositRequests) return "text-xl text-blue-600";
+              if (isWithdrawRequests) return "text-xl text-purple-600";
               return "text-xl text-gray-600";
             };
 

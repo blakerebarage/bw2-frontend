@@ -338,6 +338,7 @@ const AllWithdraw = () => {
           : refreshedWithdraws?.data?.data?.results.filter(
               (item) => item?.referralCode === user?.referralCode
             );
+       
         setWithdraws(filteredWithdraws);
         reloadUserData();
       }

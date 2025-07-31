@@ -4,6 +4,7 @@ import { GiTurnstile } from "react-icons/gi";
 import { GrTransaction } from "react-icons/gr";
 import { HiMiniChatBubbleLeftRight } from "react-icons/hi2";
 import { ImProfile } from "react-icons/im";
+import { MdRequestPage } from "react-icons/md";
 import { PiHandDepositFill, PiHandWithdrawFill } from "react-icons/pi";
 
 const menuItems = [
@@ -37,34 +38,48 @@ const menuItems = [
   },
   {
     id: 5,
+    labelKey: "depositRequests",
+    Icon: MdRequestPage,
+    link: "/deposit-requests",
+    description: "View your deposit requests"
+  },
+  {
+    id: 6,
+    labelKey: "withdrawRequests",
+    Icon: MdRequestPage,
+    link: "/withdraw-requests",
+    description: "View your withdraw requests"
+  },
+  {
+    id: 7,
     labelKey: "withdrawByChat",
     Icon: HiMiniChatBubbleLeftRight,
     link: "/withdraw-chat",
     description: "Withdraw through chat support"
   },
   {
-    id: 6,
+    id: 8,
     labelKey: "turnOver",
     Icon:  GiTurnstile,
     link: "/turn-over",
     description: "Turn Over"
   },
   { 
-      id: 7, 
+      id: 9, 
     labelKey: "betsHistory", 
     Icon: FaHistory, 
     link: "/bets-history",
     description: "View your past bets"
   },
   { 
-    id: 8, 
+    id: 10, 
     labelKey: "transactionHistory", 
     Icon: GrTransaction, 
     link: "/transaction-history",
     description: "View your past transactions"
   },
   { 
-    id: 9, 
+    id: 11, 
     labelKey: "myProfile", 
     Icon: ImProfile, 
     link: "/my-profile",

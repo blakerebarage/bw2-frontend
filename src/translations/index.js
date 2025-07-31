@@ -132,6 +132,36 @@ export const translations = {
     selectPaymentMethod: 'পেমেন্ট পদ্ধতি নির্বাচন করুন',
     confirmDeposit: 'জমা নিশ্চিত করুন',
     
+    // Deposit Requests
+    depositRequests: 'ডিপোজিট অনুরোধ',
+    viewYourDepositRequests: 'আপনার সব ডিপোজিট অনুরোধ এবং তাদের অবস্থা দেখুন',
+    totalRequests: 'মোট অনুরোধ',
+    pendingRequests: 'অপেক্ষমাণ অনুরোধ',
+    approvedRequests: 'অনুমোদিত অনুরোধ',
+    recentRequests: 'সাম্প্রতিক অনুরোধ',
+    noDepositRequests: 'কোনো ডিপোজিট অনুরোধ পাওয়া যায়নি',
+    noDepositRequestsDesc: 'আপনি এখনও কোনো ডিপোজিট অনুরোধ করেননি',
+    transactionId: 'লেনদেন আইডি',
+    senderPhone: 'প্রেরক ফোন',
+    channel: 'চ্যানেল',
+    accountNumber: 'অ্যাকাউন্ট নম্বর',
+    createdAt: 'তৈরির তারিখ',
+    adminNote: 'অ্যাডমিন নোট',
+    note: 'নোট',
+    previous: 'পূর্ববর্তী',
+    next: 'পরবর্তী',
+    page: 'পৃষ্ঠা',
+    of: 'এর',
+    
+    // Withdraw Requests
+    withdrawRequests: 'উইথড্র অনুরোধ',
+    viewYourWithdrawRequests: 'আপনার সব উইথড্র অনুরোধ এবং তাদের অবস্থা দেখুন',
+    noWithdrawRequests: 'কোনো উইথড্র অনুরোধ পাওয়া যায়নি',
+    noWithdrawRequestsDesc: 'আপনি এখনও কোনো উইথড্র অনুরোধ করেননি',
+    withdrawAccount: 'উইথড্র অ্যাকাউন্ট',
+    referralCode: 'রেফারেল কোড',
+    updatedAt: 'আপডেটের তারিখ',
+    
     // Chat Support
     depositByChatSupport: 'কথোপকথন এর মাধ্যমে ডিপোজিট',
     withdrawByChatSupport: 'কথোপকথন এর মাধ্যমে উইথড্র',
@@ -467,6 +497,36 @@ export const translations = {
     requestWithdrawal: 'Request a withdrawal from your account',
     selectPaymentMethod: 'Select Payment Method',
     confirmDeposit: 'Confirm Deposit',
+    
+    // Deposit Requests
+    depositRequests: 'Deposit Requests',
+    viewYourDepositRequests: 'View all your deposit requests and their status',
+    totalRequests: 'Total Requests',
+    pendingRequests: 'Pending Requests',
+    approvedRequests: 'Approved Requests',
+    recentRequests: 'Recent Requests',
+    noDepositRequests: 'No deposit requests found',
+    noDepositRequestsDesc: 'You haven\'t made any deposit requests yet',
+    transactionId: 'Transaction ID',
+    senderPhone: 'Sender Phone',
+    channel: 'Channel',
+    accountNumber: 'Account Number',
+    createdAt: 'Created At',
+    adminNote: 'Admin Note',
+    note: 'Note',
+    previous: 'Previous',
+    next: 'Next',
+    page: 'Page',
+    of: 'of',
+    
+    // Withdraw Requests
+    withdrawRequests: 'Withdraw Requests',
+    viewYourWithdrawRequests: 'View all your withdraw requests and their status',
+    noWithdrawRequests: 'No withdraw requests found',
+    noWithdrawRequestsDesc: 'You haven\'t made any withdraw requests yet',
+    withdrawAccount: 'Withdraw Account',
+    referralCode: 'Referral Code',
+    updatedAt: 'Updated At',
     
     // Chat Support
     depositByChatSupport: 'Deposit by Chat Support',
