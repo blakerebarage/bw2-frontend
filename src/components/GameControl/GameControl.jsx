@@ -227,7 +227,7 @@ const GameControl = () => {
         throw new Error('Game not found');
       }
 
-      const provider = await axiosSecure.get(`/api/v1/game/providers?page=1&limit=300`);
+      const provider = await axiosSecure.get(`/api/v1/game/providers?page=1&limit=500`);
       const providerDetails = provider?.data?.data?.results?.find(p => p.name.toLowerCase() === gameDetails.provider.toLowerCase());
       if (!providerDetails) {
         throw new Error('Provider not found');

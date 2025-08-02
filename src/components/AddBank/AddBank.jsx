@@ -12,7 +12,7 @@ const AddBank = () => {
   const axiosSecure = useAxiosSecure();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [bankType, setBankType] = useState("");
-  const [selectBankLimit, setSelectBankLimit] = useState("10");
+  const [selectBankLimit, setSelectBankLimit] = useState(10);
   const [channel, setChannel] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [banks, setBanks] = useState([]);
@@ -52,7 +52,7 @@ const AddBank = () => {
       }
       
       const res = await axiosSecure.get(`/api/v1/finance/bank-list?${params.toString()}`);
-      
+      console.log(res)
       if (res.data.success) {
         setBanks(res.data.data.results || []);
         setTotalPages(Math.ceil((res.data.data.total || 0) / parseInt(selectBankLimit)));
