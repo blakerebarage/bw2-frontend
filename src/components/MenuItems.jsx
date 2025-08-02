@@ -38,25 +38,26 @@ const menuItems = [
   },
   {
     id: 5,
+    labelKey: "withdrawByChat",
+    Icon: HiMiniChatBubbleLeftRight,
+    link: "/withdraw-chat",
+    description: "Withdraw through chat support"
+  },
+  {
+    id: 6,
     labelKey: "depositRequests",
     Icon: MdRequestPage,
     link: "/deposit-requests",
     description: "View your deposit requests"
   },
   {
-    id: 6,
+    id: 7,
     labelKey: "withdrawRequests",
     Icon: MdRequestPage,
     link: "/withdraw-requests",
     description: "View your withdraw requests"
   },
-  {
-    id: 7,
-    labelKey: "withdrawByChat",
-    Icon: HiMiniChatBubbleLeftRight,
-    link: "/withdraw-chat",
-    description: "Withdraw through chat support"
-  },
+ 
   {
     id: 8,
     labelKey: "turnOver",

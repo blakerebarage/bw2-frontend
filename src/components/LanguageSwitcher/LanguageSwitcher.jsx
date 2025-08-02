@@ -32,7 +32,7 @@ const LanguageSwitcher = ({ className = '', variant = 'default' }) => {
       case 'navbar':
         return {
           button: 'flex items-center gap-2 px-3 py-2 text-white hover:text-yellow-400 transition-colors duration-200 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20',
-          dropdown: 'absolute right-0 top-full mt-2 bg-gray-800/95 backdrop-blur-md border border-gray-600 rounded-lg shadow-2xl z-50 min-w-[180px] overflow-hidden',
+          dropdown: 'absolute right-0 top-full mt-2 bg-gray-800/95 backdrop-blur-md border border-gray-600 rounded-lg shadow-2xl z-[999995] min-w-[180px] overflow-hidden',
           item: 'flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-700/50 transition-colors duration-200 cursor-pointer border-b border-gray-700/50 last:border-b-0',
         };
       default:

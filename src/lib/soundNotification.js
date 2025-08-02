@@ -2,7 +2,7 @@ class SoundNotification {
   constructor() {
     this.sounds = {};
     this.isEnabled = this.getSoundPreference();
-    this.volume = 0.8; // Increased default volume from 0.5 to 0.8
+    this.volume = 1; // Increased default volume from 0.5 to 0.8
     this.init();
   }
 

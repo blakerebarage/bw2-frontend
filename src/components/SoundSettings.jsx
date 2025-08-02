@@ -15,10 +15,28 @@ const SoundSettings = ({ className = '' }) => {
 
   const [volume, setLocalVolume] = useState(0.8);
   const [isOpen, setIsOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
+  // Sync with the actual sound notification state
   useEffect(() => {
     setLocalVolume(getVolume());
-  }, [getVolume]);
+    setSoundEnabled(isSoundEnabled());
+  }, [getVolume, isSoundEnabled]);
+
+  // Update local state when sound state changes
+  useEffect(() => {
+    const updateSoundState = () => {
+      setSoundEnabled(isSoundEnabled());
+    };
+
+    // Update state immediately
+    updateSoundState();
+
+    // Set up an interval to check for state changes
+    const interval = setInterval(updateSoundState, 100);
+    
+    return () => clearInterval(interval);
+  }, [isSoundEnabled]);
 
   const handleVolumeChange = (e) => {
     const newVolume = parseFloat(e.target.value);
@@ -27,7 +45,8 @@ const SoundSettings = ({ className = '' }) => {
   };
 
   const handleToggleSound = () => {
-    toggleSound();
+    const newState = toggleSound();
+    setSoundEnabled(newState);
   };
 
   const handleTestSound = () => {
@@ -35,7 +54,7 @@ const SoundSettings = ({ className = '' }) => {
   };
 
   const getVolumeIcon = () => {
-    if (!isSoundEnabled()) return <FaVolumeMute className="text-gray-400" />;
+    if (!soundEnabled) return <FaVolumeMute className="text-gray-400" />;
     if (volume === 0) return <FaVolumeMute className="text-gray-400" />;
     if (volume < 0.3) return <FaVolumeDown className="text-blue-500" />;
     if (volume < 0.7) return <FaVolumeUp className="text-blue-500" />;
@@ -58,12 +77,12 @@ const SoundSettings = ({ className = '' }) => {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-[999998] !z-[999998]"
+            className="fixed inset-0  !z-[999998]"
             onClick={() => setIsOpen(false)}
           />
           
           {/* Modal */}
-          <div className="fixed right-4 top-20 bg-white rounded-lg shadow-lg border border-gray-200 p-4 min-w-64 z-[999999] !z-[999999]">
+          <div className="fixed right-4 top-20 bg-white rounded-lg shadow-lg border border-gray-200 p-4 min-w-64  !z-[999999]">
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
@@ -82,12 +101,12 @@ const SoundSettings = ({ className = '' }) => {
                 <button
                   onClick={handleToggleSound}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                    isSoundEnabled() ? 'bg-blue-600' : 'bg-gray-300'
+                    soundEnabled ? 'bg-blue-600' : 'bg-gray-300'
                   }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                      isSoundEnabled() ? 'translate-x-6' : 'translate-x-1'
+                      soundEnabled ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -109,7 +128,7 @@ const SoundSettings = ({ className = '' }) => {
                     value={volume}
                     onChange={handleVolumeChange}
                     className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                    disabled={!isSoundEnabled()}
+                    disabled={!soundEnabled}
                   />
                   <FaVolumeUp className="w-4 h-4 text-gray-400" />
                 </div>
@@ -122,9 +141,9 @@ const SoundSettings = ({ className = '' }) => {
               <div className="pt-2">
                 <button
                   onClick={handleTestSound}
-                  disabled={!isSoundEnabled()}
+                  disabled={!soundEnabled}
                   className={`w-full py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${
-                    isSoundEnabled()
+                    soundEnabled
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}

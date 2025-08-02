@@ -23,7 +23,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
 
   useEffect(() => {
     // Get user's timezone
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
     const offset = new Date().getTimezoneOffset();
     const hours = Math.abs(Math.floor(offset / 60));
     const minutes = Math.abs(offset % 60);
@@ -91,7 +91,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
             const isDeposit = labelKey === "depositeBalance";
             const isWithdraw = labelKey === "withdrawBalance";
             const isDepositRequests = labelKey === "depositRequests";
-            const isWithdrawRequests = labelKey === "withdrawRequests";
+            const isWithdrawRequests = labelKey === "depositRequests";
             
             const getItemClasses = () => {
               if (isDeposit) {
