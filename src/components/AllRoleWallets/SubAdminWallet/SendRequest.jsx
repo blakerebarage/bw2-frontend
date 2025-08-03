@@ -525,10 +525,9 @@ const DepositSection = () => {
       });
       return;
     }
-
     const rechargeData = {
       username: user?.username,
-      bankId: selectedBank?._id,
+      bankId: selectedAccount?._id,
       amount: parseFloat(finalAmount),
       paymentMethod: selectedMethod.method,
       channel: selectedChannel,
