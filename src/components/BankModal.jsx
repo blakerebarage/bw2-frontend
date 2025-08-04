@@ -21,6 +21,7 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
   const [accountHolderName, setAccountHolderName] = useState("");
   const [districtName, setDistrictName] = useState("");
   const [routingNumber, setRoutingNumber] = useState("");
+  const [balance, setBalance] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Reset form when modal opens/closes or editing bank changes
@@ -38,6 +39,7 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
         setAccountHolderName(editingBank.accountHolderName || "");
         setDistrictName(editingBank.districtName || "");
         setRoutingNumber(editingBank.routingNumber || "");
+        setBalance(editingBank.balance || "");
       } else {
         // Reset form for adding new
         resetForm();
@@ -56,6 +58,7 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
     setAccountHolderName("");
     setDistrictName("");
     setRoutingNumber("");
+    setBalance("");
   };
 
   const handleSubmit = async (e) => {
@@ -79,28 +82,30 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
       }
     }
 
-    const newBank = bankType === "Bank Transfer" ? {
-      username: user?.username,
-      bankType,
-      bankName,
-      branchName,
-      accountNumber,
-      accountHolderName,
-      districtName,
-      routingNumber,
-      channel: "Bank-Transfer",
-      dailyLimit: dailyLimit || "0",
-      purpose,
-      isWalletAgent: true
-    } : {
-      username: user?.username,
-      bankType,
-      channel,
-      accountNumber,
-      dailyLimit: dailyLimit || "0",
-      purpose,
-      isWalletAgent: true
-    };
+         const newBank = bankType === "Bank Transfer" ? {
+       username: user?.username,
+       bankType,
+       bankName,
+       branchName,
+       accountNumber,
+       accountHolderName,
+       districtName,
+       routingNumber,
+       channel: "Bank-Transfer",
+       dailyLimit: dailyLimit || "0",
+       balance: balance || "0",
+       purpose,
+       isWalletAgent: true
+     } : {
+       username: user?.username,
+       bankType,
+       channel,
+       accountNumber,
+       dailyLimit: dailyLimit || "0",
+       balance: balance || "0",
+       purpose,
+       isWalletAgent: true
+     };
 
     try {
       setLoading(true);
@@ -223,20 +228,32 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
             />
           </div>
 
-          <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">Purpose</label>
-            <select
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Select Purpose</option>
-              <option value="Deposit">Deposit</option>
-              <option value="Withdraw">Withdraw</option>
-              <option value="Deposit-Withdraw">Both</option>
-            </select>
-          </div>
+                     <div>
+             <label className="block text-gray-700 text-sm font-medium mb-2">Purpose</label>
+             <select
+               value={purpose}
+               onChange={(e) => setPurpose(e.target.value)}
+               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               required
+             >
+               <option value="">Select Purpose</option>
+               <option value="Deposit">Deposit</option>
+               <option value="Withdraw">Withdraw</option>
+               <option value="Deposit-Withdraw">Both</option>
+             </select>
+           </div>
+
+           <div>
+             <label className="block text-gray-700 text-sm font-medium mb-2">Balance</label>
+             <input
+               type="number"
+               value={balance}
+               onChange={(e) => setBalance(e.target.value)}
+               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               placeholder="Enter balance"
+               min="0"
+             />
+           </div>
 
           {bankType === "Bank Transfer" && (
             <>

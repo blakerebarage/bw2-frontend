@@ -33,7 +33,7 @@ const AddBank = () => {
   const [accountHolderName, setAccountHolderName] = useState("");
   const [districtName, setDistrictName] = useState("");
   const [routingNumber, setRoutingNumber] = useState("");
-  
+  const [balance, setBalance] = useState("");
 
   const fetchBanks = useCallback(async () => {
     try {
@@ -107,6 +107,7 @@ const AddBank = () => {
         setRoutingNumber("");
         setDailyLimit("");
         setPurpose("");
+        setBalance("");
         setEditingBank(null);
       }
       return !prevState;
@@ -133,6 +134,15 @@ const AddBank = () => {
         return;
       }
     }
+    
+    // Validate balance (optional field but should be a valid number if provided)
+    if (balance && isNaN(Number(balance))) {
+      addToast("Balance must be a valid number!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
     const newBank = bankType === "Bank" ? {
       username: user?.username,
       bankType,
@@ -144,6 +154,7 @@ const AddBank = () => {
       routingNumber,
       channel: "Bank-Transfer",
       dailyLimit: dailyLimit || "0",
+      balance: balance || "0",
       purpose
     } : {
       username: user?.username,
@@ -151,6 +162,7 @@ const AddBank = () => {
       channel,
       accountNumber,
       dailyLimit: dailyLimit || "0",
+      balance: balance || "0",
       purpose
     };
     try {
@@ -188,7 +200,7 @@ const AddBank = () => {
         confirmButtonText: "OK",
       });
     }
-  }, [bankType, channel, accountNumber, bankName, branchName, accountHolderName, districtName, routingNumber, dailyLimit, user?.username, axiosSecure, toggleModal, fetchBanks, addToast, editingBank]);
+  }, [bankType, channel, accountNumber, bankName, branchName, accountHolderName, districtName, routingNumber, dailyLimit, balance, user?.username, axiosSecure, toggleModal, fetchBanks, addToast, editingBank]);
 
   const handleEdit = (bank) => {
     setEditingBank(bank);
@@ -201,6 +213,7 @@ const AddBank = () => {
     setDistrictName(bank.districtName || "");
     setRoutingNumber(bank.routingNumber || "");
     setDailyLimit(bank.dailyLimit || "");
+    setBalance(bank.balance || "");
     setPurpose(bank.purpose || "");
     setIsModalOpen(true);
   };
@@ -338,6 +351,7 @@ const AddBank = () => {
                 <th className="py-2 px-2 md:py-3 md:px-4 border-b">Account Number</th>
                 <th className="py-2 px-2 md:py-3 md:px-4 border-b">Purpose</th>
                 <th className="py-2 px-2 md:py-3 md:px-4 border-b">Daily Limit</th>
+                <th className="py-2 px-2 md:py-3 md:px-4 border-b">Balance</th>
                 <th className="py-2 px-2 md:py-3 md:px-4 border-b">Remaining Limit</th>
                 <th className="py-2 px-2 md:py-3 md:px-4 border-b">Total Received Today</th>
                 <th className="py-2 px-2 md:py-3 md:px-4 border-b">Status</th>
@@ -347,7 +361,7 @@ const AddBank = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="10" className="text-center py-8">
+                  <td colSpan="11" className="text-center py-8">
                     <div className="flex-col flex justify-center items-center space-y-4">
                       <div className="w-12 h-12 border-4 border-[#1f2937] border-t-transparent rounded-full animate-spin"></div>
                       <img src={logo} alt="" className="h-12" />
@@ -356,7 +370,7 @@ const AddBank = () => {
                 </tr>
               ) : banks?.length === 0 ? (
                 <tr>
-                    <td colSpan="10" className="px-6 py-12 text-center">
+                    <td colSpan="11" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center space-y-3">
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                           <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,6 +415,7 @@ const AddBank = () => {
                       </span>
                     </td>
                     <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{bank.dailyLimit || "0"}</td>
+                    <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{bank.balance || "0"}</td>
                     <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{bank.remainingDailyLimit || "0"}</td>
                     <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">{bank.totalReceivedToday || "0"}</td>
                     <td className="py-2 px-2 md:py-3 md:px-4 border-b text-center">
@@ -663,6 +678,19 @@ const AddBank = () => {
                   value={dailyLimit}
                   onChange={(e) => setDailyLimit(e.target.value)}
                   placeholder="Enter daily limit"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#1f2937] mb-1">
+                  Balance
+                </label>
+                <input
+                  type="number"
+                  className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-[#1f2937] transition-all duration-200"
+                  value={balance}
+                  onChange={(e) => setBalance(e.target.value)}
+                  placeholder="Enter balance"
                 />
               </div>
 

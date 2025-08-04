@@ -242,6 +242,10 @@ const WalletAgentPaymentMethods = () => {
                       <span className="text-gray-400">Daily Limit:</span>
                       <span className="text-white">{formatCurrency(bank.dailyLimit || 0)}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Balance:</span>
+                      <span className="text-white">{formatCurrency(bank.balance || 0)}</span>
+                    </div>
                     {bank.bankType === "Bank Transfer" && (
                       <>
                         <div className="flex justify-between">
