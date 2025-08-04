@@ -110,6 +110,11 @@ const HeadingNavbar = () => {
           roles: ["super-admin"],
         },
         {
+          label: "Payment Messages",
+          path: "/admindashboard/payment-messages",
+          roles: ["super-admin"],
+        },
+        {
           label: "Transaction Summary",
           path: "/admindashboard/transaction-summary",
           roles: ["super-admin"],

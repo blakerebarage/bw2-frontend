@@ -19,6 +19,7 @@ import Downlist from "@/components/Downlist/Downlist";
 import AllCommissionCashagent from "@/components/Finances/AllCommissionCashagent";
 import AllCommissionWalletagent from "@/components/Finances/AllCommissionWalletagent";
 import AllTransactions from "@/components/Finances/AllTransactions";
+import PaymentMessages from "@/components/Finances/PaymentMessages";
 import TransactionSummary from "@/components/Finances/TransactionSummary";
 // import Game from "@/components/GameApi/Game";
 import GameControl from "@/components/GameControl/GameControl";
@@ -211,6 +212,7 @@ const router = createBrowserRouter([
           { path: "userprofile/:id", element: <UserProfile /> },
           { path: "allwithdrawrequest", element: <AllWithdraw /> },
           { path: "all-transactions", element: <AllTransactions /> },
+          { path: "payment-messages", element: <PaymentMessages /> },
           { path: "transaction-summary", element: <TransactionSummary /> },
           { path: "all-commission-cashagent", element: <AllCommissionCashagent /> },
           { path: "all-commission-walletagent", element: <AllCommissionWalletagent /> },

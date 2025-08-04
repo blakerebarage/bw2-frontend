@@ -542,7 +542,8 @@ const DepositSection = () => {
         walletAgentUsername: selectedMethod.method === "Bank" ? selectedBank.username : selectedAccount.username
       })
     };
-
+    // console.log(rechargeData)
+    // return
     try {
       const res = await axiosSecure.post(`/api/v1/finance/create-recharge-request`, rechargeData);
       if (res.data.success) {

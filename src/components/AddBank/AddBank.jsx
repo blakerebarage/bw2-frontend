@@ -52,7 +52,7 @@ const AddBank = () => {
       }
       
       const res = await axiosSecure.get(`/api/v1/finance/bank-list?${params.toString()}`);
-      console.log(res)
+      // console.log(res)
       if (res.data.success) {
         setBanks(res.data.data.results || []);
         setTotalPages(Math.ceil((res.data.data.total || 0) / parseInt(selectBankLimit)));
@@ -252,7 +252,7 @@ const AddBank = () => {
   const handleSearch = useCallback(() => {
     debouncedSearch();
   }, [debouncedSearch]);
-  
+  console.log(banks)
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto">
