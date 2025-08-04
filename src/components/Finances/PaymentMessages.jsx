@@ -106,6 +106,7 @@ const PaymentMessages = () => {
 
       let url = `/api/v1/finance/payment-confirmations?page=${currentPage}&limit=${limit}`;
       
+      
       if (startDate) {
         url += `&startDate=${startDate}`;
       }
@@ -118,7 +119,7 @@ const PaymentMessages = () => {
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to fetch payment messages");
       }
-
+     console.log(response,"response")
       setPaymentMessages(response.data.data);
       setTotalPages(Math.ceil(response.data.meta.total / limit));
     } catch (error) {
@@ -413,6 +414,9 @@ const PaymentMessages = () => {
                             Incoming Number
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Receiver Number
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Status
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -445,6 +449,9 @@ const PaymentMessages = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {message.incommingNumber}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {message.receiverNumber }
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                               <span className={`font-medium ${getStatusColor(message.status)}`}>

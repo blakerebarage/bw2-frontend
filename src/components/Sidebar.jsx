@@ -67,7 +67,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
 
   return (
     <div
-      className={`absolute top-0 left-0 bg-[#eef6fb] w-3/5 h-screen z-30 ${
+      className={`absolute top-0 left-0 bg-[#eef6fb] w-4/4 h-screen z-30 ${
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       } transition-transform duration-200 ease-in-out flex flex-col`}
     >

@@ -1,10 +1,9 @@
-import PageHeader from "@/components/shared/PageHeader";
 import SoundSettings from "@/components/SoundSettings";
 
 const Settings = () => {
   return (
     <div className="mt-16 h-svh">
-      <PageHeader title="Setting" />
+      {/* <PageHeader title="Setting" /> */}
 
       <div className="bg-gray-700 m-4 p-2 rounded-[4px]">
         {/* Sound Settings Section */}
