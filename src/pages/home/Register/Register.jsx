@@ -17,10 +17,9 @@ import {
   FaInfoCircle,
   FaMinus,
   FaPlus,
-  FaRedo,
-  FaUser
+  FaRedo
 } from "react-icons/fa";
-import { FaShield } from "react-icons/fa6";
+import { FaFlag, FaShield } from "react-icons/fa6";
 import { IoIosUnlock } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -281,16 +280,33 @@ const Register = () => {
                 {t('phoneNumber')} <span className="text-red-400">*</span>
               </label>
               <div className="relative group">
-                <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-lg" />
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                  <FaFlag className="text-[#facc15] text-lg" />
+                  <span className="text-[#facc15] font-semibold text-sm">+88</span>
+                </div>
                 <Input
                   type="text"
-                  placeholder={t('enterPhoneNumber')}
-                  className="pl-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
+                  placeholder="1XXXXXXXXX"
+                  className="pl-20 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                   {...register("phone", {
                     required: `${t('phoneNumber')} is required.`,
-                    minLength: { value: 11, message: "Minimum 11 characters." },
+                    pattern: {
+                      value: /^[0-9]{11}$/,
+                      message: "Phone number must be exactly 11 digits (e.g., 1XXXXXXXXX)"
+                    },
+                    validate: {
+                      onlyNumbers: (value) => /^[0-9]+$/.test(value) || "Only numbers are allowed",
+                      exactLength: (value) => value.length === 11 || "Phone number must be exactly 11 digits"
+                    }
                   })}
                   aria-invalid={errors.phone ? "true" : "false"}
+                  maxLength={11}
+                  onKeyPress={(e) => {
+                    // Only allow numbers
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                 />
               </div>
               {errors.phone && (
@@ -299,6 +315,9 @@ const Register = () => {
                   {errors.phone.message}
                 </p>
               )}
+              <p className="text-xs text-gray-400 mt-1">
+                💡 Enter 11-digit phone number (e.g., 1XXXXXXXXX)
+              </p>
             </div>
             {/* Password */}
             <div className="space-y-2">

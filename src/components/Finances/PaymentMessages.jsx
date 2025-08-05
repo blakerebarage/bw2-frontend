@@ -401,9 +401,7 @@ const PaymentMessages = () => {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Username
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Payment Method
-                          </th>
+                         
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Amount
                           </th>
@@ -415,6 +413,9 @@ const PaymentMessages = () => {
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Receiver Number
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Balance
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Status
@@ -436,11 +437,7 @@ const PaymentMessages = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {message.username}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <span className={`font-medium ${getPaymentMethodColor(message.paymentMethod)}`}>
-                                {message.paymentMethod}
-                              </span>
-                            </td>
+                            
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {formatCurrency(message.amount)}
                             </td>
@@ -452,6 +449,9 @@ const PaymentMessages = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {message.receiverNumber }
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {message?.balance}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                               <span className={`font-medium ${getStatusColor(message.status)}`}>
