@@ -143,7 +143,7 @@ const BalanceRequest = () => {
 
     // Listen for recharge request updates
     const handleRechargeRequestUpdate = (payload) => {
-      console.log('BalanceRequest: Received recharge_request_update:', payload);
+     
       
       if (payload && payload.data && Array.isArray(payload.data)) {
         let filteredResults = payload.data;
@@ -166,7 +166,7 @@ const BalanceRequest = () => {
         const newPendingRequests = filteredResults.filter(req => req.status === "pending");
         if (newPendingRequests.length > 0) {
           // Play sound for new pending requests
-          console.log('BalanceRequest: Playing deposit pending sound for new requests');
+          
           handleDepositEvent('deposit_pending', { 
             count: newPendingRequests.length,
             requests: newPendingRequests 
@@ -196,7 +196,7 @@ const BalanceRequest = () => {
         const newPendingRequests = filteredResults.filter(req => req.status === "pending");
         if (newPendingRequests.length > 0) {
           // Play sound for new pending requests
-          console.log('BalanceRequest: Playing deposit pending sound for new requests');
+          
           handleDepositEvent('deposit_pending', { 
             count: newPendingRequests.length,
             requests: newPendingRequests 
@@ -226,7 +226,7 @@ const BalanceRequest = () => {
         const newPendingRequests = filteredResults.filter(req => req.status === "pending");
         if (newPendingRequests.length > 0) {
           // Play sound for new pending requests
-          console.log('BalanceRequest: Playing deposit pending sound for new requests');
+          
           handleDepositEvent('deposit_pending', { 
             count: newPendingRequests.length,
             requests: newPendingRequests 

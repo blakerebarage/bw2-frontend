@@ -154,7 +154,7 @@ class SoundNotification {
   }
 
   playDepositPending() {
-    console.log('SoundNotification: Playing deposit pending sound, enabled:', this.isEnabled, 'volume:', this.volume);
+   
     this.sounds.depositPending.play();
   }
 

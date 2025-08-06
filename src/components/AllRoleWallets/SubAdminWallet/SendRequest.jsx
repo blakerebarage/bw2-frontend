@@ -548,7 +548,7 @@ const DepositSection = () => {
       const res = await axiosSecure.post(`/api/v1/finance/create-recharge-request`, rechargeData);
       if (res.data.success) {
         // Play success sound for deposit request submission
-        console.log('Playing deposit pending sound for amount:', finalAmount);
+        
         handleDepositEvent('deposit_pending', { amount: finalAmount, method: selectedMethod.method });
         
         Swal.fire({
@@ -572,7 +572,7 @@ const DepositSection = () => {
       }
     } catch (err) {
       // Play error sound for failed deposit request
-      console.log('Playing deposit error sound for amount:', finalAmount);
+      
       handleDepositEvent('deposit_error', { amount: finalAmount, method: selectedMethod.method });
       
       Swal.fire({

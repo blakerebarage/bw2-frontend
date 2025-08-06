@@ -4,31 +4,31 @@ import { useCurrency } from "@/Hook/useCurrency";
 import useSoundNotification from "@/Hook/useSoundNotification";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
 import {
-    useAddUserMutation,
-    useCompleteWithdrawalMutation,
-    useGetUserTransactionsQuery,
-    useInitiateWithdrawalMutation,
-    useLazyGetActiveOtpQuery,
-    useSendBalanceMutation
+  useAddUserMutation,
+  useCompleteWithdrawalMutation,
+  useGetUserTransactionsQuery,
+  useInitiateWithdrawalMutation,
+  useLazyGetActiveOtpQuery,
+  useSendBalanceMutation
 } from "@/redux/features/allApis/usersApi/usersApi";
 import { logout } from "@/redux/slices/authSlice";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-    FaArrowDown,
-    FaArrowRight,
-    FaBell,
-    FaCopy,
-    FaEye,
-    FaEyeSlash,
-    FaHistory,
-    FaMoneyBillWave,
-    FaPaperPlane,
-    FaPlus,
-    FaTimes,
-    FaUserCheck,
-    FaUserPlus,
-    FaWallet
+  FaArrowDown,
+  FaArrowRight,
+  FaBell,
+  FaCopy,
+  FaEye,
+  FaEyeSlash,
+  FaHistory,
+  FaMoneyBillWave,
+  FaPaperPlane,
+  FaPlus,
+  FaTimes,
+  FaUserCheck,
+  FaUserPlus,
+  FaWallet
 } from "react-icons/fa";
 import { RiLogoutCircleLine } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
@@ -218,7 +218,7 @@ const CashAgentPanel = () => {
 
     // Listen for deposit request updates
     const handleDepositRequestUpdate = (payload) => {
-      console.log('CashAgentPanel: Received recharge_request_update:', payload);
+      
       
       if (payload && payload.data) {
         let depositData = [];
@@ -266,7 +266,7 @@ const CashAgentPanel = () => {
           const newPendingRequests = filteredDeposits.filter(req => req.status === "pending");
           if (newPendingRequests.length > 0) {
             // Play sound for new pending requests
-            console.log('CashAgentPanel: Playing deposit pending sound for new requests');
+            
             handleDepositEvent('deposit_pending', { 
               count: newPendingRequests.length,
               requests: newPendingRequests 

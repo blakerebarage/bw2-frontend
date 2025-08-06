@@ -23,7 +23,7 @@ const useSoundNotification = () => {
 
   // Play deposit pending sound
   const playDepositPending = useCallback(() => {
-    console.log('Playing deposit pending sound');
+    
     soundNotification.playDepositPending();
   }, []);
 
@@ -104,12 +104,12 @@ const useSoundNotification = () => {
 
   // Handle deposit events with sound
   const handleDepositEvent = useCallback((eventType, data) => {
-    console.log('handleDepositEvent called with:', eventType, data);
+    
     const eventKey = `${eventType}_${data?.requestId || data?._id || Date.now()}`;
     
     // Prevent duplicate sounds for the same event
     if (lastDepositEvent.current === eventKey) {
-      console.log('Duplicate deposit event, skipping sound');
+      
       return;
     }
     

@@ -119,7 +119,7 @@ const PaymentMessages = () => {
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to fetch payment messages");
       }
-     console.log(response,"response")
+     
       setPaymentMessages(response.data.data);
       setTotalPages(Math.ceil(response.data.meta.total / limit));
     } catch (error) {

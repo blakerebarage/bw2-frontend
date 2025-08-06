@@ -55,7 +55,7 @@ const GameControl = () => {
     "Arcade",
     "Uncategorized"
   ];
- console.log(currentLanguage)
+ 
   // Debounce the search query update
   const debouncedSetSearchQuery = useCallback(
     debounce((value) => setSearchQuery(value), 300),
