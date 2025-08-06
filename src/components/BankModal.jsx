@@ -64,7 +64,7 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (bankType === "Bank Transfer") {
+    if (bankType === "Bank") {
       if (!bankName || !branchName || !accountNumber || !accountHolderName || !districtName || !routingNumber || !purpose) {
         addToast("All bank fields are required!", {
           appearance: "error",
@@ -82,30 +82,39 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
       }
     }
 
-         const newBank = bankType === "Bank Transfer" ? {
-       username: user?.username,
-       bankType,
-       bankName,
-       branchName,
-       accountNumber,
-       accountHolderName,
-       districtName,
-       routingNumber,
-       channel: "Bank-Transfer",
-       dailyLimit: dailyLimit || "0",
-       balance: balance || "0",
-       purpose,
-       isWalletAgent: true
-     } : {
-       username: user?.username,
-       bankType,
-       channel,
-       accountNumber,
-       dailyLimit: dailyLimit || "0",
-       balance: balance || "0",
-       purpose,
-       isWalletAgent: true
-     };
+    // Validate balance (optional field but should be a valid number if provided)
+    if (balance && isNaN(Number(balance))) {
+      addToast("Balance must be a valid number!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    const newBank = bankType === "Bank" ? {
+      username: user?.username,
+      bankType,
+      bankName,
+      branchName,
+      accountNumber,
+      accountHolderName,
+      districtName,
+      routingNumber,
+      channel: "Bank-Transfer",
+      dailyLimit: dailyLimit || "0",
+      balance: balance || "0",
+      purpose,
+      isWalletAgent: true
+    } : {
+      username: user?.username,
+      bankType,
+      channel,
+      accountNumber,
+      dailyLimit: dailyLimit || "0",
+      balance: balance || "0",
+      purpose,
+      isWalletAgent: true
+    };
 
     try {
       setLoading(true);
@@ -183,7 +192,10 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
                 <option value="Nagad">Nagad</option>
                 <option value="Rocket">Rocket</option>
                 <option value="Upay">Upay</option>
-                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Tap">Tap</option>
+                <option value="OkWallet">OkWallet</option>
+                <option value="Crypto">Crypto</option>
+                <option value="Bank">Bank</option>
               </select>
             </div>
             
@@ -194,11 +206,14 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
                 onChange={(e) => setChannel(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+                disabled={bankType === "Bank"}
               >
                 <option value="">Select Channel</option>
-                <option value="Send-Money">Send Money</option>
-                <option value="Cash-In">Cash In</option>
-                <option value="Make-Payment">Make Payment</option>
+                <option value="Cash-Out">Cash-Out</option>
+                <option value="Send-Money">Send-Money</option>
+                <option value="Cash-In">Cash-In</option>
+                <option value="Make-Payment">Make-Payment</option>
+                <option value="Bank-Transfer">Bank-Transfer</option>
               </select>
             </div>
           </div>
@@ -228,45 +243,58 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
             />
           </div>
 
-                     <div>
-             <label className="block text-gray-700 text-sm font-medium mb-2">Purpose</label>
-             <select
-               value={purpose}
-               onChange={(e) => setPurpose(e.target.value)}
-               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-               required
-             >
-               <option value="">Select Purpose</option>
-               <option value="Deposit">Deposit</option>
-               <option value="Withdraw">Withdraw</option>
-               <option value="Deposit-Withdraw">Both</option>
-             </select>
-           </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">Purpose</label>
+            <select
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="">Select Purpose</option>
+              <option value="Deposit">Deposit</option>
+              <option value="Withdraw">Withdraw</option>
+            </select>
+          </div>
 
-           <div>
-             <label className="block text-gray-700 text-sm font-medium mb-2">Balance</label>
-             <input
-               type="number"
-               value={balance}
-               onChange={(e) => setBalance(e.target.value)}
-               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-               placeholder="Enter balance"
-               min="0"
-             />
-           </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">Balance</label>
+            <input
+              type="number"
+              value={balance}
+              onChange={(e) => setBalance(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter balance"
+              min="0"
+            />
+          </div>
 
-          {bankType === "Bank Transfer" && (
+          {bankType === "Bank" && (
             <>
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-2">Bank Name</label>
-                <input
-                  type="text"
+                <select
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter bank name"
                   required
-                />
+                >
+                  <option value="">Select Bank Name</option>
+                  <option value="DutchBangla">Dutch Bangla Bank</option>
+                  <option value="Islami">Islami Bank</option>
+                  <option value="ShajalalIslami">Shajalal Islami Bank</option>
+                  <option value="Brack">Brack Bank</option>
+                  <option value="City">City Bank</option>
+                  <option value="Prime">Prime Bank</option>
+                  <option value="Agrani">Agrani Bank</option>
+                  <option value="Sonali">Sonali Bank</option>
+                  <option value="Pubali">Pubali Bank</option>
+                  <option value="Uttara">Uttara Bank</option>
+                  <option value="Dhaka">Dhaka Bank</option>
+                  <option value="Jamuna">Jamuna Bank</option>
+                  <option value="One">One Bank</option>
+                  <option value="UnitedCommercial">United Commercial Bank</option>
+                </select>
               </div>
 
               <div>

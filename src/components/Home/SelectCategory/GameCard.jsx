@@ -39,7 +39,9 @@ export const GameCard = ({
         className="w-full h-40 object-cover group-hover:brightness-90 transition-all duration-300"
         onError={() => setImageError(true)}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#1a1f24]/90 via-[#1a1f24]/40 to-transparent opacity-100 transition-all duration-300"></div>
+      
+      {/* Subtle gradient overlay for better text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#1a1f24]/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
       
       {user && (
         <button
@@ -58,12 +60,12 @@ export const GameCard = ({
         </button>
       )}
   
-      <div className="absolute bottom-0 left-0 right-0 p-3">
-        <div className="bg-[#22282e]/80 backdrop-blur-sm text-white px-2 py-2 rounded-lg border border-[#facc15]/30 shadow-sm">
+      {/* Game name - only visible on hover */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+        <div className="bg-[#22282e]/40 backdrop-blur-sm text-white px-3 py-2 rounded-lg border border-[#facc15]/20 shadow-sm">
           <p className="text-sm font-medium text-[#facc15] leading-tight break-words">
             {game.name === "LuckSportGaming" ? "Lucky Exchange" : game.name}
           </p>
-          
         </div>
       </div>
 

@@ -85,6 +85,14 @@ const router = createBrowserRouter([
     element: <CashAgentRoute />,
   },
   {
+    path: "/wallet-agent",
+    element: <CashAgentRoute />,
+  },
+  {
+    path: "/sub-cash-agent",
+    element: <CashAgentRoute />,
+  },
+  {
     path: "/",
     element: <App />,
     children: [

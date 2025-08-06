@@ -97,9 +97,19 @@ function App() {
     }
   }, [pathname, dispatch, reloadUserData]);
 
-  // If user is cash-agent or sub-cash-agent, always redirect to /cash-agent
-  if (user && ["cash-agent", "sub-cash-agent", "wallet-agent"].includes(user.role) && pathname !== "/cash-agent") {
+  // If user is cash-agent, always redirect to /cash-agent
+  if (user && user.role === "cash-agent" && pathname !== "/cash-agent") {
     return <Navigate to="/cash-agent" replace />;
+  }
+
+  // If user is wallet-agent, always redirect to /wallet-agent
+  if (user && user.role === "wallet-agent" && pathname !== "/wallet-agent") {
+    return <Navigate to="/wallet-agent" replace />;
+  }
+
+  // If user is sub-cash-agent, always redirect to /sub-cash-agent
+  if (user && user.role === "sub-cash-agent" && pathname !== "/sub-cash-agent") {
+    return <Navigate to="/sub-cash-agent" replace />;
   }
 
   return (

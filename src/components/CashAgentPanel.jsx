@@ -60,7 +60,7 @@ const CashAgentPanel = () => {
   const [amount, setAmount] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   
-  // User creation states (only for cash-agent)
+  // User creation states (only for cash-agent and wallet-agent)
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   
   // User withdrawal states  
@@ -412,8 +412,7 @@ const CashAgentPanel = () => {
               (updatedRequest.walletAgentUsername === user.username || updatedRequest.referralCode === user.referralCode) :
               (updatedRequest.referralCode === user.referralCode);
             
-            
-            
+      
             if (shouldShow) {
             
               const updated = [...prev, updatedRequest];
@@ -987,13 +986,21 @@ const CashAgentPanel = () => {
     return `${randomPart}`;
   };
 
-  // Handle user creation (only for cash-agent)
+  // Handle user creation (for wallet-agent and cash-agent)
   const onCreateUserSubmit = async (data) => {
     const { confirmPassword, ...userInfo } = data;
     
-    // Only allow sub-cash-agent creation for cash-agent
-    if (user?.role === "cash-agent" && userInfo.role !== "sub-cash-agent") {
-      addToast("Cash agents can only create sub-cash-agent users", {
+    // Determine allowed role based on current user's role
+    let allowedRole = "";
+    if (user?.role === "wallet-agent") {
+      allowedRole = "cash-agent";
+    } else if (user?.role === "cash-agent") {
+      allowedRole = "sub-cash-agent";
+    }
+    
+    // Validate role assignment
+    if (userInfo.role !== allowedRole) {
+      addToast(`${user?.role === "wallet-agent" ? "Wallet agents" : "Cash agents"} can only create ${allowedRole} users`, {
         appearance: "error",
         autoDismiss: true,
       });
@@ -1136,6 +1143,12 @@ const CashAgentPanel = () => {
   // Tab system for wallet agent
   const [activeTab, setActiveTab] = useState("deposits"); // deposits, withdraws, addBalance, sendBalance
 
+  // State to control withdraw form visibility for cash-agent and sub-cash-agent
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+
+  // Tab system for cash-agent and sub-cash-agent
+  const [cashAgentTab, setCashAgentTab] = useState("deposit"); // deposit, withdraw
+
 
 
 
@@ -1248,17 +1261,27 @@ const CashAgentPanel = () => {
                   }`}
                 >
                   <FaPaperPlane className="text-xl" />
-                  <span className="font-medium">Send Balance</span>
+                  <span className="font-medium">Deposit</span>
                 </button>
 
                 <button
-                  onClick={() => setIsWithdrawModalOpen(true)}
-                  className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
+                  onClick={() => setActiveTab("withdraw")}
+                  className={`w-full border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
+                    activeTab === "withdraw" ? "bg-red-500/20 border-red-500/30 text-red-400" : "bg-white/10"
+                  }`}
                 >
-                  <FaArrowDown className="text-red-400 text-xl" />
-                  <span className="font-medium">Withdraw from User</span>
+                  <FaArrowDown className="text-xl" />
+                  <span className="font-medium">Withdraw</span>
                 </button>
-
+              
+                  <button
+                    onClick={() => setIsCreateUserModalOpen(true)}
+                    className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
+                  >
+                    <FaUserPlus className="text-green-400 text-xl" />
+                    <span className="font-medium">Create Sub Cash Agent</span>
+                  </button>
+                
                 <button
                   onClick={() => {
                     setShowCommissions(!showCommissions);
@@ -1281,24 +1304,28 @@ const CashAgentPanel = () => {
             {/* Action Buttons for Cash Agent */}
             {["cash-agent", "sub-cash-agent"].includes(currentUser?.role) && (
               <div className="space-y-4">
-                {/* User Creation - Only for cash-agent */}
-                {currentUser?.role === "cash-agent" && (
-                  <button
-                    onClick={() => setIsCreateUserModalOpen(true)}
-                    className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
-                  >
-                    <FaUserPlus className="text-green-400 text-xl" />
-                    <span className="font-medium">Create Sub Cash Agent</span>
-                  </button>
-                )}
                 
-                {/* Withdraw functionality for cash agents */}
+                
+                {/* Deposit Tab Button */}
                 <button
-                  onClick={() => setIsWithdrawModalOpen(true)}
-                  className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
+                  onClick={() => setCashAgentTab("deposit")}
+                  className={`w-full border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
+                    cashAgentTab === "deposit" ? "bg-yellow-500/20 border-yellow-500/30 text-yellow-400" : "bg-white/10"
+                  }`}
                 >
-                  <FaArrowDown className="text-red-400 text-xl" />
-                  <span className="font-medium">Withdraw from User</span>
+                  <FaPaperPlane className="text-xl" />
+                  <span className="font-medium">Deposit</span>
+                </button>
+
+                {/* Withdraw Tab Button */}
+                <button
+                  onClick={() => setCashAgentTab("withdraw")}
+                  className={`w-full border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
+                    cashAgentTab === "withdraw" ? "bg-red-500/20 border-red-500/30 text-red-400" : "bg-white/10"
+                  }`}
+                >
+                  <FaArrowDown className="text-xl" />
+                  <span className="font-medium">Withdraw</span>
                 </button>
 
                 <button
@@ -1315,6 +1342,18 @@ const CashAgentPanel = () => {
                     {showCommissions ? 'Hide' : 'Show'} Commissions
                   </span>
                 </button>
+                {/* User Creation - Only for wallet-agent and cash-agent */}
+                {(currentUser?.role === "wallet-agent" || currentUser?.role === "cash-agent") && (
+                  <button
+                    onClick={() => setIsCreateUserModalOpen(true)}
+                    className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3"
+                  >
+                    <FaUserPlus className="text-green-400 text-xl" />
+                    <span className="font-medium">
+                      {currentUser?.role === "wallet-agent" ? "Create Cash Agent" : "Create Sub Cash Agent"}
+                    </span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1354,7 +1393,7 @@ const CashAgentPanel = () => {
                   <div>
                     <div className="flex items-center gap-3 mb-6">
                       <FaPaperPlane className="text-orange-400 text-xl" />
-                      <h2 className="text-xl font-bold text-white">Send Balance</h2>
+                      <h2 className="text-xl font-bold text-white">Deposit</h2>
                     </div>
                     
                     <form onSubmit={handleSendBalance} className="space-y-4 w-full">
@@ -1412,70 +1451,359 @@ const CashAgentPanel = () => {
                     </form>
                   </div>
                 )}
+
+                {/* Withdraw Content */}
+                {activeTab === "withdraw" && (
+                  <div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <FaArrowDown className="text-red-400 text-xl" />
+                      <h2 className="text-xl font-bold text-white">Withdraw</h2>
+                    </div>
+                    
+                    <form onSubmit={handleInitiateWithdrawal} className="space-y-4 w-full">
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Username
+                        </label>
+                        <div className="relative">
+                          <FaUserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Enter username to withdraw from"
+                            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
+                            value={withdrawUsername}
+                            onChange={e => setWithdrawUsername(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Amount
+                        </label>
+                        <div className="relative">
+                          <FaMoneyBillWave className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="number"
+                            placeholder="Enter amount to withdraw"
+                            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
+                            value={withdrawAmount}
+                            onChange={e => setWithdrawAmount(e.target.value)}
+                            min="1"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-red-400 to-red-600 hover:from-red-500 hover:to-red-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                        disabled={initiatingWithdrawal}
+                      >
+                        {initiatingWithdrawal ? (
+                          <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <FaArrowDown />
+                            Send OTP
+                            <FaArrowRight />
+                          </>
+                        )}
+                      </button>
+                    </form>
+
+                    {/* OTP Input Section - Show when withdrawStep === 2 */}
+                    {withdrawStep === 2 && (
+                      <div className="mt-6 pt-6 border-t border-white/20">
+                        <div className="bg-white/5 rounded-lg p-4 mb-4">
+                          <p className="text-sm text-gray-300 mb-2">Withdrawal Details:</p>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="font-medium text-gray-300">Username:</span>
+                            <span className="text-gray-400">{withdrawUsername}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="font-medium text-gray-300">Amount:</span>
+                            <span className="text-gray-400">{formatCurrency(withdrawAmount)}</span>
+                          </div>
+                        </div>
+
+                        <form onSubmit={handleCompleteWithdrawal} className="space-y-4">
+                          <div>
+                            <label className="block text-gray-300 text-sm font-medium mb-3">Enter OTP</label>
+                            <div className="flex justify-center gap-3 mb-4">
+                              {withdrawOtp.map((digit, index) => (
+                                <input
+                                  key={index}
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  placeholder="•"
+                                  className="w-12 h-12 text-center text-xl font-bold border-2 border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-colors hover:border-white/30 bg-white/10 text-white"
+                                  value={digit}
+                                  onChange={e => handleOtpChange(index, e.target.value)}
+                                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                  onPaste={(e) => handleOtpPaste(e, index)}
+                                  onFocus={(e) => e.target.select()}
+                                  onInput={(e) => {
+                                    if (e.target.value.length > 1) {
+                                      e.target.value = e.target.value.slice(-1);
+                                    }
+                                  }}
+                                  maxLength="1"
+                                  data-otp-index={index}
+                                  autoComplete="off"
+                                />
+                              ))}
+                            </div>
+                            <p className="text-xs text-gray-400 text-center">Please enter the 6-digit OTP code</p>
+                          </div>
+
+                          <div className="flex gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setWithdrawStep(1)}
+                              className="flex-1 bg-gray-500/20 border border-gray-500/30 text-gray-300 hover:bg-gray-500/30 transition-colors duration-200 py-3 rounded-xl"
+                            >
+                              Back
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={completingWithdrawal}
+                              className="flex-1 bg-gradient-to-r from-red-400 to-red-600 hover:from-red-500 hover:to-red-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                            >
+                              {completingWithdrawal ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                  Completing...
+                                </>
+                              ) : (
+                                <>
+                                  <FaArrowDown />
+                                  Complete Withdrawal
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
             {/* Send Balance Form - Only for cash-agent and sub-cash-agent */}
             {["cash-agent", "sub-cash-agent"].includes(currentUser?.role) && (
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-                <div className="flex items-center gap-3 mb-6">
-                  <FaPaperPlane className="text-yellow-400 text-xl" />
-                  <h2 className="text-xl font-bold text-white">Send Balance</h2>
-                </div>
-                
-                <form onSubmit={handleSendBalance} className="space-y-4">
-                  <div>
-                    <label className="block text-gray-300 text-sm font-medium mb-2">
-                      Receiver Username
-                    </label>
-                    <div className="relative">
-                      <FaUserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Enter username"
-                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                        value={receiverUsername}
-                        onChange={e => setReceiverUsername(e.target.value)}
-                      />
+                {/* Deposit Form */}
+                {cashAgentTab === "deposit" && (
+                  <>
+                    <div className="flex items-center gap-3 mb-6">
+                      <FaPaperPlane className="text-yellow-400 text-xl" />
+                      <h2 className="text-xl font-bold text-white">Deposit</h2>
                     </div>
-                  </div>
+                    
+                    <form onSubmit={handleSendBalance} className="space-y-4">
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Receiver Username
+                        </label>
+                        <div className="relative">
+                          <FaUserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Enter username"
+                            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                            value={receiverUsername}
+                            onChange={e => setReceiverUsername(e.target.value)}
+                          />
+                        </div>
+                      </div>
 
-                  <div>
-                    <label className="block text-gray-300 text-sm font-medium mb-2">
-                      Amount
-                    </label>
-                    <div className="relative">
-                      <FaMoneyBillWave className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="number"
-                        placeholder="Enter amount"
-                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                        value={amount}
-                        onChange={e => setAmount(e.target.value)}
-                        min="1"
-                      />
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Amount
+                        </label>
+                        <div className="relative">
+                          <FaMoneyBillWave className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="number"
+                            placeholder="Enter amount"
+                            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                            value={amount}
+                            onChange={e => setAmount(e.target.value)}
+                            min="1"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                        disabled={sendingBalance}
+                      >
+                        {sendingBalance ? (
+                          <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <FaPaperPlane />
+                            Send Balance
+                            <FaArrowRight />
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  </>
+                )}
+
+                {/* Withdraw Form */}
+                {cashAgentTab === "withdraw" && (
+                  <>
+                    <div className="flex items-center gap-3 mb-6">
+                      <FaArrowDown className="text-red-400 text-xl" />
+                      <h2 className="text-xl font-bold text-white">Withdraw</h2>
                     </div>
-                  </div>
+                    
+                    <form onSubmit={handleInitiateWithdrawal} className="space-y-4">
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Username
+                        </label>
+                        <div className="relative">
+                          <FaUserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Enter username to withdraw from"
+                            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
+                            value={withdrawUsername}
+                            onChange={e => setWithdrawUsername(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
 
-                  <button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                    disabled={sendingBalance}
-                  >
-                    {sendingBalance ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <FaPaperPlane />
-                        Send Balance
-                        <FaArrowRight />
-                      </>
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Amount
+                        </label>
+                        <div className="relative">
+                          <FaMoneyBillWave className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="number"
+                            placeholder="Enter amount to withdraw"
+                            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
+                            value={withdrawAmount}
+                            onChange={e => setWithdrawAmount(e.target.value)}
+                            min="1"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-red-400 to-red-600 hover:from-red-500 hover:to-red-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                        disabled={initiatingWithdrawal}
+                      >
+                        {initiatingWithdrawal ? (
+                          <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <FaArrowDown />
+                            Send OTP
+                            <FaArrowRight />
+                          </>
+                        )}
+                      </button>
+                    </form>
+
+                    {/* OTP Input Section - Show when withdrawStep === 2 */}
+                    {withdrawStep === 2 && (
+                      <div className="mt-6 pt-6 border-t border-white/20">
+                        <div className="bg-white/5 rounded-lg p-4 mb-4">
+                          <p className="text-sm text-gray-300 mb-2">Withdrawal Details:</p>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="font-medium text-gray-300">Username:</span>
+                            <span className="text-gray-400">{withdrawUsername}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="font-medium text-gray-300">Amount:</span>
+                            <span className="text-gray-400">{formatCurrency(withdrawAmount)}</span>
+                          </div>
+                        </div>
+
+                        <form onSubmit={handleCompleteWithdrawal} className="space-y-4">
+                          <div>
+                            <label className="block text-gray-300 text-sm font-medium mb-3">Enter OTP</label>
+                            <div className="flex justify-center gap-3 mb-4">
+                              {withdrawOtp.map((digit, index) => (
+                                <input
+                                  key={index}
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  placeholder="•"
+                                  className="w-12 h-12 text-center text-xl font-bold border-2 border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-colors hover:border-white/30 bg-white/10 text-white"
+                                  value={digit}
+                                  onChange={e => handleOtpChange(index, e.target.value)}
+                                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                  onPaste={(e) => handleOtpPaste(e, index)}
+                                  onFocus={(e) => e.target.select()}
+                                  onInput={(e) => {
+                                    if (e.target.value.length > 1) {
+                                      e.target.value = e.target.value.slice(-1);
+                                    }
+                                  }}
+                                  maxLength="1"
+                                  data-otp-index={index}
+                                  autoComplete="off"
+                                />
+                              ))}
+                            </div>
+                            <p className="text-xs text-gray-400 text-center">Please enter the 6-digit OTP code</p>
+                          </div>
+
+                          <div className="flex gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setWithdrawStep(1)}
+                              className="flex-1 bg-gray-500/20 border border-gray-500/30 text-gray-300 hover:bg-gray-500/30 transition-colors duration-200 py-3 rounded-xl"
+                            >
+                              Back
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={completingWithdrawal}
+                              className="flex-1 bg-gradient-to-r from-red-400 to-red-600 hover:from-red-500 hover:to-red-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                            >
+                              {completingWithdrawal ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                  Completing...
+                                </>
+                              ) : (
+                                <>
+                                  <FaArrowDown />
+                                  Complete Withdrawal
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     )}
-                  </button>
-                </form>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -1771,7 +2099,9 @@ const CashAgentPanel = () => {
               className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4"
             >
               <div className="flex items-center justify-between border-b pb-4">
-                <h3 className="text-lg font-semibold text-[#1f2937]">Create Sub Cash Agent</h3>
+                <h3 className="text-lg font-semibold text-[#1f2937]">
+                  {user?.role === "wallet-agent" ? "Create Cash Agent" : "Create Sub Cash Agent"}
+                </h3>
                 <button
                   type="button"
                   onClick={() => {
@@ -1811,7 +2141,11 @@ const CashAgentPanel = () => {
                   )}
                 </div>
 
-                <input type="hidden" {...register("role")} value="sub-cash-agent" />
+                <input 
+                  type="hidden" 
+                  {...register("role")} 
+                  value={user?.role === "wallet-agent" ? "cash-agent" : "sub-cash-agent"} 
+                />
 
                 <div>
                   <label className="block text-sm font-medium text-[#1f2937] mb-1">Password</label>
