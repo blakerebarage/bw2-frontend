@@ -2153,15 +2153,46 @@ const CashAgentPanel = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#1f2937] mb-1">Phone Number</label>
-                  <input
-                    type="text"
-                    {...register("phone", { required: "Phone number is required" })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors"
-                  />
+                  <label className="block text-sm font-medium text-[#1f2937] mb-1">Phone Number <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                      <span className="text-[#1f2937] font-semibold text-sm">+88</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="0XXXXXXXXX"
+                      maxLength={11}
+                      onKeyPress={(e) => {
+                        // Only allow numbers
+                        if (!/[0-9]/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      {...register("phone", {
+                        required: "Phone number is required.",
+                        pattern: {
+                          value: /^[0-9]{11}$/,
+                          message: "Phone number must be exactly 11 digits (e.g., 0XXXXXXXXX)"
+                        },
+                        validate: {
+                          onlyNumbers: (value) => /^[0-9]+$/.test(value) || "Only numbers are allowed",
+                          exactLength: (value) => value.length === 11 || "Phone number must be exactly 11 digits"
+                        }
+                      })}
+                      className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors"
+                    />
+                  </div>
                   {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {errors.phone.message}
+                    </p>
                   )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Enter 11-digit phone number (e.g., 0XXXXXXXXX)
+                  </p>
                 </div>
 
                 <input 
