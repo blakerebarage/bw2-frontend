@@ -1,7 +1,8 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
+import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
-import { FaEdit, FaPlus, FaTimes, FaUniversity, FaWallet } from "react-icons/fa";
+import { FaEdit, FaEye, FaList, FaPlus, FaTable, FaTimes, FaUniversity, FaWallet } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 import Swal from "sweetalert2";
@@ -18,6 +19,18 @@ const WalletAgentPaymentMethods = () => {
   const [banksLoading, setBanksLoading] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
   const [editingBank, setEditingBank] = useState(null);
+
+  // Bank Details states
+  const [showBankDetails, setShowBankDetails] = useState(false);
+  const [selectedBankAccount, setSelectedBankAccount] = useState("");
+  const [bankTransactions, setBankTransactions] = useState([]);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [bankError, setBankError] = useState(null);
+  const [bankCurrentPage, setBankCurrentPage] = useState(1);
+  const [bankTotalPages, setBankTotalPages] = useState(1);
+  const [bankViewMode, setBankViewMode] = useState("table");
+  const [bankStartDate, setBankStartDate] = useState("");
+  const [bankEndDate, setBankEndDate] = useState("");
 
   // Fetch user's banks
   const fetchUserBanks = useCallback(async () => {
@@ -122,6 +135,87 @@ const WalletAgentPaymentMethods = () => {
     }
   };
 
+  // Bank Details Functions
+  const handleShowBankDetails = (bank) => {
+    setSelectedBankAccount(bank.accountNumber);
+    setShowBankDetails(true);
+    setBankCurrentPage(1);
+    setBankStartDate("");
+    setBankEndDate("");
+    setBankError(null);
+  };
+
+  const fetchBankTransactions = async (accountNumber) => {
+    try {
+      setBankLoading(true);
+      setBankError(null);
+      
+      // Validate date range if both dates are provided
+      if (bankStartDate && bankEndDate && new Date(bankStartDate) > new Date(bankEndDate)) {
+        throw new Error("Start date cannot be after end date");
+      }
+
+      let url = `/api/v1/finance/received-payments/${accountNumber}?page=${bankCurrentPage}&limit=10`;
+      
+      if (bankStartDate) {
+        url += `&startDate=${bankStartDate}`;
+      }
+      if (bankEndDate) {
+        url += `&endDate=${bankEndDate}`;
+      }
+
+      const response = await axiosSecure.get(url);
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to fetch transactions");
+      }
+
+      setBankTransactions(response.data.data.results);
+      setBankTotalPages(response.data.data.pageCount);
+    } catch (error) {
+      setBankError(error.message || "Failed to fetch transactions. Please try again later.");
+      addToast(error.message || "Failed to fetch transactions. Please try again later.", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      setBankTransactions([]);
+      setBankTotalPages(1);
+    } finally {
+      setBankLoading(false);
+    }
+  };
+
+  const handleBankDateFilter = () => {
+    if (bankStartDate && bankEndDate && new Date(bankStartDate) > new Date(bankEndDate)) {
+      addToast("Start date cannot be after end date", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+    setBankCurrentPage(1);
+    if (selectedBankAccount) {
+      fetchBankTransactions(selectedBankAccount);
+    }
+  };
+
+  const clearBankDateFilter = () => {
+    setBankStartDate("");
+    setBankEndDate("");
+    setBankCurrentPage(1);
+    setBankError(null);
+    if (selectedBankAccount) {
+      fetchBankTransactions(selectedBankAccount);
+    }
+  };
+
+  // Fetch bank transactions when selected account changes
+  useEffect(() => {
+    if (selectedBankAccount && showBankDetails) {
+      fetchBankTransactions(selectedBankAccount);
+    }
+  }, [selectedBankAccount, bankCurrentPage, bankStartDate, bankEndDate, showBankDetails]);
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
@@ -201,6 +295,13 @@ const WalletAgentPaymentMethods = () => {
                         {bank.status === "active" ? "Active" : "Inactive"}
                       </span>
                       <div className="flex gap-1">
+                        <button
+                          onClick={() => handleShowBankDetails(bank)}
+                          className="p-1 text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 rounded transition-colors"
+                          title="Bank Details"
+                        >
+                          <FaEye className="text-xs" />
+                        </button>
                         <button
                           onClick={() => handleEditBank(bank)}
                           className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded transition-colors"
@@ -302,6 +403,251 @@ const WalletAgentPaymentMethods = () => {
           }}
         />
       )}
+
+             {/* Bank Details Modal */}
+       {showBankDetails && (
+         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+           <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-white/20">
+                           {/* Header */}
+              <div className="p-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-white/10">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                  
+                                   <div className="flex flex-col lg:flex-row gap-4 min-w-0">
+                    {/* Date Filter */}
+                    <div className="flex flex-col sm:flex-row gap-3 min-w-0">
+                      <div className="relative min-w-0">
+                        <input
+                          type="date"
+                          value={bankStartDate}
+                          onChange={(e) => setBankStartDate(e.target.value)}
+                          className="w-full min-w-0 pl-4 pr-4 py-2.5 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none bg-white/10 text-white placeholder-gray-400 shadow-sm hover:border-white/30 transition-colors"
+                        />
+                      </div>
+                      <div className="relative min-w-0">
+                        <input
+                          type="date"
+                          value={bankEndDate}
+                          onChange={(e) => setBankEndDate(e.target.value)}
+                          className="w-full min-w-0 pl-4 pr-4 py-2.5 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none bg-white/10 text-white placeholder-gray-400 shadow-sm hover:border-white/30 transition-colors"
+                        />
+                      </div>
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button
+                          onClick={handleBankDateFilter}
+                          className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-xl hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2 whitespace-nowrap"
+                        >
+                          <span>Filter</span>
+                        </button>
+                        <button
+                          onClick={clearBankDateFilter}
+                          className="px-6 py-2.5 border border-white/20 text-white rounded-xl hover:bg-white/10 transition-all duration-200 shadow-sm hover:shadow flex items-center gap-2 whitespace-nowrap"
+                        >
+                          <span>Clear</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center flex-shrink-0">
+                      <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/20">
+                        <button
+                          onClick={() => setBankViewMode("table")}
+                          className={`p-2.5 rounded-lg transition-all duration-200 ${
+                            bankViewMode === "table"
+                              ? "bg-white/20 shadow-sm text-purple-300"
+                              : "text-gray-300 hover:text-white hover:bg-white/10"
+                          }`}
+                          title="Table View"
+                        >
+                          <FaTable className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => setBankViewMode("list")}
+                          className={`p-2.5 rounded-lg transition-all duration-200 ${
+                            bankViewMode === "list"
+                              ? "bg-white/20 shadow-sm text-purple-300"
+                              : "text-gray-300 hover:text-white hover:bg-white/10"
+                          }`}
+                          title="List View"
+                        >
+                          <FaList className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Close Button */}
+                    <button
+                      onClick={() => setShowBankDetails(false)}
+                      className="text-gray-300 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all duration-200 flex-shrink-0"
+                    >
+                      <FaTimes className="h-6 w-6" />
+                    </button>
+                  </div>
+               </div>
+             </div>
+
+             {/* Content */}
+             <div className="p-2 overflow-y-auto max-h-[60vh]">
+               {bankLoading ? (
+                 <div className="flex justify-center items-center py-12">
+                   <div className="flex items-center gap-3 text-white">
+                     <div className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                     <span>Loading transactions...</span>
+                   </div>
+                 </div>
+               ) : bankError ? (
+                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-red-300">
+                   <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center">
+                       <FaTimes className="text-red-400" />
+                     </div>
+                     <div>
+                       <h3 className="font-semibold text-red-300">Error</h3>
+                       <p className="text-red-400 text-sm">{bankError}</p>
+                     </div>
+                   </div>
+                 </div>
+               ) : bankTransactions.length === 0 ? (
+                 <div className="text-center py-16 bg-white/5 rounded-xl border border-white/10">
+                   <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                     <FaUniversity className="text-purple-400 text-2xl" />
+                   </div>
+                   <p className="text-white text-lg font-medium mb-2">No transactions found</p>
+                   <p className="text-gray-400 text-sm">Try adjusting your filters or date range</p>
+                 </div>
+                               ) : bankViewMode === "table" ? (
+                  <div className="w-full overflow-x-auto rounded-xl border border-white/10 bg-white/5">
+                    <div className="min-w-[800px]">
+                      <table className="w-full divide-y divide-white/10">
+                        <thead className="bg-white/10">
+                          <tr>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[120px]">
+                              Username
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[140px]">
+                              Payment Method
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[140px]">
+                              Account Number
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[100px]">
+                              Channel
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[120px]">
+                              Amount
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[160px]">
+                              Date
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white/5 divide-y divide-white/10">
+                          {bankTransactions.map((txn) => (
+                            <tr key={txn._id} className="hover:bg-white/10 transition-colors duration-200">
+                              <td className="px-6 py-4 whitespace-nowrap min-w-[120px]">
+                                <div className="flex items-center">
+                                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                                    {txn.username.charAt(0).toUpperCase()}
+                                  </div>
+                                  <span className="ml-3 text-sm font-medium text-white truncate">{txn.username}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap min-w-[140px]">
+                                <span className="px-3 py-1 text-sm rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
+                                  {txn.paymentMethod}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 font-mono min-w-[140px]">
+                                {txn.accountNumber}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap min-w-[100px]">
+                                <span className="px-3 py-1 text-sm rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                  {txn.channel}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap min-w-[120px]">
+                                <span className="text-sm font-semibold text-yellow-300">
+                                  {formatCurrency(txn.amount)}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 min-w-[160px]">
+                                {moment(txn.date).format("MMM D, YYYY h:mm A")}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+               ) : (
+                 <div className="space-y-4">
+                   {bankTransactions.map((txn) => (
+                     <div
+                       key={txn._id}
+                       className="bg-white/5 rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:border-white/20"
+                     >
+                       <div className="flex justify-between items-start">
+                         <div className="flex items-start gap-4">
+                           <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold text-lg">
+                             {txn.username.charAt(0).toUpperCase()}
+                           </div>
+                           <div>
+                             <div className="flex items-center gap-3 mb-2">
+                               <h3 className="font-semibold text-white">{txn.paymentMethod}</h3>
+                               <span className="px-3 py-1 text-sm rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
+                                 {txn.channel}
+                               </span>
+                             </div>
+                             <div className="space-y-1">
+                               <p className="text-sm text-gray-300">
+                                 <span className="font-medium text-white">Username:</span> {txn.username}
+                               </p>
+                               <p className="text-sm text-gray-300">
+                                 <span className="font-medium text-white">Account:</span> <span className="font-mono text-purple-300">{txn.accountNumber}</span>
+                               </p>
+                             </div>
+                           </div>
+                         </div>
+                         <div className="text-right">
+                           <p className="text-xl font-bold text-yellow-300 mb-1">{formatCurrency(txn.amount)}</p>
+                           <p className="text-sm text-gray-400">{moment(txn.date).format("MMM D, YYYY h:mm A")}</p>
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               )}
+             </div>
+
+             {/* Pagination */}
+             {bankTotalPages > 1 && (
+               <div className="px-6 py-4 border-t border-white/10 bg-white/5">
+                 <div className="flex items-center justify-between">
+                   <div className="text-sm text-gray-300">
+                     Showing page {bankCurrentPage} of {bankTotalPages}
+                   </div>
+                   <div className="flex gap-3">
+                     <button
+                       onClick={() => setBankCurrentPage((prev) => Math.max(prev - 1, 1))}
+                       disabled={bankCurrentPage === 1}
+                       className="px-5 py-2.5 border border-white/20 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                     >
+                       Previous
+                     </button>
+                     <button
+                       onClick={() => setBankCurrentPage((prev) => Math.min(prev + 1, bankTotalPages))}
+                       disabled={bankCurrentPage === bankTotalPages}
+                       className="px-5 py-2.5 border border-white/20 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                     >
+                       Next
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             )}
+           </div>
+         </div>
+       )}
     </div>
   );
 };
