@@ -510,7 +510,16 @@ const AddBank = () => {
                 <select
                   className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-[#1f2937] transition-all duration-200"
                   value={bankType}
-                  onChange={(e) => setBankType(e.target.value)}
+                  onChange={(e) => {
+                    const newBankType = e.target.value;
+                    setBankType(newBankType);
+                    // Auto-set channel for Bank and Crypto
+                    if (newBankType === "Bank" || newBankType === "Crypto") {
+                      setChannel("Send-Money");
+                    } else {
+                      setChannel("");
+                    }
+                  }}
                 >
                   <option value="">Select Bank Type</option>
                   <option value="Bkash">Bkash</option>
@@ -631,11 +640,17 @@ const AddBank = () => {
                       onChange={(e) => setChannel(e.target.value)}
                     >
                       <option value="">Select Channel Type</option>
-                      <option value="Cash-Out">Cash-Out</option>
-                      <option value="Send-Money">Send-Money</option>
-                      <option value="Cash-In">Cash-In</option>
-                      <option value="Make-Payment">Make-Payment</option>
-                      <option value="Bank-Transfer">Bank-Transfer</option>
+                      {bankType === "Bank" || bankType === "Crypto" ? (
+                        <option value="Send-Money">Send-Money</option>
+                      ) : (
+                        <>
+                          <option value="Cash-Out">Cash-Out</option>
+                          <option value="Send-Money">Send-Money</option>
+                          <option value="Cash-In">Cash-In</option>
+                          <option value="Make-Payment">Make-Payment</option>
+                          <option value="Bank-Transfer">Bank-Transfer</option>
+                        </>
+                      )}
                     </select>
                   </div>
                   <div>

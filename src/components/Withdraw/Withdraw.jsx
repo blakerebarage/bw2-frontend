@@ -14,7 +14,7 @@ const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMe
   
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Internal Payment Methods</h3>
+     
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {systemBankTypes.map((bankType) => {
           const methodInfo = paymentMethods.find(m => m.name === bankType);
@@ -43,7 +43,7 @@ const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMe
                   )}
                 </div>
                 <span className="text-xs font-medium">{bankType}</span>
-                <span className="text-xs text-blue-400">System</span>
+               
                 {isSelected && (
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#facc15] rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-[#1a1f24]" />
@@ -93,7 +93,7 @@ const WalletAgentPaymentMethodSelector = ({ walletAgentBanks, paymentMethods, se
                   )}
                 </div>
                 <span className="text-xs font-medium">{bankType}</span>
-                <span className="text-xs text-green-400">Agent</span>
+                
                 {isSelected && (
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#facc15] rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-[#1a1f24]" />
@@ -222,6 +222,7 @@ export default function Withdraw() {
   const [bankTypes, setBankTypes] = useState([]);
   const [channels, setChannels] = useState([]);
   const [allBanks, setAllBanks] = useState([]);
+  const channelOrder = ["Send-Money", "Cash-Out", "Make-Payment", "Cash-In", "Bank-Transfer"];
   const [walletAgentBanks, setWalletAgentBanks] = useState([]);
   const [systemBanks, setSystemBanks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -316,12 +317,24 @@ export default function Withdraw() {
       // Use wallet agent banks for this method
       const methodBanks = walletAgentBanks.filter(bank => bank.bankType === selectedMethod.method);
       const uniqueChannels = [...new Set(methodBanks.map(bank => bank.channel))];
-      setChannels(uniqueChannels);
+      // Sort channels according to the specified order
+      const sortedChannels = uniqueChannels.sort((a, b) => {
+        const indexA = channelOrder.indexOf(a);
+        const indexB = channelOrder.indexOf(b);
+        return indexA - indexB;
+      });
+      setChannels(sortedChannels);
     } else {
       // Use system banks for this method
       const methodBanks = systemBanks.filter(bank => bank.bankType === selectedMethod.method);
       const uniqueChannels = [...new Set(methodBanks.map(bank => bank.channel))];
-      setChannels(uniqueChannels);
+      // Sort channels according to the specified order
+      const sortedChannels = uniqueChannels.sort((a, b) => {
+        const indexA = channelOrder.indexOf(a);
+        const indexB = channelOrder.indexOf(b);
+        return indexA - indexB;
+      });
+      setChannels(sortedChannels);
     }
     
     setChanel("");
@@ -342,15 +355,47 @@ export default function Withdraw() {
     } else if (selectedMethod.method && chanel) {
       if (isWalletAgentMethod) {
         const filtered = walletAgentBanks.filter(b => b.bankType === selectedMethod.method && b.channel === chanel);
-        setSelectedBankDetails(filtered[0] || null);
+        // For mobile banking, select the bank with smallest suitable limit
+        if (["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet"].includes(selectedMethod.method)) {
+          const amountValue = parseFloat(amount);
+          if (amountValue && filtered.length > 0) {
+            const suitableBanks = filtered.filter(bank => bank.dailyLimit >= amountValue);
+            if (suitableBanks.length > 0) {
+              const sortedBanks = suitableBanks.sort((a, b) => a.dailyLimit - b.dailyLimit);
+              setSelectedBankDetails(sortedBanks[0]);
+            } else {
+              setSelectedBankDetails(filtered[0]);
+            }
+          } else {
+            setSelectedBankDetails(filtered[0] || null);
+          }
+        } else {
+          setSelectedBankDetails(filtered[0] || null);
+        }
       } else {
         const filtered = systemBanks.filter(b => b.bankType === selectedMethod.method && b.channel === chanel);
-        setSelectedBankDetails(filtered[0] || null);
+        // For mobile banking, select the bank with smallest suitable limit
+        if (["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet"].includes(selectedMethod.method)) {
+          const amountValue = parseFloat(amount);
+          if (amountValue && filtered.length > 0) {
+            const suitableBanks = filtered.filter(bank => bank.dailyLimit >= amountValue);
+            if (suitableBanks.length > 0) {
+              const sortedBanks = suitableBanks.sort((a, b) => a.dailyLimit - b.dailyLimit);
+              setSelectedBankDetails(sortedBanks[0]);
+            } else {
+              setSelectedBankDetails(filtered[0]);
+            }
+          } else {
+            setSelectedBankDetails(filtered[0] || null);
+          }
+        } else {
+          setSelectedBankDetails(filtered[0] || null);
+        }
       }
     } else {
       setSelectedBankDetails(null);
     }
-  }, [selectedMethod, chanel, walletAgentBanks, systemBanks, selectedBank, isWalletAgentMethod]);
+  }, [selectedMethod, chanel, walletAgentBanks, systemBanks, selectedBank, isWalletAgentMethod, amount]);
 
   // Update bank list when method changes
   useEffect(() => {
@@ -546,11 +591,6 @@ export default function Withdraw() {
                     }`}
                   >
                     {isWalletAgentMethod ? bankObj.username : bankObj.bankName}
-                    {isWalletAgentMethod && (
-                      <div className="text-xs text-gray-400 mt-1">
-                        Limit: ৳{bankObj.dailyLimit}
-                      </div>
-                    )}
                   </button>
                 ))}
               </div>

@@ -116,7 +116,7 @@ const BalanceOverview = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <div className="bg-[#1a1f24] rounded-lg shadow-sm border border-[#facc15]/20 p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">

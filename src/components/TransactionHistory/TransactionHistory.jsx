@@ -162,47 +162,47 @@ const TransactionHistory = () => {
   );
 
   const TransactionAmount = ({ type, amount }) => (
-    <p className={`font-medium text-[#facc15]`}>
+    <p className={`font-medium text-[#facc15] text-sm sm:text-base break-words`}>
       {type === "deposit" ? "+" : "-"}{formatCurrency(amount)}
     </p>
   );
 
   const TransactionCards = () => (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {filteredTransactions.length === 0 ? (
         <p className="text-center text-gray-300 py-8">{t('noTransactionsFound')}</p>
       ) : (
         filteredTransactions.map((txn) => (
           <div
             key={txn._id}
-            className={`p-4 rounded-lg border bg-[#1a1f24] ${getStatusColor(txn.status)} hover:shadow-lg transition-all duration-300 group`}
+            className={`p-3 sm:p-4 rounded-lg border bg-[#1a1f24] ${getStatusColor(txn.status)} hover:shadow-lg transition-all duration-300 group`}
           >
             <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                 <TransactionIcon type={txn.type} />
-                <div>
-                  <h3 className="text-lg font-semibold text-[#facc15] group-hover:text-[#facc15]/90">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm sm:text-lg font-semibold text-[#facc15] group-hover:text-[#facc15]/90 truncate">
                     {getTransactionTypeName(txn.type)}
                   </h3>
-                  <p className="text-sm text-gray-300">{t('ref')}: {txn.txnRef}</p>
+                  
                 </div>
               </div>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusTextColor(txn.status)}`}>
+              <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getStatusTextColor(txn.status)} flex-shrink-0 ml-2`}>
                 {getStatusName(txn.status)}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2">
                 <div>
-                  <p className="text-sm text-gray-300">{t('amount')}</p>
+                  <p className="text-xs sm:text-sm text-gray-300">{t('amount')}</p>
                   <TransactionAmount type={txn.type} amount={txn.amount} />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 <div>
-                  <p className="text-sm text-gray-300">{t('balance')}</p>
-                  <p className="font-medium text-[#facc15]">
+                  <p className="text-xs sm:text-sm text-gray-300">{t('balance')}</p>
+                  <p className="font-medium text-[#facc15] text-sm sm:text-base break-words">
                     {formatCurrency(txn.balanceAfter)}
                   </p>
                 </div>
@@ -211,7 +211,7 @@ const TransactionHistory = () => {
 
             <div className="mt-3 pt-3 border-t border-[#facc15]/20">
               <div className="flex justify-center">
-                <p className="text-sm text-gray-300">
+                <p className="text-xs sm:text-sm text-gray-300 text-center">
                   {moment(txn.createdAt).format("MMM D, YYYY h:mm A")}
                 </p>
               </div>
@@ -235,54 +235,54 @@ const TransactionHistory = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 mt-16">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 mt-16">
       <Card className="w-full bg-[#1a1f24] rounded-lg shadow-xl border border-[#facc15]/20">
-        <CardHeader className="border-b border-[#facc15]/20">
-          <CardTitle className="text-2xl font-bold text-[#facc15] text-center">
+        <CardHeader className="border-b border-[#facc15]/20 p-4 sm:p-6">
+          <CardTitle className="text-xl sm:text-2xl font-bold text-[#facc15] text-center">
             {t('transactionHistory')}
           </CardTitle>
           
           {/* Summary Cards - Only show for admin users */}
           {isAdminUser && (
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="bg-[#1a1f24] p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
+            <div className="grid grid-cols-1  gap-3 sm:gap-4 mt-4">
+              <div className="bg-[#1a1f24] p-3 sm:p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <FaArrowUp className="text-[#facc15]" />
-                  <h3 className="text-sm font-medium text-gray-300">{t('totalDeposit30Days')}</h3>
+                  <FaArrowUp className="text-[#facc15] flex-shrink-0" />
+                  <h3 className="text-xs sm:text-sm font-medium text-gray-300 truncate">{t('totalDeposit30Days')}</h3>
                 </div>
-                <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(stats.totalDeposit)}</p>
+                <p className="text-lg sm:text-2xl font-bold text-[#facc15] break-words">{formatCurrency(stats.totalDeposit)}</p>
               </div>
-              <div className="bg-[#1a1f24] p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
+              <div className="bg-[#1a1f24] p-3 sm:p-4 rounded-lg border border-[#facc15] hover:border-[#facc15]/80 transition-all duration-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <FaArrowDown className="text-[#facc15]" />
-                  <h3 className="text-sm font-medium text-gray-300">{t('totalWithdraw30Days')}</h3>
+                  <FaArrowDown className="text-[#facc15] flex-shrink-0" />
+                  <h3 className="text-xs sm:text-sm font-medium text-gray-300 truncate">{t('totalWithdraw30Days')}</h3>
                 </div>
-                <p className="text-2xl font-bold text-[#facc15]">{formatCurrency(stats.totalWithdraw)}</p>
+                <p className="text-lg sm:text-2xl font-bold text-[#facc15] break-words">{formatCurrency(stats.totalWithdraw)}</p>
               </div>
             </div>
           )}
         </CardHeader>
         
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           {/* Filter Tabs */}
-          <div className="flex justify-center mb-6">
-            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-[#1a1f24] border border-[#facc15]/20">
                 <TabsTrigger 
                   value="all" 
-                  className="text-sm font-medium data-[state=active]:bg-[#facc15] data-[state=active]:text-[#1a1f24] text-gray-300 hover:bg-[#facc15]/10 transition-all duration-300"
+                  className="text-xs sm:text-sm font-medium data-[state=active]:bg-[#facc15] data-[state=active]:text-[#1a1f24] text-gray-300 hover:bg-[#facc15]/10 transition-all duration-300 px-2 sm:px-3"
                 >
                   {t('all')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="deposit" 
-                  className="text-sm font-medium data-[state=active]:bg-[#facc15] data-[state=active]:text-[#1a1f24] text-gray-300 hover:bg-[#facc15]/10 transition-all duration-300"
+                  className="text-xs sm:text-sm font-medium data-[state=active]:bg-[#facc15] data-[state=active]:text-[#1a1f24] text-gray-300 hover:bg-[#facc15]/10 transition-all duration-300 px-2 sm:px-3"
                 >
                   {t('deposits')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="withdraw" 
-                  className="text-sm font-medium data-[state=active]:bg-[#facc15] data-[state=active]:text-[#1a1f24] text-gray-300 hover:bg-[#facc15]/10 transition-all duration-300"
+                  className="text-xs sm:text-sm font-medium data-[state=active]:bg-[#facc15] data-[state=active]:text-[#1a1f24] text-gray-300 hover:bg-[#facc15]/10 transition-all duration-300 px-2 sm:px-3"
                 >
                   {t('withdrawals')}
                 </TabsTrigger>
@@ -295,11 +295,11 @@ const TransactionHistory = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-4 sm:mt-6">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-300 ${
                   currentPage === 1
                     ? "bg-[#1a1f24] text-gray-500 cursor-not-allowed"
                     : "bg-[#1a1f24] text-[#facc15] border border-[#facc15] hover:bg-[#facc15]/10"
@@ -307,13 +307,13 @@ const TransactionHistory = () => {
               >
                 {t('previous')}
               </button>
-              <span className="text-gray-300">
+              <span className="text-gray-300 text-xs sm:text-sm text-center">
                 {t('pageOf')} {currentPage} {t('of')} {totalPages}
               </span>
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-300 ${
                   currentPage === totalPages
                     ? "bg-[#1a1f24] text-gray-500 cursor-not-allowed"
                     : "bg-[#1a1f24] text-[#facc15] border border-[#facc15] hover:bg-[#facc15]/10"

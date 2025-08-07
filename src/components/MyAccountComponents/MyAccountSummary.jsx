@@ -71,9 +71,7 @@ const MyAccountSummary = () => {
                     Current Balance
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className="font-sans text-lg font-semibold text-gray-600">
-                      {user?.currency || 'USD'}
-                    </span>
+                  
                     <span className="text-gray-700 text-xl font-bold sm:text-3xl">
                       {formatCurrency(user?.balance) || '0.00'}
                     </span>

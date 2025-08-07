@@ -183,7 +183,16 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
               <label className="block text-gray-700 text-sm font-medium mb-2">Bank Type</label>
               <select
                 value={bankType}
-                onChange={(e) => setBankType(e.target.value)}
+                onChange={(e) => {
+                  const newBankType = e.target.value;
+                  setBankType(newBankType);
+                  // Auto-set channel for Bank and Crypto
+                  if (newBankType === "Bank" || newBankType === "Crypto") {
+                    setChannel("Send-Money");
+                  } else {
+                    setChannel("");
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
@@ -209,11 +218,17 @@ const BankModal = ({ isOpen, onClose, editingBank, onSubmit, onSuccess }) => {
                 disabled={bankType === "Bank"}
               >
                 <option value="">Select Channel</option>
-                <option value="Cash-Out">Cash-Out</option>
-                <option value="Send-Money">Send-Money</option>
-                <option value="Cash-In">Cash-In</option>
-                <option value="Make-Payment">Make-Payment</option>
-                <option value="Bank-Transfer">Bank-Transfer</option>
+                {bankType === "Bank" || bankType === "Crypto" ? (
+                  <option value="Send-Money">Send-Money</option>
+                ) : (
+                  <>
+                    <option value="Cash-Out">Cash-Out</option>
+                    <option value="Send-Money">Send-Money</option>
+                    <option value="Cash-In">Cash-In</option>
+                    <option value="Make-Payment">Make-Payment</option>
+                    <option value="Bank-Transfer">Bank-Transfer</option>
+                  </>
+                )}
               </select>
             </div>
           </div>

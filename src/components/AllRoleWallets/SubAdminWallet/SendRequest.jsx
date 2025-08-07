@@ -13,7 +13,7 @@ const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMe
   
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Internal Payment Methods</h3>
+      
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {systemBankTypes.map((bankType) => {
           const methodInfo = paymentMethods.find(m => m.name === bankType);
@@ -42,7 +42,7 @@ const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMe
                   )}
                 </div>
                 <span className="text-xs font-medium">{bankType}</span>
-                <span className="text-xs text-blue-400">System</span>
+                
                 {isSelected && (
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#facc15] rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-[#1a1f24]" />
@@ -92,7 +92,7 @@ const WalletAgentPaymentMethodSelector = ({ walletAgentBanks, paymentMethods, se
                   )}
                 </div>
                 <span className="text-xs font-medium">{bankType}</span>
-                <span className="text-xs text-green-400">Agent</span>
+                
                 {isSelected && (
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#facc15] rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-[#1a1f24]" />
@@ -249,6 +249,7 @@ const DepositSection = () => {
   const [selectedChannel, setSelectedChannel] = useState("");
   const [allChannels, setAllChannels] = useState([]);
   const [filteredChannels, setFilteredChannels] = useState([]);
+  const channelOrder = ["Send-Money", "Cash-Out", "Make-Payment", "Cash-In", "Bank-Transfer"];
   const [selectedAmount, setSelectedAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
   const [trxId, setTrxId] = useState("");
@@ -295,9 +296,11 @@ const DepositSection = () => {
 
   const getSuitableBankAccount = useCallback((amount, availableBanks) => {
     if (!amount || !availableBanks.length) return null;
-    const sortedBanks = [...availableBanks].sort((a, b) => b.dailyLimit - a.dailyLimit);
-    const suitableBank = sortedBanks.find(bank => bank.dailyLimit >= amount);
-    return suitableBank || null;
+    // Filter banks that can handle the amount, then sort by ascending dailyLimit to get the smallest suitable limit
+    const suitableBanks = availableBanks.filter(bank => bank.dailyLimit >= amount);
+    if (suitableBanks.length === 0) return null;
+    const sortedBanks = suitableBanks.sort((a, b) => a.dailyLimit - b.dailyLimit); // Sort ascending to get smallest suitable limit
+    return sortedBanks[0]; // Return the bank with the smallest suitable limit
   }, []);
 
   // Fetch payment methods
@@ -418,13 +421,25 @@ const DepositSection = () => {
           // Use wallet agent banks for this method
           const methodBanks = walletAgentBanks.filter(bank => bank.bankType === selectedMethod.method);
           const channels = [...new Set(methodBanks.map(bank => bank.channel))];
-          setFilteredChannels(channels);
+          // Sort channels according to the specified order
+          const sortedChannels = channels.sort((a, b) => {
+            const indexA = channelOrder.indexOf(a);
+            const indexB = channelOrder.indexOf(b);
+            return indexA - indexB;
+          });
+          setFilteredChannels(sortedChannels);
         } else {
           // Use system banks for this method
           const res = await axiosSecure.get(`/api/v1/finance/bank-list/${user.referredBy}?bankType=${selectedMethod.method}&purpose=Deposit`);
           if (res.data.success) {
             const channels = [...new Set(res.data.data.map(bank => bank.channel))];
-            setFilteredChannels(channels);
+            // Sort channels according to the specified order
+            const sortedChannels = channels.sort((a, b) => {
+              const indexA = channelOrder.indexOf(a);
+              const indexB = channelOrder.indexOf(b);
+              return indexA - indexB;
+            });
+            setFilteredChannels(sortedChannels);
           }
         }
       } catch (err) {
@@ -786,52 +801,13 @@ const DepositSection = () => {
                 <div className="bg-[#22282e] rounded-lg p-4 border border-[#facc15]/20">
                   <h3 className="text-[#facc15] font-medium mb-3 text-center">Send money to this number:</h3>
                   
-                  {/* Account Selector for Multiple Accounts */}
-                  {isWalletAgentMethod && (() => {
-                    const methodChannelBanks = walletAgentBanks.filter(
-                      bank => bank.bankType === selectedMethod.method && bank.channel === selectedChannel
-                    );
-                    if (methodChannelBanks.length > 1) {
-                      return (
-                        <div className="mb-4">
-                          <h4 className="text-sm font-medium text-gray-400 mb-2">Select Account:</h4>
-                          <div className="grid grid-cols-1 gap-2">
-                            {methodChannelBanks.map((account) => (
-                              <button
-                                key={account._id}
-                                onClick={() => setSelectedAccount(account)}
-                                className={`p-3 rounded-lg text-left transition-all duration-200 ${
-                                  selectedAccount._id === account._id
-                                    ? "bg-[#facc15] text-[#1a1f24]"
-                                    : "bg-[#1a1f24] text-white border border-gray-600 hover:border-gray-500"
-                                }`}
-                              >
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <p className="font-medium">{account.accountNumber}</p>
-                                    <p className="text-xs text-gray-400">Username: {account.username}</p>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-xs">Limit: ৳{account.dailyLimit}</p>
-                                  </div>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                  
                   
                   <div className="flex items-center justify-between p-3 bg-[#1a1f24] rounded-lg">
-                    <div>
-                      <p className="text-xs text-gray-400 uppercase tracking-wide">Account Number</p>
-                      <p className="text-lg font-bold text-white">{selectedAccount.accountNumber}</p>
-                      {isWalletAgentMethod && (
-                        <p className="text-xs text-gray-400 mt-1">Username: {selectedAccount.username}</p>
-                      )}
-                    </div>
+                                         <div>
+                       <p className="text-xs text-gray-400 uppercase tracking-wide">Account Number</p>
+                       <p className="text-lg font-bold text-white">{selectedAccount.accountNumber}</p>
+                     </div>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(selectedAccount.accountNumber);
