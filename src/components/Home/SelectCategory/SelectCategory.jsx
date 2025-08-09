@@ -392,7 +392,7 @@ export function SelectCategory() {
           username: user?.username,
           currency: providerCurrency || 'NGN',
           gameId,
-          lang: currentLanguage,
+          lang: providerDetails?.name === 'kingmidas' ?'en': currentLanguage,
           platform: 2,
         }
       );

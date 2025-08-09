@@ -73,7 +73,7 @@ const HeadingNavbar = () => {
       ],
     },
     {
-      label: "Finances",
+      label: "Bank",
       path: null,
       roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
       subItems: [
@@ -82,6 +82,28 @@ const HeadingNavbar = () => {
           path: "/admindashboard/banking",
           roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
         },
+        {
+          label: "Bank List",
+          path: "/admindashboard/addBank",
+          roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
+        },
+        {
+          label: "All Transactions",
+          path: "/admindashboard/all-transactions",
+          roles: ["super-admin"],
+        },
+        {
+          label: "Transaction Summary",
+          path: "/admindashboard/transaction-summary",
+          roles: ["super-admin"],
+        },
+      ],
+    },
+    {
+      label: "Finances",
+      path: null,
+      roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
+      subItems: [
         {
           label: "Withdraw request",
           path: "/admindashboard/allwithdrawrequest",
@@ -95,28 +117,13 @@ const HeadingNavbar = () => {
           badge: pendingDeposits > 0 ? pendingDeposits : null,
         },
         {
-          label: "Bank List",
-          path: "/admindashboard/addBank",
-          roles: ["sub-agent", "agent", "master", "sub-admin", "admin", "super-admin"],
-        },
-        {
           label: "Turnover Management",
           path: "/admindashboard/turnover-management",
           roles: ["admin", "sub-admin", "super-admin"],
         },
         {
-          label: "All Transactions",
-          path: "/admindashboard/all-transactions",
-          roles: ["super-admin"],
-        },
-        {
           label: "Payment Messages",
           path: "/admindashboard/payment-messages",
-          roles: ["super-admin"],
-        },
-        {
-          label: "Transaction Summary",
-          path: "/admindashboard/transaction-summary",
           roles: ["super-admin"],
         },
         {
