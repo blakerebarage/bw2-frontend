@@ -492,11 +492,11 @@ const AllWithdraw = () => {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
                     Referred By
                   </th>
-                  {isAdminOrSuperAdmin && (
+                  
                     <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
                       Wallet Agent
                     </th>
-                  )}
+                  
                   <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
                     Date
                   </th>
@@ -535,11 +535,11 @@ const AllWithdraw = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {withdraw?.referralCode}
                       </td>
-                      {isAdminOrSuperAdmin && (
+                      
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {withdraw?.walletAgentUsername || "N/A"}
                         </td>
-                      )}
+                   
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {new Date(withdraw?.createdAt).toLocaleString()}
                       </td>

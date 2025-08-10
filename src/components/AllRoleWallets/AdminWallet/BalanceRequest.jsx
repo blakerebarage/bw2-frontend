@@ -464,11 +464,11 @@ const BalanceRequest = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Txn ID
                   </th>
-                  {isAdminOrSuperAdmin && (
+                  
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Wallet Agent
                     </th>
-                  )}
+                  
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Amount
                   </th>
@@ -510,11 +510,11 @@ const BalanceRequest = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{request.txnId[0]}</div>
                     </td>
-                    {isAdminOrSuperAdmin && (
+                    
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{request.walletAgentUsername || 'N/A'}</div>
                       </td>
-                    )}
+                   
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{formatCurrency(request.amount)}</div>
                     </td>

@@ -224,27 +224,6 @@ const GenerateCommission = () => {
             {/* Referral Commissions Results */}
             {referralCommissions && (
               <div className="space-y-6 mb-8">
-                {/* Referral Summary Cards - Only Period */}
-                {referralCommissions?.commissions && (
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                    <div className="bg-gradient-to-r from-[#1f2937] to-gray-800 rounded-lg p-4 text-white">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm opacity-90">Period</p>
-                          <p className="text-lg font-bold">
-                            {referralCommissions.commissions[0]?.metadata?.period || "N/A"}
-                          </p>
-                        </div>
-                        <div className="text-3xl opacity-80">
-                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Referral Commissions Table */}
                 {referralCommissions?.commissions && (
                   <div className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
@@ -274,10 +253,16 @@ const GenerateCommission = () => {
                               Amount
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Commission Amount
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Status
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Date
+                              Start Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              End Date
                             </th>
                           </tr>
                         </thead>
@@ -306,6 +291,9 @@ const GenerateCommission = () => {
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {formatCurrency(commission.baseCommissionAmount)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {formatCurrency(commission.commissionAmount)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -320,7 +308,10 @@ const GenerateCommission = () => {
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {formatDate(commission.createdAt)}
+                                {formatDate(commission.periodStart)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {formatDate(commission.periodEnd)}
                               </td>
                             </tr>
                           ))}
