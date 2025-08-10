@@ -1332,15 +1332,7 @@ const CashAgentPanel = () => {
                   <FaArrowDown className="text-xl" />
                   <span className="font-medium">Withdraw</span>
                 </button>
-                <button
-                  onClick={() => setActiveTab("addBalance")}
-                  className={`w-full border border-white/20 rounded-xl p-4 text-white hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
-                    activeTab === "addBalance" ? "bg-blue-500/20 border-blue-500/30 text-blue-400" : "bg-white/10"
-                  }`}
-                >
-                  <FaPlus className="text-xl" />
-                  <span className="font-medium">Add Payment Method</span>
-                </button>
+               
                 <button
                   onClick={() => {
                     setShowCommissions(!showCommissions);
@@ -1613,9 +1605,7 @@ const CashAgentPanel = () => {
             {["cash-agent", "sub-cash-agent"].includes(currentUser?.role) && (
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                 {/* Payment Methods Section - Show when activeTab is addBalance */}
-                {activeTab === "addBalance" && (
-                  <WalletAgentPaymentMethods />
-                )}
+               
 
                 {/* Deposit and Withdraw Forms - Show when activeTab is not addBalance */}
                 {activeTab !== "addBalance" && (
