@@ -136,6 +136,11 @@ const HeadingNavbar = () => {
           path: "/admindashboard/all-commission-walletagent",
           roles: ["super-admin"],
         },
+        {
+          label: "Generate Commission",
+          path: "/admindashboard/generate-commission",
+          roles: ["super-admin"],
+        },
       ],
     },
     {
