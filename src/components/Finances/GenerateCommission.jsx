@@ -1,6 +1,5 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
-import moment from "moment";
 import { useEffect, useState } from "react";
 import { useToasts } from "react-toast-notifications";
 
@@ -9,56 +8,57 @@ const GenerateCommission = () => {
   const axiosSecure = useAxiosSecure();
   const { addToast } = useToasts();
   
-  // Commission Generation Dates
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  // Commission Generation Month
+  const [selectedMonth, setSelectedMonth] = useState("");
   
-  // Commission Filter Dates (separate from generation dates)
-  const [filterStartDate, setFilterStartDate] = useState("");
-  const [filterEndDate, setFilterEndDate] = useState("");
+  // Commission Filter Month (separate from generation month)
+  const [filterMonth, setFilterMonth] = useState("");
   
   const [loading, setLoading] = useState(false);
   const [referralCommissions, setReferralCommissions] = useState(null);
   const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
+  
+  // Commission Approval States
+  const [selectedCommissions, setSelectedCommissions] = useState([]);
+  const [approvalLoading, setApprovalLoading] = useState(false);
 
-  // Fetch referral commissions on component mount (without date filtering)
+  // Fetch referral commissions on component mount (show all data by default)
   useEffect(() => {
-    fetchReferralCommissions();
+    fetchReferralCommissions(false);
   }, []);
 
-  const fetchReferralCommissions = async (withDates = false) => {
+  const fetchReferralCommissions = async (withMonth = false) => {
     try {
       setIsLoadingReferrals(true);
       let url = `/api/v1/finance/all-cw-referral-commissions`;
       
-      // Only add date parameters if explicitly requested
-      if (withDates && filterStartDate && filterEndDate) {
-        url += `?startDate=${filterStartDate}&endDate=${filterEndDate}`;
+      // Only add month parameter if explicitly requested
+      if (withMonth && filterMonth) {
+        url += `?month=${filterMonth}`;
       }
 
       const response = await axiosSecure.get(url);
-
+     
       if (response.data.success) {
         setReferralCommissions(response.data.data);
+      } else {
+        throw new Error(response.data.message || "Failed to fetch referral commissions");
       }
     } catch (error) {
       console.error("Failed to fetch referral commissions:", error);
+      addToast(error.message || "Failed to fetch referral commissions", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      setReferralCommissions(null);
     } finally {
       setIsLoadingReferrals(false);
     }
   };
 
   const handleGenerateCommission = async () => {
-    if (!startDate || !endDate) {
-      addToast("Please select both start and end dates", {
-        appearance: "error",
-        autoDismiss: true,
-      });
-      return;
-    }
-
-    if (new Date(startDate) > new Date(endDate)) {
-      addToast("Start date cannot be after end date", {
+    if (!selectedMonth) {
+      addToast("Please select a month", {
         appearance: "error",
         autoDismiss: true,
       });
@@ -70,21 +70,21 @@ const GenerateCommission = () => {
       const response = await axiosSecure.post(
         "/api/v1/finance/generate-cash-and-wallet-agent-commission",
         {
-          startDate,
-          endDate,
+          month: selectedMonth,
         }
       );
 
       if (response.data.success) {
-      await fetchReferralCommissions()
-        // Only show toast, don't store or display the data
+        // Refresh referral commissions after successful generation
+        await fetchReferralCommissions(false);
+        
         addToast("Commission generated successfully!", {
           appearance: "success",
           autoDismiss: true,
         });
+        
         // Clear the form
-        setStartDate("");
-        setEndDate("");
+        setSelectedMonth("");
       } else {
         throw new Error(response.data.message || "Failed to generate commission");
       }
@@ -100,14 +100,72 @@ const GenerateCommission = () => {
 
   const clearData = () => {
     setReferralCommissions(null);
-    setStartDate("");
-    setEndDate("");
-    setFilterStartDate("");
-    setFilterEndDate("");
+    setSelectedMonth("");
+    setFilterMonth("");
+    // Reload all data after clearing
+    fetchReferralCommissions(false);
   };
 
-  const formatDate = (dateString) => {
-    return moment(dateString).format("MMM D, YYYY");
+  const handleApproveCommissions = async () => {
+    if (selectedCommissions.length === 0) {
+      addToast("Please select commissions to approve", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    try {
+      setApprovalLoading(true);
+      const response = await axiosSecure.patch(
+        "/api/v1/finance/approve-commission-for-wallet-and-cash-agent",
+        {
+          commissionIds: selectedCommissions,
+        }
+      );
+
+      if (response.data.success) {
+        addToast("Commissions approved successfully!", {
+          appearance: "success",
+          autoDismiss: true,
+        });
+        
+        // Clear selections and refresh data
+        setSelectedCommissions([]);
+        
+        // Refresh the commissions list
+        await fetchReferralCommissions(filterMonth ? true : false);
+      } else {
+        throw new Error(response.data.message || "Failed to approve commissions");
+      }
+    } catch (error) {
+      addToast(error.message || "Failed to approve commissions", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    } finally {
+      setApprovalLoading(false);
+    }
+  };
+
+  const handleCommissionSelection = (commissionId) => {
+    setSelectedCommissions(prev => {
+      if (prev.includes(commissionId)) {
+        return prev.filter(id => id !== commissionId);
+      } else {
+        return [...prev, commissionId];
+      }
+    });
+  };
+
+  const handleSelectAllCommissions = () => {
+    if (referralCommissions?.commissions) {
+      if (selectedCommissions.length === referralCommissions.commissions.length) {
+        setSelectedCommissions([]);
+      } else {
+        setSelectedCommissions(referralCommissions.commissions.map(c => c._id || c.id));
+      }
+    }
   };
 
   return (
@@ -120,7 +178,7 @@ const GenerateCommission = () => {
               Generate Commission
             </h1>
             <p className="text-gray-300 text-center mt-2">
-              Generate cash and wallet agent commissions for specified date ranges
+              Generate cash and wallet agent commissions for specified months
             </p>
           </div>
 
@@ -131,27 +189,31 @@ const GenerateCommission = () => {
               {/* Commission Generation Date Selection */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                  <label className="text-sm font-medium text-gray-700 mb-1">Select Month</label>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
                     className="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm"
-                  />
+                  >
+                    <option value="">Choose Month</option>
+                    <option value="january">January</option>
+                    <option value="february">February</option>
+                    <option value="march">March</option>
+                    <option value="april">April</option>
+                    <option value="may">May</option>
+                    <option value="june">June</option>
+                    <option value="july">July</option>
+                    <option value="august">August</option>
+                    <option value="september">September</option>
+                    <option value="october">October</option>
+                    <option value="november">November</option>
+                    <option value="december">December</option>
+                  </select>
                 </div>
                 <div className="flex items-end">
                   <button
                     onClick={handleGenerateCommission}
-                    disabled={loading}
+                    disabled={loading || !selectedMonth}
                     className="w-full px-4 py-2.5 bg-[#1f2937] text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
@@ -172,37 +234,36 @@ const GenerateCommission = () => {
           <div className="p-6 border-b border-gray-200 bg-blue-50">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Filter Referral Commissions</h2>
             <div className="flex flex-col gap-6">
-              {/* Commission Filter Date Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Commission Filter Month Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-1">Filter Start Date</label>
-                  <input
-                    type="date"
-                    value={filterStartDate}
-                    onChange={(e) => setFilterStartDate(e.target.value)}
+                  <label className="text-sm font-medium text-gray-700 mb-1">Filter Month</label>
+                  <select
+                    value={filterMonth}
+                    onChange={(e) => {
+                      setFilterMonth(e.target.value);
+                      if (e.target.value) {
+                        fetchReferralCommissions(true);
+                      } else {
+                        fetchReferralCommissions(false);
+                      }
+                    }}
                     className="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20 transition-all duration-200 outline-none text-sm"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-1">Filter End Date</label>
-                  <input
-                    type="date"
-                    value={filterEndDate}
-                    onChange={(e) => setFilterEndDate(e.target.value)}
-                    className="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20 transition-all duration-200 outline-none text-sm"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={() => fetchReferralCommissions(true)}
-                    disabled={!filterStartDate || !filterEndDate}
-                    className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                    </svg>
-                    Filter by Date
-                  </button>
+                    <option value="">All Months</option>
+                    <option value="january">January</option>
+                    <option value="february">February</option>
+                    <option value="march">March</option>
+                    <option value="april">April</option>
+                    <option value="may">May</option>
+                    <option value="june">June</option>
+                    <option value="july">July</option>
+                    <option value="august">August</option>
+                    <option value="september">September</option>
+                    <option value="october">October</option>
+                    <option value="november">November</option>
+                    <option value="december">December</option>
+                  </select>
                 </div>
                 <div className="flex items-end">
                   <button
@@ -210,9 +271,9 @@ const GenerateCommission = () => {
                     className="w-full px-4 py-2.5 bg-white text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    Clear
+                    Clear Filter
                   </button>
                 </div>
               </div>
@@ -228,18 +289,60 @@ const GenerateCommission = () => {
                 {referralCommissions?.commissions && (
                   <div className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
                     <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900">Referral Commission Details</h3>
-                      <p className="text-sm text-gray-500">
-                        {filterStartDate && filterEndDate 
-                          ? `Filtered for ${formatDate(filterStartDate)} to ${formatDate(filterEndDate)}`
-                          : "Showing all referral commissions"
-                        }
-                      </p>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Referral Commission Details</h3>
+                          <p className="text-sm text-gray-500">
+                            {filterMonth 
+                              ? `Filtered for ${filterMonth.charAt(0).toUpperCase() + filterMonth.slice(1)}`
+                              : "Showing all referral commissions"
+                            }
+                          </p>
+                          {referralCommissions?.commissions && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              Total Commissions: {referralCommissions.commissions.length}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Commission Selection Controls */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedCommissions.length === referralCommissions.commissions.length && referralCommissions.commissions.length > 0}
+                              onChange={handleSelectAllCommissions}
+                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span className="text-sm text-gray-600">
+                              Select All ({selectedCommissions.length}/{referralCommissions.commissions.length})
+                            </span>
+                          </div>
+                          
+                          {selectedCommissions.length > 0 && (
+                            <button
+                              onClick={handleApproveCommissions}
+                              disabled={approvalLoading}
+                              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {approvalLoading ? "Approving..." : `Approve Selected (${selectedCommissions.length})`}
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <input
+                                type="checkbox"
+                                checked={selectedCommissions.length === referralCommissions.commissions.length && referralCommissions.commissions.length > 0}
+                                onChange={handleSelectAllCommissions}
+                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                              />
+                            </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Earning Agent
                             </th>
@@ -259,16 +362,22 @@ const GenerateCommission = () => {
                               Status
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Start Date
+                              Month 
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              End Date
-                            </th>
+                           
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {referralCommissions.commissions.map((commission, index) => (
                             <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedCommissions.includes(commission._id || commission.id)}
+                                  onChange={() => handleCommissionSelection(commission._id || commission.id)}
+                                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                />
+                              </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
                                   {commission.earningAgentUsername}
@@ -308,11 +417,9 @@ const GenerateCommission = () => {
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {formatDate(commission.periodStart)}
+                                {commission.month}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {formatDate(commission.periodEnd)}
-                              </td>
+                              
                             </tr>
                           ))}
                         </tbody>
@@ -340,12 +447,13 @@ const GenerateCommission = () => {
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Generate Commissions</h3>
-                <p className="text-gray-500">Select a date range above to generate new commissions or filter existing referral commissions.</p>
+                <p className="text-gray-500">Select a month above to generate new commissions or filter existing referral commissions.</p>
               </div>
             )}
           </div>
         </div>
       </div>
+      
     </div>
   );
 };
