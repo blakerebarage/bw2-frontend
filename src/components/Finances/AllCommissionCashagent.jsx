@@ -2,7 +2,7 @@ import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import { useSocket } from "@/contexts/SocketContext";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaList, FaTable } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -13,7 +13,7 @@ const AllCommissionCashagent = () => {
   const { user } = useSelector((state) => state.auth);
   const { addToast } = useToasts();
   const { socket, isConnected } = useSocket();
-  const [commissions, setCommissions] = useState([]);
+  const [allCommissions, setAllCommissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,9 +24,17 @@ const AllCommissionCashagent = () => {
   const [endDate, setEndDate] = useState("");
   const limit = 10;
 
+  // Filter commissions based on selected filter
+  const filteredCommissions = useMemo(() => {
+    if (filter === "all") {
+      return allCommissions;
+    }
+    return allCommissions.filter(commission => commission.type === filter);
+  }, [allCommissions, filter]);
+
   useEffect(() => {
     fetchCommissions();
-  }, [currentPage, filter, startDate, endDate]);
+  }, [currentPage, startDate, endDate]);
 
   // Socket event listeners for real-time updates
   useEffect(() => {
@@ -47,26 +55,8 @@ const AllCommissionCashagent = () => {
         }
         
         if (commissionData.length > 0) {
-          // Apply current filters
-          let filteredCommissions = commissionData;
-          
-          if (filter !== "all") {
-            filteredCommissions = commissionData.filter(c => c.type === filter);
-          }
-          
-          if (startDate) {
-            filteredCommissions = filteredCommissions.filter(c => 
-              new Date(c.createdAt) >= new Date(startDate)
-            );
-          }
-          
-          if (endDate) {
-            filteredCommissions = filteredCommissions.filter(c => 
-              new Date(c.createdAt) <= new Date(endDate)
-            );
-          }
-          
-          setCommissions(filteredCommissions);
+          // Store all commissions and let useMemo handle filtering
+          setAllCommissions(commissionData);
         }
       }
     };
@@ -76,7 +66,7 @@ const AllCommissionCashagent = () => {
     return () => {
       socket.off('commission_update', handleCommissionUpdate);
     };
-  }, [socket, isConnected, user, filter, startDate, endDate]);
+  }, [socket, isConnected, user]);
 
   const fetchCommissions = async () => {
     try {
@@ -103,8 +93,9 @@ const AllCommissionCashagent = () => {
         throw new Error(response.data.message || "Failed to fetch commissions");
       }
       
-
-      setCommissions(response.data.data.commissions);
+      // Store all commissions and apply client-side filtering
+      const allCommissions = response.data.data.commissions;
+      setAllCommissions(allCommissions);
       setTotalPages(response.data.data.pagination.totalPages);
     } catch (error) {
       setError(error.message || "Failed to fetch commissions. Please try again later.");
@@ -112,7 +103,7 @@ const AllCommissionCashagent = () => {
         appearance: "error",
         autoDismiss: true,
       });
-      setCommissions([]);
+      setAllCommissions([]);
       setTotalPages(1);
     } finally {
       setLoading(false);
@@ -162,7 +153,7 @@ const AllCommissionCashagent = () => {
 
   const ListView = () => (
     <div className="space-y-4">
-      {commissions.map((commission) => (
+      {filteredCommissions.map((commission) => (
         <div
           key={commission._id}
           className={`p-4 rounded-lg border ${getTypeBgColor(commission.type)}`}
@@ -352,7 +343,7 @@ const AllCommissionCashagent = () => {
                   Try Again
                 </button>
               </div>
-            ) : commissions.length > 0 ? (
+            ) : filteredCommissions.length > 0 ? (
               <>
                 {viewMode === "table" && (
                   <div className="overflow-x-auto">
@@ -389,7 +380,7 @@ const AllCommissionCashagent = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {commissions.map((commission) => (
+                        {filteredCommissions.map((commission) => (
                           <tr key={commission._id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {commission.transactionRef}
