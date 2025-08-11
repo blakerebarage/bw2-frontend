@@ -102,6 +102,7 @@ const AllCommissionCashagent = () => {
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to fetch commissions");
       }
+      
 
       setCommissions(response.data.data.commissions);
       setTotalPages(response.data.data.pagination.totalPages);

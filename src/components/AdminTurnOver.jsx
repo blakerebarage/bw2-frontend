@@ -11,6 +11,7 @@ const AdminTurnOver = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
   const [turnoverData, setTurnoverData] = useState(null);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -187,9 +188,9 @@ const AdminTurnOver = () => {
                       <td className="px-6 py-4">
                         <button
                           onClick={() => handleTurnoverCancel(turnover._id)}
-                          disabled={turnover.status === "cancelled"}
+                          disabled={turnover.status === "cancelled" || turnover.status ==="complete"}
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
-                            turnover.status === "cancelled"
+                            turnover.status === "cancelled" || turnover.status === "complete"
                               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                               : "bg-[#1f2937] text-white hover:bg-gray-800"
                           }`}
