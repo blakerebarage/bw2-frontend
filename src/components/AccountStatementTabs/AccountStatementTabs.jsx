@@ -43,7 +43,7 @@ const AccountStatementTabs = () => {
           <AccountTabs
           id={id}
           ></AccountTabs>
-          <div className="flex-1 space-y-6 mt-6 border border-gray-200 rounded-lg p-4 drop-shadow-lg">
+          <div className="flex-1 space-y-6  border border-gray-200 rounded-lg p-4 drop-shadow-lg">
             
               <h3 className="text-2xl font-bold text-gray-900 mb-2">User Account Statement</h3>
               

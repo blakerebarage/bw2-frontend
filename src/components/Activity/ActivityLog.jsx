@@ -137,7 +137,7 @@ const Activity = () => {
             <CommonNavMenu />
             <div className="flex flex-col md:flex-row px-4 py-6 gap-6">
                 <AccountTabs id={id} />
-                <div className="flex-1 border border-gray-200 rounded-lg p-4 drop-shadow-lg mt-6 mb-6">
+                <div className="flex-1 border border-gray-200 rounded-lg p-4 drop-shadow-lg  mb-6">
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">
                         Activity Log {selectedUser && `- ${selectedUser.username}`}
                     </h2>

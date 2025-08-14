@@ -1,6 +1,5 @@
 import {
   useAddUserMutation,
-  useGetUsersQuery,
 } from "@/redux/features/allApis/usersApi/usersApi";
 import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useState } from "react";
@@ -18,11 +17,10 @@ import TransactionSummaryCards from '../TransactionSummaryCards/TransactionSumma
 const AdminDashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const axiosSecure = useAxiosSecure();
-  const { data: users } = useGetUsersQuery();
   const [addUser, { isLoading }] = useAddUserMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [searchTimeout, setSearchTimeout] = useState(null);
+  
   const [updatingStatus, setUpdatingStatus] = useState(false);
   
   const {
@@ -35,7 +33,7 @@ const AdminDashboard = () => {
   const { addToast } = useToasts();
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [keyword, setKeyword] = useState("");
-  const [allusers, setUser] = useState([]);
+  // Removed unused allusers list; rely on server filtering only
  
   const [page, setPage] = useState(1);
   const limit = 50;
@@ -105,6 +103,7 @@ const AdminDashboard = () => {
   }, [axiosSecure, addToast, user?.role, user?._id]);
 
   useEffect(() => {
+    const abortController = new AbortController();
     const fetchInitialData = async () => {
       // Don't fetch if user is not properly loaded
       if (!user?.role || !user?._id) {
@@ -127,24 +126,19 @@ const AdminDashboard = () => {
           params.append('status', selectedStatus);
         }
         
-        // Add referredBy filter for non-super-admin users
-        if (user?.role !== 'super-admin' || user?.role !== 'admin' && user?.referralCode) {
+        // Add referredBy filter only for non-super-admin AND non-admin roles
+        if (user?.referralCode && user?.role !== 'super-admin' && user?.role !== 'admin') {
           params.append('referredBy', user.referralCode);
         }
         
-        const res = await axiosSecure.get(`/api/v1/user/all?${params.toString()}`);
+        const res = await axiosSecure.get(`/api/v1/user/all?${params.toString()}` , { signal: abortController.signal });
         
         if (res.data.success) {
-          // Filter out super-admin data for non-super-admin users
-          let filteredData = res.data.data.users || [];
-          if (user?.role !== 'super-admin') {
-            filteredData = filteredData.filter(userd => 
-              userd.referredBy === user.referralCode
-            );
-          }
-          setFilteredUsers(filteredData);
-          setTotalPages(Math.ceil(filteredData.length / limit));
-          setTotalItems(filteredData.length);
+          const usersList = res.data.data.users || [];
+          const total = res.data.data.totalItems ?? usersList.length;
+          setFilteredUsers(usersList);
+          setTotalPages(Math.ceil(total / limit));
+          setTotalItems(total);
           setHasSearchError(false);
         } else {
           // Handle API success but no data case
@@ -171,19 +165,9 @@ const AdminDashboard = () => {
     };
 
     fetchInitialData();
+    return () => abortController.abort();
   }, [page, keyword, selectedRole, selectedStatus, axiosSecure, user?.role, user?._id, user?.referralCode]);
-  useEffect(() => {
-    if (users?.data?.users) {
-      setUser(users.data.users);
-    }
-  }, [users]);
-
-  useEffect(() => {
-    if (allusers && user?.referralCode) {
-      const result = allusers.filter((u) => u.referredBy === user.referralCode);
-      setFilteredUsers(result);
-    }
-  }, [allusers, user?.referralCode]);
+  
 
   const generateReferralCode = () => {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -284,8 +268,8 @@ const AdminDashboard = () => {
         params.append('status', selectedStatus);
       }
 
-      // Add referredBy filter for non-super-admin users
-      if (user?.role !== 'super-admin' && user?.referralCode) {
+      // Add referredBy filter only for non-super-admin AND non-admin roles
+      if (user?.referralCode && user?.role !== 'super-admin' && user?.role !== 'admin') {
         params.append('referredBy', user.referralCode);
       }
 
@@ -321,28 +305,7 @@ const AdminDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-
-    // Only set timeout if user is properly loaded
-    if (!user?.role || !user?._id) {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      handleSearch();
-    }, 500);
-
-    setSearchTimeout(timeout);
-
-    return () => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-    };
-  }, [page, keyword, selectedRole, selectedStatus, user?.role, user?._id, user?.referralCode]);
+  // Remove duplicate debounced timeout effect; rely on the main data effect above
 
   const handleStatusUpdate = async (username, newStatus) => {
     try {

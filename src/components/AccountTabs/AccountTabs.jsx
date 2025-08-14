@@ -9,8 +9,8 @@ const AccountTabs = ({id}) => {
   // Helper function to apply active class
   const isActive = (path) => location.pathname === path;
   return (
-    <div>
-      <ul className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6 ">
+    <div className="w-full lg:w-72 flex-shrink-0">
+      <ul className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         {/* Position Section */}
         <li className="border-b border-gray-200">
           <div className="px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-800">

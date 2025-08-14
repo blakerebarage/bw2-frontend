@@ -88,9 +88,9 @@ const AccountSummary = () => {
     <div className="bg-gradient-to-b from-[#fefefe] to-[#f3f3f3] min-h-screen">
       <CommonNavMenu />
       <div>
-        <div className="flex flex-col md:flex-row px-4 py-6 gap-6 ">
+        <div className="flex flex-col lg:flex-row px-4 py-6 gap-6 ">
           <AccountTabs id={id} />
-          <div className="font-sans space-y-4 md:space-y-6 lg:space-y-6 mt-6 flex-1 border border-gray-200 rounded-lg p-4 drop-shadow-lg">
+          <div className="font-sans space-y-4 md:space-y-6 lg:space-y-6  flex-1 border border-gray-200 rounded-lg p-4 drop-shadow-lg">
             <h3 className="text-lg font-bold sm:text-xl text-gray-800">
               Account Summary - {selectedUser?.username || 'Loading...'}
             </h3>

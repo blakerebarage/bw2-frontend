@@ -127,7 +127,7 @@ const Downlist = () => {
         <AccountTabs id={id} />
         <div className="flex-1 ">
           {/* Header Section */}
-          <div className="mt-6 mb-6 border border-gray-200 rounded-lg p-4 drop-shadow-lg">
+          <div className=" mb-6 border border-gray-200 rounded-lg p-4 drop-shadow-lg">
             <h2 className="text-2xl font-bold text-gray-900">Downline Users</h2>
             <p className="mt-1 text-sm text-gray-600">Manage and view referred users</p>
           </div>

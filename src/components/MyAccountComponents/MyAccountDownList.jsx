@@ -1,6 +1,6 @@
 import { useGetUsersQuery } from "@/redux/features/allApis/usersApi/usersApi";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaExclamationTriangle, FaHouseUser, FaInfoCircle, FaRedo } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -8,7 +8,6 @@ import logo from "../../../public/logoBlack.png";
 
 const MyAccountDownList = () => {
   const { user } = useSelector((state) => state.auth);
-  const [referredUsers, setReferredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
   const usersPerPage = 20;
@@ -20,23 +19,18 @@ const MyAccountDownList = () => {
     ...(user?.referralCode && { referredBy: user.referralCode })
   };
   
-  const { data: users, isLoading, error, refetch } = useGetUsersQuery(queryParams, {
+  const { data: usersData, isLoading, error, refetch } = useGetUsersQuery(queryParams, {
     // Skip the query if no user or referral code
     skip: !user?.referralCode,
     // Retry configuration
     refetchOnMountOrArgChange: true,
     refetchOnReconnect: true,
   });
- 
-  useEffect(() => {
-    if (!isLoading && !error && user && users?.data?.users) {
-      const filteredUsers = users.data.users.filter(
-        (u) => u.referredBy === user?.referralCode
-      );
-      setReferredUsers(filteredUsers);
-      setErrorMessage(""); // Clear any previous error messages
-    }
-  }, [user, users, isLoading, error]);
+  
+  // Derive current page list and totals from server response
+  const usersList = useMemo(() => usersData?.data?.users ?? [], [usersData]);
+  const totalItems = usersData?.data?.totalItems ?? 0;
+  const totalPages = usersData?.data?.pageCount ?? 0;
 
   // Handle errors
   useEffect(() => {
@@ -61,10 +55,9 @@ const MyAccountDownList = () => {
     }
   }, [error]);
 
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = referredUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(referredUsers.length / usersPerPage);
+  const indexOfFirstUser = (currentPage - 1) * usersPerPage + 1;
+  const usersOnPage = usersList.length;
+  const indexOfLastUser = usersOnPage > 0 ? indexOfFirstUser + usersOnPage - 1 : 0;
 
   const handlePageChange = (pageNumber) => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
@@ -175,7 +168,7 @@ const MyAccountDownList = () => {
       <div className="mb-6 bg-white rounded-lg shadow-sm">
         <h2 className="text-2xl font-bold text-gray-900">My Referred Users</h2>
         <p className="mt-1 text-sm text-gray-600">
-          View users you have referred ({referredUsers.length} total)
+          View users you have referred ({totalItems} total)
         </p>
       </div>
 
@@ -204,8 +197,8 @@ const MyAccountDownList = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {currentUsers.length > 0 ? (
-                currentUsers.map((row, index) => (
+              {usersList.length > 0 ? (
+                usersList.map((row, index) => (
                   <tr key={row._id || index} className="hover:bg-yellow-50 transition-colors duration-200">
                     <td className="px-4 py-3 whitespace-nowrap border-r border-gray-200">
                       <div className="flex items-center space-x-2">
@@ -284,7 +277,7 @@ const MyAccountDownList = () => {
           <div className="px-4 py-4 bg-gray-50 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-sm text-gray-700">
-                Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, referredUsers.length)} of {referredUsers.length} users
+                Showing {indexOfFirstUser} to {indexOfLastUser} of {totalItems} users
               </div>
               <div className="flex items-center space-x-2">
                 <button

@@ -103,7 +103,7 @@ const UserBetList = () => {
           <AccountTabs
           id={id}
           ></AccountTabs>
-          <div className="flex-1 border border-gray-200 rounded-lg p-4 drop-shadow-lg mt-6">
+          <div className="flex-1 border border-gray-200 rounded-lg p-4 drop-shadow-lg">
             
     <h3 className="text-2xl font-bold text-gray-900 mb-2">User Bet list</h3>
      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 ">
