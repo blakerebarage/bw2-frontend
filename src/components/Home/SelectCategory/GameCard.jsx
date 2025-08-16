@@ -36,7 +36,7 @@ export const GameCard = ({
           game.img || 'https://via.placeholder.com/300x200?text=No+Image'
         }
         alt={game.name}
-        className="w-full h-40 object-cover group-hover:brightness-90 transition-all duration-300"
+        className="w-full  h-36 md:h-40 object-cover group-hover:brightness-90 transition-all duration-300"
         onError={() => setImageError(true)}
       />
       
@@ -46,7 +46,7 @@ export const GameCard = ({
       {user && (
         <button
           onClick={handleFavoriteToggle}
-          className={`group absolute top-3 right-3 p-2 rounded-full shadow-md transition-all duration-200 z-10 ${
+          className={`group absolute top-2 right-2 md:top-3 md:right-3 p-2 rounded-full shadow-md transition-all duration-200 z-10 ${
             isFavorite
               ? "bg-[#ef4444] text-[#ffffff] hover:bg-[#ef4444]/80 hover:text-[#ffffff]"
               : "bg-white text-[#ef4444] hover:bg-[#ef4444]/80 hover:text-[#ffffff] border border-[#facc15]/30 group-hover:text-[#ef4444] group-hover:bg-[#ef4444] group-hover:border-[#facc15]/30"

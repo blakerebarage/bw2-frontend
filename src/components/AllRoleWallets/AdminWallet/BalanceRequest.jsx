@@ -3,18 +3,18 @@ import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useSoundNotification from "@/Hook/useSoundNotification";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
-import { useCallback, useEffect, useState } from "react";
+import debounce from 'lodash.debounce';
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FaMoneyBillWave } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 import Swal from "sweetalert2";
-import Loading from "../../../components/shared/Loading";
 
 const BalanceRequest = () => {
   const { user } = useSelector((state) => state.auth);
   const axiosSecure = useAxiosSecure();
   const [requestData, setRequestData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastSocketUpdate, setLastSocketUpdate] = useState(null);
   const { addToast } = useToasts();
@@ -22,8 +22,17 @@ const BalanceRequest = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [keyword, setKeyword] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const {formatCurrency} = useCurrency();
   const { reloadUserData } = useManualUserDataReload();
+  
+  // Ref for search input to maintain focus
+  const searchInputRef = useRef(null);
   
   // Get socket using the useSocket hook
   const { socket, isConnected } = useSocket();
@@ -34,8 +43,53 @@ const BalanceRequest = () => {
   // Check if user is admin or super-admin
   const isAdminOrSuperAdmin = user?.role === "admin" || user?.role === "super-admin";
 
+  // Create a debounced search function
+  const debouncedSearch = useCallback(
+    debounce((searchValue) => {
+      setKeyword(searchValue);
+      setIsSearching(false);
+    }, 500),
+    []
+  );
+
+  // Update the search input handler
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    setSearchInput(value); // Update input value immediately for user feedback
+    
+    // Set searching state if there's a difference between input and current keyword
+    if (value !== keyword) {
+      setIsSearching(true);
+    }
+    
+    debouncedSearch(value); // Debounce the actual search
+  };
+
+  // Maintain focus on search input after data updates
+  useEffect(() => {
+    if (isSearchFocused && searchInputRef.current && searchInput) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        // Restore cursor position to end
+        const len = searchInput.length;
+        searchInputRef.current?.setSelectionRange(len, len);
+      }, 0);
+    }
+  }, [requestData, isSearchFocused, searchInput]);
+
+  // Date validation
+  const isDateRangeValid = useCallback(() => {
+    if (!startDate || !endDate) return true;
+    return new Date(startDate) <= new Date(endDate);
+  }, [startDate, endDate]);
+
   const fetchRequests = useCallback(async () => {
     try {
+      // Don't fetch if user is not loaded or date range is invalid
+      if (!user?.role || !isDateRangeValid()) {
+        return;
+      }
+      
       setLoading(true);
       setError(null);
      
@@ -57,6 +111,20 @@ const BalanceRequest = () => {
         apiUrl += `&status=${statusFilter}`;
       }
       
+      // Add search filter if provided
+      if (keyword.trim()) {
+        apiUrl += `&search=${encodeURIComponent(keyword.trim())}`;
+      }
+      
+      // Add date filters if provided
+      if (startDate) {
+        apiUrl += `&startDate=${startDate}`;
+      }
+      
+      if (endDate) {
+        apiUrl += `&endDate=${endDate}`;
+      }
+      
       const res = await axiosSecure.get(apiUrl);
 
       if (!res.data.success) {
@@ -75,11 +143,18 @@ const BalanceRequest = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, statusFilter, isAdminOrSuperAdmin, user?.role, user?.username, user?.referralCode, axiosSecure]);
+  }, [page, limit, statusFilter, keyword, startDate, endDate, isAdminOrSuperAdmin, user?.role, user?.username, user?.referralCode, axiosSecure, isDateRangeValid]);
 
   useEffect(() => {
-    fetchRequests();
-  }, [page, statusFilter, isAdminOrSuperAdmin, fetchRequests]);
+    if (user?.role) {
+      fetchRequests();
+    }
+  }, [page, statusFilter, keyword, startDate, endDate, isAdminOrSuperAdmin, fetchRequests, user?.role]);
+
+  // Reset to first page when filters change (except page)
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, keyword, startDate, endDate]);
 
   // Socket event listeners for real-time updates
   useEffect(() => {
@@ -392,6 +467,18 @@ const BalanceRequest = () => {
   };
   
 
+  // Show loading if user is not loaded yet
+  if (!user?.role) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 border-4 border-[#1f2937] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[#1f2937] font-medium">Loading user data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto">
@@ -425,12 +512,34 @@ const BalanceRequest = () => {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Filter Section */}
           <div className="p-4 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="w-full sm:w-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Search
+                  {searchInput !== keyword && searchInput.length > 0 && (
+                    <span className="ml-2 text-xs text-blue-500">(searching...)</span>
+                  )}
+                </label>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search by username, txnId..."
+                  value={searchInput}
+                  onChange={handleSearchInputChange}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200"
+                />
+              </div>
+              
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200"
                 >
                   <option value="all">All Status</option>
                   <option value="pending">Pending</option>
@@ -438,7 +547,61 @@ const BalanceRequest = () => {
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
+              
+              {/* Start Date Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  max={endDate || undefined}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200 ${
+                    !isDateRangeValid() ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {!isDateRangeValid() && (
+                  <p className="text-red-500 text-xs mt-1">Start date cannot be greater than end date</p>
+                )}
+              </div>
+              
+              {/* End Date Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200 ${
+                    !isDateRangeValid() ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {!isDateRangeValid() && (
+                  <p className="text-red-500 text-xs mt-1">End date cannot be less than start date</p>
+                )}
+              </div>
             </div>
+            
+            {/* Clear Filters Button */}
+            {(keyword || searchInput || startDate || endDate || statusFilter !== "all") && (
+              <div className="mt-4">
+                <button
+                  onClick={() => {
+                    setKeyword("");
+                    setSearchInput("");
+                    setIsSearching(false);
+                    setStartDate("");
+                    setEndDate("");
+                    setStatusFilter("all");
+                    setPage(1);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Table */}
@@ -484,7 +647,25 @@ const BalanceRequest = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {requestData?.length ? requestData.map((request) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={isAdminOrSuperAdmin ? "11" : "10"} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-4">
+                        <div className="w-12 h-12 border-4 border-[#1f2937] border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-gray-500">Loading...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : isSearching ? (
+                  <tr>
+                    <td colSpan={isAdminOrSuperAdmin ? "11" : "10"} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-4">
+                        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-blue-500">Searching...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : requestData?.length ? requestData.map((request) => (
                   <tr key={request._id} className="hover:bg-gray-50 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -567,12 +748,7 @@ const BalanceRequest = () => {
             </table>
           </div>
 
-          {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center items-center py-8">
-              <Loading />
-            </div>
-          )}
+
 
          
 

@@ -529,13 +529,17 @@ const DepositSection = () => {
       if (selectedMethod.method === "Bank") {
         return !finalAmount || !selectedMethod.method || !selectedBank || !reference;
       }
-      return !finalAmount || !senderPhone || !selectedMethod.method || !selectedAccount;
+      return !finalAmount || !senderPhone || senderPhone.length !== 11 || !selectedMethod.method || !selectedAccount;
     };
 
     if (validateFields()) {
+      let errorMessage = "All fields are required!";
+      if (senderPhone && senderPhone.length !== 11) {
+        errorMessage = "Phone number must be exactly 11 digits!";
+      }
       Swal.fire({
         icon: "warning",
-        title: "All fields are required!",
+        title: errorMessage,
         confirmButtonText: "OK",
       });
       return;
@@ -842,13 +846,46 @@ const DepositSection = () => {
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">Sender Phone *</label>
-                    <input
-                      type="text"
-                      value={senderPhone}
-                      onChange={(e) => setSenderPhone(e.target.value)}
-                      placeholder="Enter sender phone number"
-                      className="w-full p-3 bg-[#22282e] text-white rounded-lg border border-gray-600 focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] outline-none"
-                    />
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                        <span className="text-[#facc15] font-semibold text-sm">+88</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={senderPhone}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Only allow numbers and limit to 11 digits
+                          if (/^[0-9]*$/.test(value) && value.length <= 11) {
+                            setSenderPhone(value);
+                          }
+                        }}
+                        onKeyPress={(e) => {
+                          // Only allow numbers
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        placeholder="0XXXXXXXXX"
+                        maxLength={11}
+                        className={`w-full pl-12 p-3 bg-[#22282e] text-white rounded-lg border focus:ring-1 focus:ring-[#facc15] outline-none transition-colors ${
+                          senderPhone && senderPhone.length !== 11 
+                            ? 'border-red-500 focus:border-red-500' 
+                            : 'border-gray-600 focus:border-[#facc15]'
+                        }`}
+                      />
+                    </div>
+                    {senderPhone && senderPhone.length !== 11 && (
+                      <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Phone number must be exactly 11 digits (e.g., 0XXXXXXXXX)
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">
+                      💡 Enter 11-digit phone number (e.g., 0XXXXXXXXX)
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">Transaction ID *</label>

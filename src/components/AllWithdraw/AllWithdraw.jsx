@@ -4,7 +4,8 @@ import { useCurrency } from "@/Hook/useCurrency";
 import useSoundNotification from "@/Hook/useSoundNotification";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
 import { setCredentials } from "@/redux/slices/authSlice";
-import { useEffect, useState } from "react";
+import debounce from 'lodash.debounce';
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
 import logo from "../../../public/logoBlack.png";
@@ -20,8 +21,16 @@ const AllWithdraw = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
   const [lastSocketUpdate, setLastSocketUpdate] = useState(null);
+  const [keyword, setKeyword] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const itemsPerPage = 50;
   const { reloadUserData } = useManualUserDataReload();
+  
+  // Ref for search input to maintain focus
+  const searchInputRef = useRef(null);
   
   // Get socket using the useSocket hook
   const { socket, isConnected } = useSocket();
@@ -32,8 +41,46 @@ const AllWithdraw = () => {
   // Check if user is admin or super-admin
   const isAdminOrSuperAdmin = user?.role === "admin" || user?.role === "super-admin";
 
+  // Create a debounced search function
+  const debouncedSearch = useCallback(
+    debounce((searchValue) => {
+      setKeyword(searchValue);
+    }, 500),
+    []
+  );
+
+  // Update the search input handler
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    setSearchInput(value); // Update input value immediately for user feedback
+    debouncedSearch(value); // Debounce the actual search
+  };
+
+  // Maintain focus on search input after data updates
+  useEffect(() => {
+    if (isSearchFocused && searchInputRef.current && searchInput) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        // Restore cursor position to end
+        const len = searchInput.length;
+        searchInputRef.current?.setSelectionRange(len, len);
+      }, 0);
+    }
+  }, [withdraws, isSearchFocused, searchInput]);
+
+  // Date validation
+  const isDateRangeValid = () => {
+    if (!startDate || !endDate) return true;
+    return new Date(startDate) <= new Date(endDate);
+  };
+
   const fetchData = async () => {
     try {
+      // Don't fetch if date range is invalid
+      if (!isDateRangeValid()) {
+        return;
+      }
+      
       setLoading(true);
       
       let apiUrl = '/api/v1/finance/all-withdraw-request';
@@ -52,6 +99,20 @@ const AllWithdraw = () => {
       // Add status filter if not "all"
       if (statusFilter !== "all") {
         apiUrl += `&status=${statusFilter}`;
+      }
+      
+      // Add search filter if provided
+      if (keyword.trim()) {
+        apiUrl += `&search=${encodeURIComponent(keyword.trim())}`;
+      }
+      
+      // Add date filters if provided
+      if (startDate) {
+        apiUrl += `&startDate=${startDate}`;
+      }
+      
+      if (endDate) {
+        apiUrl += `&endDate=${endDate}`;
       }
       
       const res = await axiosSecure.get(apiUrl);
@@ -78,7 +139,12 @@ const AllWithdraw = () => {
     if (user?.referralCode || isAdminOrSuperAdmin) {
       fetchData();
     }
-  }, [axiosSecure, user?.referralCode, currentPage, statusFilter, isAdminOrSuperAdmin]);
+  }, [axiosSecure, user?.referralCode, currentPage, statusFilter, keyword, startDate, endDate, isAdminOrSuperAdmin]);
+
+  // Reset to first page when filters change (except currentPage)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, keyword, startDate, endDate]);
 
   // Socket event listeners for real-time updates
   useEffect(() => {
@@ -332,7 +398,15 @@ const AllWithdraw = () => {
           icon: "success"
         });
 
-        const refreshedWithdraws = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}${statusFilter !== "all" ? `&status=${statusFilter}` : ""}`);
+        let refreshUrl = `/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}`;
+        if (statusFilter !== "all") refreshUrl += `&status=${statusFilter}`;
+        if (keyword.trim()) refreshUrl += `&search=${encodeURIComponent(keyword.trim())}`;
+        if (startDate) refreshUrl += `&startDate=${startDate}`;
+        if (endDate) refreshUrl += `&endDate=${endDate}`;
+        if (!isAdminOrSuperAdmin && user?.referralCode) refreshUrl += `&referralCode=${user.referralCode}`;
+        
+        const refreshedWithdraws = await axiosSecure.get(refreshUrl);
+        console.log(refreshedWithdraws);
         const filteredWithdraws = isAdminOrSuperAdmin 
           ? refreshedWithdraws?.data?.data?.results 
           : refreshedWithdraws?.data?.data?.results.filter(
@@ -389,7 +463,14 @@ const AllWithdraw = () => {
           icon: "success"
         });
 
-        const refreshedWithdraws = await axiosSecure.get(`/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}${statusFilter !== "all" ? `&status=${statusFilter}` : ""}`);
+        let refreshUrl = `/api/v1/finance/all-withdraw-request?limit=${itemsPerPage}&page=${currentPage}`;
+        if (statusFilter !== "all") refreshUrl += `&status=${statusFilter}`;
+        if (keyword.trim()) refreshUrl += `&search=${encodeURIComponent(keyword.trim())}`;
+        if (startDate) refreshUrl += `&startDate=${startDate}`;
+        if (endDate) refreshUrl += `&endDate=${endDate}`;
+        if (!isAdminOrSuperAdmin && user?.referralCode) refreshUrl += `&referralCode=${user.referralCode}`;
+        
+        const refreshedWithdraws = await axiosSecure.get(refreshUrl);
         const filteredWithdraws = isAdminOrSuperAdmin 
           ? refreshedWithdraws?.data?.data?.results 
           : refreshedWithdraws?.data?.data?.results.filter(
@@ -459,17 +540,96 @@ const AllWithdraw = () => {
           </div>
         ) : (
             <div className="overflow-x-auto bg-white rounded-xl shadow-lg">
-            <div className="w-full sm:w-auto p-4">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="cancelled  ">Cancelled</option>
-              </select>
+            <div className="p-4 border-b border-gray-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Search Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Search
+                    {searchInput !== keyword && searchInput.length > 0 && (
+                      <span className="ml-2 text-xs text-blue-500">(searching...)</span>
+                    )}
+                  </label>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search by username, phone..."
+                    value={searchInput}
+                    onChange={handleSearchInputChange}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200"
+                  />
+                </div>
+                
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                
+                {/* Start Date Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    max={endDate || undefined}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200 ${
+                      !isDateRangeValid() ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                  {!isDateRangeValid() && (
+                    <p className="text-red-500 text-xs mt-1">Start date cannot be greater than end date</p>
+                  )}
+                </div>
+                
+                {/* End Date Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    min={startDate || undefined}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors duration-200 ${
+                      !isDateRangeValid() ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                  {!isDateRangeValid() && (
+                    <p className="text-red-500 text-xs mt-1">End date cannot be less than start date</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Clear Filters Button */}
+              {(keyword || searchInput || startDate || endDate || statusFilter !== "all") && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => {
+                      setKeyword("");
+                      setSearchInput("");
+                      setStartDate("");
+                      setEndDate("");
+                      setStatusFilter("all");
+                      setCurrentPage(1);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              )}
             </div>
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-[#1f2937]">
