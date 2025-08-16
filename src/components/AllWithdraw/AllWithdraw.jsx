@@ -119,7 +119,7 @@ const AllWithdraw = () => {
       
       if (res.data.success) {
         const results = res.data.data.results || [];
-        
+         console.log(results)
         setWithdraws(results);
         setTotalPages(res.data.data.pageCount || 1);
       } else {
@@ -127,6 +127,7 @@ const AllWithdraw = () => {
         setTotalPages(1);
       }
     } catch (error) {
+      
       console.error("Error fetching withdraw requests:", error);
       setWithdraws([]);
       setTotalPages(1);
@@ -471,6 +472,7 @@ const AllWithdraw = () => {
         if (!isAdminOrSuperAdmin && user?.referralCode) refreshUrl += `&referralCode=${user.referralCode}`;
         
         const refreshedWithdraws = await axiosSecure.get(refreshUrl);
+        
         const filteredWithdraws = isAdminOrSuperAdmin 
           ? refreshedWithdraws?.data?.data?.results 
           : refreshedWithdraws?.data?.data?.results.filter(
