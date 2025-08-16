@@ -2,19 +2,18 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
-import { ArrowRight, Check, Copy, CreditCard, Send, Wallet } from "lucide-react";
+import { ArrowRight, Check, CreditCard, Send, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
 // Internal Payment Method Selector Component
-const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMethod, onSelect, t }) => {
+const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMethod, onSelect }) => {
   const systemBankTypes = [...new Set(systemBanks.map(bank => bank.bankType))];
   
   return (
     <div className="space-y-3">
-     
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {systemBankTypes.map((bankType) => {
           const methodInfo = paymentMethods.find(m => m.name === bankType);
@@ -59,7 +58,7 @@ const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMe
 };
 
 // Wallet Agent Payment Method Selector Component
-const WalletAgentPaymentMethodSelector = ({ walletAgentBanks, paymentMethods, selectedMethod, onSelect, t }) => {
+const WalletAgentPaymentMethodSelector = ({ walletAgentBanks, paymentMethods, selectedMethod, onSelect }) => {
   const walletAgentBankTypes = [...new Set(walletAgentBanks.map(bank => bank.bankType))];
   
   return (
@@ -108,107 +107,9 @@ const WalletAgentPaymentMethodSelector = ({ walletAgentBanks, paymentMethods, se
   );
 };
 
-// Channel Selector Component
-const ChannelSelector = ({ channels, selectedChannel, onSelect }) => (
-  <div className="space-y-3">
-    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Select Channel</h3>
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-      {channels.map((channel) => (
-        <button
-          key={channel}
-          onClick={() => onSelect(channel)}
-          className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-            selectedChannel === channel
-              ? "bg-[#facc15] text-[#1a1f24]"
-              : "bg-[#22282e] text-gray-300 hover:bg-[#2a323a] border border-gray-600"
-          }`}
-        >
-          {channel}
-        </button>
-      ))}
-    </div>
-  </div>
-);
 
-// Bank Card Component
-const BankCard = ({ bankDetails, type }) => {
-  const [copiedField, setCopiedField] = useState(null);
 
-  const copyToClipboard = async (text, field) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (err) {
-      // Handle error silently
-    }
-  };
 
-  const CopyableField = ({ label, value, field }) => (
-    <div className="flex items-center justify-between p-3 bg-[#22282e] rounded-lg">
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-gray-400 uppercase tracking-wide">{label}</p>
-        <p className="text-sm font-medium text-white truncate mt-1">{value}</p>
-      </div>
-      <button
-        onClick={() => copyToClipboard(value, field)}
-        className="ml-3 p-2 text-[#facc15] hover:bg-[#facc15]/10 rounded-lg transition-colors"
-      >
-        {copiedField === field ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-      </button>
-    </div>
-  );
-
-  // Mobile banking: only show account number
-  if (type !== "Bank") {
-    return (
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Account Details</h3>
-        <div className="bg-[#1a1f24] rounded-lg border border-[#facc15]/20 p-4">
-          <CopyableField
-            label="Account Number"
-            value={bankDetails.accountNumber}
-            field="accountNumber"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Direct bank: show all fields
-  return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Bank Details</h3>
-      <div className="bg-[#1a1f24] rounded-lg border border-[#facc15]/20 p-4 space-y-3">
-        <CopyableField
-          label="Bank Name"
-          value={bankDetails.bankName}
-          field="bankName"
-        />
-        <CopyableField 
-          label="Branch"
-          value={bankDetails.branchName}
-          field="branchName"
-        />
-        <CopyableField 
-          label="Account Number" 
-          value={bankDetails.accountNumber} 
-          field="accountNumber"
-        />
-        <CopyableField 
-          label="Account Holder" 
-          value={bankDetails.accountHolderName} 
-          field="accountHolder"
-        />
-        <CopyableField 
-          label="Routing Number" 
-          value={bankDetails.routingNumber} 
-          field="routing"
-        />
-      </div>
-    </div>
-  );
-};
 
 export default function Withdraw() {
   const { t } = useLanguage();
@@ -216,13 +117,8 @@ export default function Withdraw() {
   const { formatCurrency } = useCurrency();
   const axiosSecure = useAxiosSecure();
   const [selectedMethod, setSelectedMethod] = useState({ type: '', method: '' });
-  const [chanel, setChanel] = useState("");
   const [amount, setAmount] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
-  const [bankTypes, setBankTypes] = useState([]);
-  const [channels, setChannels] = useState([]);
-  const [allBanks, setAllBanks] = useState([]);
-  const channelOrder = ["Send-Money", "Cash-Out", "Make-Payment", "Cash-In", "Bank-Transfer"];
   const [walletAgentBanks, setWalletAgentBanks] = useState([]);
   const [systemBanks, setSystemBanks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -231,132 +127,69 @@ export default function Withdraw() {
   const { reloadUserData } = useManualUserDataReload();
   const [selectedBank, setSelectedBank] = useState(null);
   const [isWalletAgentMethod, setIsWalletAgentMethod] = useState(false);
-  // New state for user's own bank info
+  // User's bank information for Bank method
   const [userBankName, setUserBankName] = useState("");
   const [userBranchName, setUserBranchName] = useState("");
   const [userAccountHolderName, setUserAccountHolderName] = useState("");
   const [userRoutingNumber, setUserRoutingNumber] = useState("");
 
-  // Define the desired order of payment methods
-  const paymentMethodOrder = [
-    "Bkash",
-    "Nagad",
-    "Rocket",
-    "Upay",
-    "Tap",
-    "OkWallet",
-    "Crypto",
-    "Bank"
-  ];
+  
 
-  // Function to sort payment methods according to the defined order
-  const sortPaymentMethods = (methods) => {
-    return [...methods].sort((a, b) => {
-      const indexA = paymentMethodOrder.indexOf(a);
-      const indexB = paymentMethodOrder.indexOf(b);
-      return indexA - indexB;
-    });
-  };
-
-  // Fetch system banks
+  // Fetch banks data
   useEffect(() => {
-    setLoading(true);
-    axiosSecure
-      .get(`/api/v1/finance/bank-list/${user.referredBy}?purpose=Withdraw`)
-      .then((res) => {
-        if (res.data.success) {
-          const banks = res.data?.data?.filter(bank => bank.status === "active");
-          setSystemBanks(banks);
-          setAllBanks(banks);
-          const uniqueBankTypes = [...new Set(banks.map(bank => bank.bankType))];
-          const sortedBankTypes = sortPaymentMethods(uniqueBankTypes);
-          setBankTypes(sortedBankTypes);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch system banks:", err);
-      })
-      .finally(() => setLoading(false));
-  }, [user.referredBy, axiosSecure]);
-
-  // Fetch wallet agent banks
-  useEffect(() => {
-    const fetchWalletAgentBanks = async () => {
+    const fetchBanks = async () => {
+      setLoading(true);
       try {
-        const res = await axiosSecure.get(`/api/v1/finance/wallet-agent-bank-list?page=1&limit=100&purpose=Withdraw`);
-      
-        if (res.data.success) {
-          const banks = res.data.data.results.filter(bank => bank.status === "active" && bank.isWalletAgent);
+        // Fetch system banks
+        const systemRes = await axiosSecure.get(`/api/v1/finance/bank-list/${user.referredBy}?purpose=Withdraw`);
+        if (systemRes.data.success) {
+          const banks = systemRes.data?.data?.filter(bank => bank.status === "active");
+          setSystemBanks(banks);
+        }
+
+        // Fetch wallet agent banks
+        const agentRes = await axiosSecure.get(`/api/v1/finance/wallet-agent-bank-list?page=1&limit=100&purpose=Withdraw`);
+        if (agentRes.data.success) {
+          const banks = agentRes.data.data.results.filter(bank => bank.status === "active" && bank.isWalletAgent);
           setWalletAgentBanks(banks);
-          
-          // Add wallet agent bank types to existing bank types
-          const walletAgentBankTypes = [...new Set(banks.map(bank => bank.bankType))];
-          setBankTypes(prevBankTypes => {
-            const allBankTypes = [...new Set([...prevBankTypes, ...walletAgentBankTypes])];
-            return sortPaymentMethods(allBankTypes);
-          });
         }
       } catch (err) {
-        console.error("Failed to fetch wallet agent banks:", err);
+        console.error("Failed to fetch banks:", err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchWalletAgentBanks();
-  }, [axiosSecure]);
 
-  // Update channels when method changes
+    fetchBanks();
+  }, [user.referredBy, axiosSecure]);
+
+  // Update selected bank details when method changes
   useEffect(() => {
     if (!selectedMethod.method) {
-      setChannels([]);
-      setChanel("");
       setSelectedBankDetails(null);
       setSelectedBank(null);
       return;
     }
 
-    if (isWalletAgentMethod) {
-      // Use wallet agent banks for this method
-      const methodBanks = walletAgentBanks.filter(bank => bank.bankType === selectedMethod.method);
-      const uniqueChannels = [...new Set(methodBanks.map(bank => bank.channel))];
-      // Sort channels according to the specified order
-      const sortedChannels = uniqueChannels.sort((a, b) => {
-        const indexA = channelOrder.indexOf(a);
-        const indexB = channelOrder.indexOf(b);
-        return indexA - indexB;
-      });
-      setChannels(sortedChannels);
-    } else {
-      // Use system banks for this method
-      const methodBanks = systemBanks.filter(bank => bank.bankType === selectedMethod.method);
-      const uniqueChannels = [...new Set(methodBanks.map(bank => bank.channel))];
-      // Sort channels according to the specified order
-      const sortedChannels = uniqueChannels.sort((a, b) => {
-        const indexA = channelOrder.indexOf(a);
-        const indexB = channelOrder.indexOf(b);
-        return indexA - indexB;
-      });
-      setChannels(sortedChannels);
-    }
-    
-    setChanel("");
     setSelectedBankDetails(null);
     setSelectedBank(null);
   }, [selectedMethod, isWalletAgentMethod, walletAgentBanks, systemBanks]);
 
-  // Update selected bank details when both method and channel are selected
+  // Update selected bank details when method and bank are selected
   useEffect(() => {
-    if (selectedMethod.method === "Bank" && selectedBank && chanel) {
+    if (selectedMethod.method === "Bank" && selectedBank) {
       if (isWalletAgentMethod) {
-        const filtered = walletAgentBanks.filter(b => b.bankType === selectedMethod.method && b.channel === chanel && b._id === selectedBank._id);
+        const filtered = walletAgentBanks.filter(b => b.bankType === selectedMethod.method && b._id === selectedBank._id);
         setSelectedBankDetails(filtered[0] || null);
       } else {
-        const filtered = systemBanks.filter(b => b.bankType === selectedMethod.method && b.channel === chanel && b.bankName === selectedBank.bankName);
+        const filtered = systemBanks.filter(b => b.bankType === selectedMethod.method && b.bankName === selectedBank.bankName);
         setSelectedBankDetails(filtered[0] || null);
       }
-    } else if (selectedMethod.method && chanel) {
+    } else if (selectedMethod.method) {
       if (isWalletAgentMethod) {
-        const filtered = walletAgentBanks.filter(b => b.bankType === selectedMethod.method && b.channel === chanel);
+        const filtered = walletAgentBanks.filter(b => b.bankType === selectedMethod.method);
         // For mobile banking, select the bank with smallest suitable limit
-        if (["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet"].includes(selectedMethod.method)) {
+        if (["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet","Crypto"].includes(selectedMethod.method)) {
           const amountValue = parseFloat(amount);
           if (amountValue && filtered.length > 0) {
             const suitableBanks = filtered.filter(bank => bank.dailyLimit >= amountValue);
@@ -373,7 +206,7 @@ export default function Withdraw() {
           setSelectedBankDetails(filtered[0] || null);
         }
       } else {
-        const filtered = systemBanks.filter(b => b.bankType === selectedMethod.method && b.channel === chanel);
+        const filtered = systemBanks.filter(b => b.bankType === selectedMethod.method);
         // For mobile banking, select the bank with smallest suitable limit
         if (["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet"].includes(selectedMethod.method)) {
           const amountValue = parseFloat(amount);
@@ -395,7 +228,7 @@ export default function Withdraw() {
     } else {
       setSelectedBankDetails(null);
     }
-  }, [selectedMethod, chanel, walletAgentBanks, systemBanks, selectedBank, isWalletAgentMethod, amount]);
+  }, [selectedMethod, walletAgentBanks, systemBanks, selectedBank, isWalletAgentMethod, amount]);
 
   // Update bank list when method changes
   useEffect(() => {
@@ -428,8 +261,21 @@ export default function Withdraw() {
       .catch(() => {});
   }, []);
 
-  const handleWithdraw = async () => {
-    if (!selectedMethod.method || !chanel || !amount || !mobileNumber) {
+  // Reset form to initial state
+  const resetForm = () => {
+    setSelectedMethod({ type: '', method: '' });
+    setAmount("");
+    setMobileNumber("");
+    setSelectedBank(null);
+    setUserBankName("");
+    setUserBranchName("");
+    setUserAccountHolderName("");
+    setUserRoutingNumber("");
+  };
+
+  // Validation helper
+  const validateForm = () => {
+    if (!selectedMethod.method || !amount || !mobileNumber) {
       Swal.fire({
         icon: "warning",
         title: "Missing Fields",
@@ -437,10 +283,9 @@ export default function Withdraw() {
         confirmButtonColor: "#3085d6",
         confirmButtonText: "OK",
       });
-      return;
+      return false;
     }
 
-    // Validate mobile number for non-Bank methods
     if (selectedMethod.method !== "Bank" && mobileNumber.length !== 11) {
       Swal.fire({
         icon: "warning",
@@ -449,9 +294,9 @@ export default function Withdraw() {
         confirmButtonColor: "#3085d6",
         confirmButtonText: "OK",
       });
-      return;
+      return false;
     }
-    // For direct bank, require user bank info
+
     if (selectedMethod.method === "Bank" && (!userBankName || !userBranchName || !userAccountHolderName || !userRoutingNumber)) {
       Swal.fire({
         icon: "warning",
@@ -460,20 +305,24 @@ export default function Withdraw() {
         confirmButtonColor: "#3085d6",
         confirmButtonText: "OK",
       });
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleWithdraw = async () => {
+    if (!validateForm()) return;
 
     const withdrawData = {
       paymentMethod: selectedMethod.method,
       amount,
       withdrawAccountNumber: mobileNumber,
-      channel: chanel,
       username: user.username,
       referralCode: user.referredBy,
       ...(isWalletAgentMethod && {
-        walletAgentUsername: selectedMethod.method === "Bank" ? selectedBank.username : selectedBankDetails.username
+        walletAgentUsername: selectedMethod.method === "Bank" ? selectedBank?.username : selectedBankDetails?.username
       }),
-      // Add user bank info for direct bank
       ...(selectedMethod.method === "Bank" && {
         userBankName,
         userBranchName,
@@ -481,27 +330,22 @@ export default function Withdraw() {
         userRoutingNumber,
       })
     };
+
     try {
-      const response = await axiosSecure.post(`/api/v1/finance/create-withdraw-request`, withdrawData);
+      await axiosSecure.post(`/api/v1/finance/create-withdraw-request`, withdrawData);
     
       Swal.fire({
         icon: "success",
         title: "Withdrawal Successful!",
-        text: "Your withdrawal request has been Pending",
+        text: "Your withdrawal request has been submitted",
         confirmButtonColor: "#3085d6",
         confirmButtonText: "OK",
       });
-      setSelectedMethod({ type: '', method: '' });
-      setChanel("");
-      setAmount("");
-      setMobileNumber("");
-      setSelectedBank(null);
-      setUserBankName("");
-      setUserBranchName("");
-      setUserAccountHolderName("");
-      setUserRoutingNumber("");
+      
+      resetForm();
       reloadUserData();
     } catch (error) {
+      console.log(error)
       Swal.fire({
         icon: "error",
         title: "Oops...",
@@ -551,11 +395,7 @@ export default function Withdraw() {
               systemBanks={systemBanks}
               paymentMethods={paymentMethods}
               selectedMethod={selectedMethod}
-              onSelect={(methodObj) => {
-                setSelectedMethod(methodObj);
-                setChanel("");
-              }}
-              t={t}
+              onSelect={setSelectedMethod}
             />
           )}
 
@@ -565,22 +405,17 @@ export default function Withdraw() {
               walletAgentBanks={walletAgentBanks}
               paymentMethods={paymentMethods}
               selectedMethod={selectedMethod}
-              onSelect={(methodObj) => {
-                setSelectedMethod(methodObj);
-                setChanel("");
-              }}
-              t={t}
+              onSelect={setSelectedMethod}
             />
           )}
 
-          {/* Selected Method Indicator */}
+          {/* Amount Display */}
           {amount && (
-            <div className=" flex justify-center items-center">
-            <h2 className=" items-center gap-2 px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-full  w-[100px] text-center font-bold text-2xl">
-              
-              {amount}
-            </h2>
-          </div>
+            <div className="flex justify-center items-center">
+              <div className="px-4 py-2 bg-[#facc15] text-[#1a1f24] rounded-full min-w-[100px] text-center font-bold text-2xl">
+                {formatCurrency(amount)}
+              </div>
+            </div>
           )}
 
           {/* Bank Selection for Bank Method */}
@@ -607,18 +442,7 @@ export default function Withdraw() {
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Channel Selection */}
-          {selectedMethod.method && (
-            <ChannelSelector
-              channels={channels}
-              selectedChannel={chanel}
-              onSelect={setChanel}
-            />
-          )}
-
-          {/* User's Bank Information for Direct Bank */}
+          )}          {/* User's Bank Information for Direct Bank */}
           {selectedMethod.method === "Bank" && selectedBank && (
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-[#facc15] uppercase tracking-wide">Your Bank Information</h3>
@@ -672,7 +496,7 @@ export default function Withdraw() {
           )}
 
           {/* Amount and Account Number Fields */}
-          {selectedMethod.method && chanel && (
+          {selectedMethod.method && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">Amount *</label>
@@ -751,19 +575,20 @@ export default function Withdraw() {
           )}
 
           {/* Withdraw Button */}
-          {selectedMethod.method && chanel && (
+          {selectedMethod.method && (
             <button
               onClick={handleWithdraw}
+              disabled={!amount || amount <= 0 || amount > user?.balance || loading}
               className={`w-full py-3 rounded-lg font-medium transition-all duration-200 ${
-                !amount || amount <= 0 || amount > user?.balance
+                !amount || amount <= 0 || amount > user?.balance || loading
                   ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                   : "bg-[#facc15] text-[#1a1f24] hover:bg-[#e6b800] active:scale-95"
               }`}
-              disabled={!amount || amount <= 0 || amount > user?.balance}
             >
-              {!amount || amount <= 0 || amount > user?.balance 
-                ? "Enter Valid Amount" 
-                : `Withdraw ${formatCurrency(amount)}`}
+              {loading ? "Processing..." : 
+                (!amount || amount <= 0 || amount > user?.balance 
+                  ? "Enter Valid Amount" 
+                  : `Withdraw ${formatCurrency(amount)}`)}
             </button>
           )}
         </div>

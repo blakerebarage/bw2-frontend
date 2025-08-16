@@ -1,8 +1,9 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import { useSocket } from "@/contexts/SocketContext";
+import debounce from 'lodash.debounce';
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FaList, FaTable } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -22,11 +23,57 @@ const AllTransactions = () => {
   const [viewMode, setViewMode] = useState("table"); // table or list
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [keyword, setKeyword] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const limit = 50;
+  
+  // Ref for search input to maintain focus
+  const searchInputRef = useRef(null);
+
+  // Create a debounced search function
+  const debouncedSearch = useCallback(
+    debounce((searchValue) => {
+      setKeyword(searchValue);
+      setIsSearching(false);
+    }, 500),
+    []
+  );
+
+  // Update the search input handler
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    setSearchInput(value); // Update input value immediately for user feedback
+    
+    // Set searching state if there's a difference between input and current keyword
+    if (value !== keyword) {
+      setIsSearching(true);
+    }
+    
+    debouncedSearch(value); // Debounce the actual search
+  };
+
+  // Maintain focus on search input after data updates
+  useEffect(() => {
+    if (isSearchFocused && searchInputRef.current && searchInput) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        // Restore cursor position to end
+        const len = searchInput.length;
+        searchInputRef.current?.setSelectionRange(len, len);
+      }, 0);
+    }
+  }, [transactions, isSearchFocused, searchInput]);
 
   useEffect(() => {
     fetchTransactions();
-  }, [currentPage, filter, startDate, endDate]);
+  }, [currentPage, filter, startDate, endDate, keyword]);
+
+  // Reset to first page when filters change (except page)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, keyword, startDate, endDate]);
 
   // Socket event listeners for real-time updates
   useEffect(() => {
@@ -36,8 +83,6 @@ const AllTransactions = () => {
 
     // Listen for transaction updates
     const handleTransactionUpdate = (payload) => {
- 
-      
       if (payload && payload.data) {
         let transactionData = [];
         
@@ -54,10 +99,24 @@ const AllTransactions = () => {
           // Apply current filters
           let filteredTransactions = transactionData;
           
+          // Apply type filter
           if (filter !== "all") {
-            filteredTransactions = transactionData.filter(t => t.type === filter);
+            filteredTransactions = transactionData.filter(t => 
+              t.senderTxn?.type?.toLowerCase() === filter.toLowerCase()
+            );
           }
           
+          // Apply search filter
+          if (keyword.trim()) {
+            const searchTerm = keyword.trim().toLowerCase();
+            filteredTransactions = filteredTransactions.filter(t => 
+              t.txnRef?.toLowerCase().includes(searchTerm) ||
+              t.senderTxn?.senderUsername?.toLowerCase().includes(searchTerm) ||
+              t.senderTxn?.receiverUsername?.toLowerCase().includes(searchTerm)
+            );
+          }
+          
+          // Apply date filters
           if (startDate) {
             filteredTransactions = filteredTransactions.filter(t => 
               new Date(t.createdAt) >= new Date(startDate)
@@ -98,9 +157,9 @@ const AllTransactions = () => {
       socket.off('transaction_update', handleTransactionUpdate);
       socket.off('request_status_updated', handleRequestStatusUpdate);
     };
-  }, [socket, isConnected, user, filter, startDate, endDate]);
+  }, [socket, isConnected, user, filter, keyword, startDate, endDate]);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -112,6 +171,16 @@ const AllTransactions = () => {
 
       let url = `/api/v1/finance/all-transactions?page=${currentPage}&limit=${limit}`;
       
+      // Add search filter if provided
+      if (keyword.trim()) {
+        url += `&search=${encodeURIComponent(keyword.trim())}`;
+      }
+      
+      // Add type filter if not "all"
+      if (filter !== "all") {
+        url += `&type=${filter}`;
+      }
+      
       if (startDate) {
         url += `&startDate=${startDate}`;
       }
@@ -120,7 +189,7 @@ const AllTransactions = () => {
       }
 
       const response = await axiosSecure.get(url);
-
+      
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to fetch transactions");
       }
@@ -128,7 +197,6 @@ const AllTransactions = () => {
       setTransactions(response.data.data.results);
       setTotalPages(response.data.data.pageCount);
     } catch (error) {
-      
       setError(error.message || "Failed to fetch transactions. Please try again later.");
       addToast(error.message || "Failed to fetch transactions. Please try again later.", {
         appearance: "error",
@@ -139,10 +207,16 @@ const AllTransactions = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, limit, keyword, filter, startDate, endDate, axiosSecure, addToast]);
+
+  // Date validation helper
+  const isDateRangeValid = useCallback(() => {
+    if (!startDate || !endDate) return true;
+    return new Date(startDate) <= new Date(endDate);
+  }, [startDate, endDate]);
 
   const handleDateFilter = () => {
-    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+    if (!isDateRangeValid()) {
       addToast("Start date cannot be after end date", {
         appearance: "error",
         autoDismiss: true,
@@ -153,9 +227,13 @@ const AllTransactions = () => {
     fetchTransactions();
   };
 
-  const clearDateFilter = () => {
+  const clearAllFilters = () => {
     setStartDate("");
     setEndDate("");
+    setKeyword("");
+    setSearchInput("");
+    setIsSearching(false);
+    setFilter("all");
     setCurrentPage(1);
     setError(null);
   };
@@ -268,49 +346,94 @@ const AllTransactions = () => {
           </div>
           <div className="p-6 border-b border-gray-200 bg-gray-50">
             <div className="flex flex-col gap-6">
-              {/* Date Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-1">Start Date</label>
+              {/* Search and Filters */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Search Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Search
+                    {searchInput !== keyword && searchInput.length > 0 && (
+                      <span className="ml-2 text-xs text-blue-500">(searching...)</span>
+                    )}
+                  </label>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search by username,type,status,counterparty,senderUsername,receiverUsername,description, txnRef..."
+                    value={searchInput}
+                    onChange={handleSearchInputChange}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                    className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm"
+                  />
+                </div>
+                
+                {/* Transaction Type Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Transaction Type</label>
+                  <select
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="deposit">Deposits</option>
+                    <option value="withdraw">Withdrawals</option>
+                    <option value="transfer">Transfers</option>
+                  </select>
+                </div>
+                
+                {/* Start Date Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                   <input
                     type="date"
                     value={startDate}
+                    max={endDate || undefined}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm"
+                    className={`w-full px-4 py-2.5 bg-white border-2 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm ${
+                      !isDateRangeValid() ? 'border-red-500' : 'border-gray-200'
+                    }`}
                   />
+                  {!isDateRangeValid() && (
+                    <p className="text-red-500 text-xs mt-1">Start date cannot be greater than end date</p>
+                  )}
                 </div>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-1">End Date</label>
+                
+                {/* End Date Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
                   <input
                     type="date"
                     value={endDate}
+                    min={startDate || undefined}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm"
+                    className={`w-full px-4 py-2.5 bg-white border-2 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm ${
+                      !isDateRangeValid() ? 'border-red-500' : 'border-gray-200'
+                    }`}
                   />
+                  {!isDateRangeValid() && (
+                    <p className="text-red-500 text-xs mt-1">End date cannot be less than start date</p>
+                  )}
                 </div>
-                <div className="flex items-end gap-3">
+              </div>
+              
+              {/* Clear Filters Button */}
+              {(keyword || searchInput || startDate || endDate || filter !== "all") && (
+                <div className="flex justify-start">
                   <button
-                    onClick={handleDateFilter}
-                    className="flex-1 px-4 py-2.5 bg-[#1f2937] text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    Apply Filter
-                  </button>
-                  <button
-                    onClick={clearDateFilter}
-                    className="flex-1 px-4 py-2.5 bg-white text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                    onClick={clearAllFilters}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Reset
+                    Clear All Filters
                   </button>
                 </div>
-              </div>
+              )}
 
-              {/* View Mode and Type Filter */}
+              {/* View Mode */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white rounded-lg border-2 border-gray-200">
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium text-gray-700">View Mode:</span>
@@ -339,18 +462,14 @@ const AllTransactions = () => {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-gray-700">Transaction Type:</span>
-                  <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-sm min-w-[150px]"
-                  >
-                    <option value="all">All Types</option>
-                    <option value="deposit">Deposits</option>
-                    <option value="withdraw">Withdrawals</option>
-                    <option value="transfer">Transfers</option>
-                  </select>
+                
+                {/* Results count */}
+                <div className="text-sm text-gray-600">
+                  {loading ? (
+                    "Loading..."
+                  ) : (
+                    `Showing ${transactions.length} transaction${transactions.length !== 1 ? 's' : ''} on page ${currentPage} of ${totalPages}`
+                  )}
                 </div>
               </div>
             </div>
@@ -411,6 +530,9 @@ const AllTransactions = () => {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Date
                           </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Description
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -458,6 +580,20 @@ const AllTransactions = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {moment(txn?.createdAt).format("MMM D, YYYY h:mm A")}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500
+                              
+                            ">
+                              <div className="flex flex-col">
+                              <span>Sender: {
+                              txn?.senderTxn?.description
+                            }</span>
+                            <span>Receiver: {
+                              txn?.receiverTxn?.description
+                            }</span>
+                              </div>
+                            
+                            
                             </td>
                           </tr>
                         ))}
