@@ -345,7 +345,7 @@ export default function Withdraw() {
       resetForm();
       reloadUserData();
     } catch (error) {
-      console.log(error)
+      
       Swal.fire({
         icon: "error",
         title: "Oops...",
