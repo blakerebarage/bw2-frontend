@@ -37,18 +37,26 @@ const usersApi = baseApi.injectEndpoints({
     // get all users
     getUsers: builder.query({
       query: (params = {}) => {
-        
-        const { referredBy, page, limit } = params;
-        
+        const { referredBy, page, limit, search, status, role } = params;
+
         const urlParams = new URLSearchParams({
           page: page?.toString() || '1',
-          limit: limit?.toString() || '10'
+          limit: limit?.toString() || '10',
         });
-        
+
         if (referredBy) {
           urlParams.append('referredBy', referredBy);
         }
-        
+        if (search) {
+          urlParams.append('search', search);
+        }
+        if (status) {
+          urlParams.append('status', status);
+        }
+        if (role) {
+          urlParams.append('role', role);
+        }
+
         return `/api/v1/user/all?${urlParams.toString()}`;
       },
       providesTags: (result) => 

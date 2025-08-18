@@ -10,21 +10,25 @@ const Banking = () => {
   const { t } = useLanguage();
   const { user } = useSelector((state) => state.auth);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("active");
   const itemsPerPage = 20;
   const queryParams = {
     page: currentPage,
     limit: itemsPerPage,
+    search: searchTerm,
+    status: statusFilter === 'all' ? '' : statusFilter,
     ...(user?.referralCode && { referredBy: user.referralCode })
   };
+  
+  
   const { data: users, isLoading, isFetching, refetch } = useGetUsersQuery(queryParams, {
     refetchOnMountOrArgChange: true,
   });
   
-  // Debug log to see if parameters are changing
  
   
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("active");
+  
 
   // Reset to page 1 when filters change
   const handleSearchChange = (value) => {
@@ -45,28 +49,18 @@ const Banking = () => {
     }
   }, [users?.data?.pageCount, currentPage]);
 
-  // Force refetch when page changes
+  // Force refetch when page, search, or status changes
   useEffect(() => {
-   
     refetch();
-  }, [currentPage, refetch]);
+  }, [currentPage, searchTerm, statusFilter, refetch]);
   
   const { formatCurrency } = useCurrency();
 
   
 
-  const filteredUsers = users?.data?.users?.filter((row) => {
-    // Role filtering is already done by the API based on referredBy query param
-    const matchesSearch = searchTerm === "" || 
-      (row?.username && row.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (row?.phoneOrUserName && row.phoneOrUserName.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || row.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  // Use API pagination data instead of client-side pagination
+  // Use API data directly since filtering is now done on the backend
   const totalPages = users?.data?.pageCount || 1;
-  const paginatedUsers = filteredUsers; // Don't slice again, API already returned paginated data
+  const paginatedUsers = users?.data?.users || [];
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto">
@@ -169,7 +163,7 @@ const Banking = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {paginatedUsers?.length > 0 ? (
-                  paginatedUsers.map((row, index) => ( row?.status === "active" &&
+                  paginatedUsers.map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50 transition-colors duration-200">
                       <td className="px-6 py-4 text-sm">
                         <span className="text-[#1f2937] font-medium">
