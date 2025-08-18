@@ -10,7 +10,7 @@ import { BellIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import Marquee from "react-fast-marquee";
 import { GrNext, GrPrevious } from "react-icons/gr";
-
+// console
 const BannerSlider = () => {
   const axiosSecure = useAxiosSecure();
   
