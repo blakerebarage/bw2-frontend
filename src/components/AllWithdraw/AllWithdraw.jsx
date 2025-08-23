@@ -660,7 +660,10 @@ const AllWithdraw = () => {
                     </th>
                   
                   <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
-                    Date
+                  Requested At
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
+                  Updated At
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
                     Status
@@ -704,6 +707,9 @@ const AllWithdraw = () => {
                    
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {new Date(withdraw?.createdAt).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {new Date(withdraw?.updatedAt).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(withdraw?.status)}`}>

@@ -126,7 +126,7 @@ const BalanceRequest = () => {
       }
       
       const res = await axiosSecure.get(apiUrl);
-
+      
       if (!res.data.success) {
         throw new Error(res.data.message || "Failed to fetch recharge requests");
       }
@@ -183,10 +183,7 @@ const BalanceRequest = () => {
         setRequestData(prev => {
           
           const existingIndex = prev.findIndex(req => req._id === updatedRequest._id);
-         
-
           if (existingIndex !== -1) {
-           
             const updated = [...prev];
             updated[existingIndex] = { ...updated[existingIndex], ...updatedRequest };
             
@@ -642,6 +639,11 @@ const BalanceRequest = () => {
                     Requested At
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Updated At
+                  </th>
+                  
+{/* updatedAt */}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -710,7 +712,10 @@ const BalanceRequest = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(request.createdAt).toLocaleString()}
+                      {new Date(request?.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(request?.updatedAt).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       {request.status === 'pending' && (
