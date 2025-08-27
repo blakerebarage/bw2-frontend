@@ -16,6 +16,7 @@ const AdminSetting = () => {
     signupBonus: 0,
     firstDepositBonusPercentage: 0,
     minAmountForFirstDepositBonus: 0,
+    referredUserCommissionPercentage: 0,
     paymentMethodBonus: [],
     bonusTurnoverRatio: 1,
     regularTurnoverRatio: 1,
@@ -299,6 +300,21 @@ const AdminSetting = () => {
                     onChange={(e) => handleChange('regularTurnoverRatio', Number(e.target.value))}
                     placeholder="Enter regular turnover ratio"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Referred User Commission (%)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-[#1f2937] focus:ring-2 focus:ring-[#1f2937] focus:ring-opacity-20 transition-all duration-200 outline-none text-gray-700"
+                      value={form.referredUserCommissionPercentage}
+                      onChange={(e) => handleChange('referredUserCommissionPercentage', Number(e.target.value))}
+                      placeholder="Enter commission percentage"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                  </div>
                 </div>
               </div>
             </div>

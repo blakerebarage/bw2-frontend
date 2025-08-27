@@ -554,7 +554,7 @@ const DepositSection = () => {
       senderPhone: selectedMethod.method === "Bank" ? undefined : senderPhone,
       referralCode: user.referredBy,
       status: "pending",
-      adminNote: "Urgent recharge",
+      adminNote: "User Balance Recharge Request",
       accountNumber: selectedMethod.method === "Bank" ? selectedBank.accountNumber : selectedAccount.accountNumber,
       dailyLimit: selectedMethod.method === "Bank" ? selectedBank.dailyLimit : selectedAccount.dailyLimit,
       ...(isWalletAgentMethod && {

@@ -36,7 +36,7 @@ export const translations = {
     success: 'সফল',
     signUp: 'সাইন আপ',
     signIn: 'সাইন ইন',
-    
+    haveReferredUserName:"রেফারেল ইউজারনেম আছে?",
     // Auth Pages
     welcomeBack: 'স্বাগতম',
     signInToContinue: 'অব্যাহত রাখতে আপনার অ্যাকাউন্টে সাইন ইন করুন',
@@ -402,7 +402,7 @@ export const translations = {
     success: 'Success',
     signUp: 'SignUp',
     signIn: 'Sign In',
-    
+    haveReferredUserName: 'Have a Referred User Name?',
     // Auth Pages
     welcomeBack: 'Welcome Back',
     signInToContinue: 'Sign in to your account to continue',
