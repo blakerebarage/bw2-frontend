@@ -52,7 +52,7 @@ const MyActivity = () => {
         return <Loading />;
     }
     if (usersError) {
-        console.log(usersError)
+        
         return <div className="mt-16 text-center text-red-500">Error loading users data</div>;
     }
 
