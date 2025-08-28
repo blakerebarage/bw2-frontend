@@ -369,7 +369,7 @@ const Register = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-[#facc15]/10 border border-[#facc15]/30 text-[#facc15] hover:bg-[#facc15]/20 rounded-lg transition-all text-sm font-medium"
                 >
                   {showReferralCode ? <FaMinus className="text-sm" /> : <FaPlus className="text-sm" />}
-                  {showReferralCode ? "Hide Referred User Name" : t('haveReferredUserName')}
+                  {showReferralCode ? "Hide Referral Code" : t('haveReferralCode')}
                 </button>
               </div>
             )}
@@ -378,19 +378,19 @@ const Register = () => {
             {showReferralCode && (
               <div className="space-y-2 animate-fade-in">
                 <label className="text-sm font-medium text-gray-300 mb-2 block">
-                  Referred User Name
+                  {t('haveReferralCode')}
                 </label>
                 <div className="relative group">
                   <FaShield className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#facc15] text-lg" />
                   <Input
                     type="text"
-                    placeholder="Enter Referred User Name"
+                    placeholder="Enter Referral Code.."
                     className="pl-12 h-12 w-full rounded-lg bg-[#22282e] border border-[#facc15]/30 text-white placeholder-gray-400 focus:border-[#facc15] focus:ring-2 focus:ring-[#facc15]/20 transition-all"
                     {...register("referredUser")}
                   />
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
-                  💡 Enter Referred User Name 
+                  💡 Enter Referral Code if you have.
                 </p>
               </div>
             )}

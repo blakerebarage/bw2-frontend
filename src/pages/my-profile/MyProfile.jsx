@@ -154,7 +154,7 @@ const MyProfile = () => {
               sensitive: false
             },
             { 
-              label: t('username'), 
+              label: t('UsernameReferralCode'), 
               value: user?.username, 
               icon: User,
               sensitive: false

@@ -50,7 +50,7 @@ export const translations = {
     enterVerificationCode: 'ভেরিফিকেশন কোড প্রবেশ করান',
     enterPhoneNumber: 'আপনার ফোন নম্বর প্রবেশ করান',
     confirmYourPassword: 'আপনার পাসওয়ার্ড নিশ্চিত করুন',
-    haveReferralCode: 'রেফারেল কোড আছে?',
+    haveReferralCode: 'রেফারেল কোড',
     dontHaveAccount: 'অ্যাকাউন্ট নেই?',
     alreadyHaveAccount: 'ইতিমধ্যে অ্যাকাউন্ট আছে?',
     loginSuccess: 'সফলভাবে লগইন হয়েছে',
@@ -61,7 +61,7 @@ export const translations = {
     enterYour: 'আপনার',
     showPassword: 'পাসওয়ার্ড দেখান',
     hidePassword: 'পাসওয়ার্ড লুকান',
-    
+    UsernameReferralCode:"ইউজারনেম / রেফারেল কোড",
     // Navigation
     home: 'হোম',
     sports: 'স্পোর্টস',
@@ -416,7 +416,8 @@ export const translations = {
     enterVerificationCode: 'Enter verification code',
     enterPhoneNumber: 'Enter your phone number',
     confirmYourPassword: 'Confirm your password',
-    haveReferralCode: 'Have a Referral Code?',
+    haveReferralCode: 'Referral Code',
+    UsernameReferralCode:"User Name / Referral Code",
     dontHaveAccount: "Don't have an account?",
     alreadyHaveAccount: 'Already have an account?',
     loginSuccess: 'Login successful',
