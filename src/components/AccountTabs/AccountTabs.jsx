@@ -15,7 +15,7 @@ const AccountTabs = ({id}) => {
         <li className="border-b border-gray-200">
           <div className="px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-800">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
-              Position
+             Account Details
             </h3>
           </div>
         </li>
@@ -50,14 +50,7 @@ const AccountTabs = ({id}) => {
           </li>
         </Link>
 
-        {/* Account Details Section */}
-        <li className="border-b border-gray-200">
-          <div className="px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-800">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
-              Account Details
-            </h3>
-          </div>
-        </li>
+       
 
         <Link to={`/profile/${id}`}>
           <li>
