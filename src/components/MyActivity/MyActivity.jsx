@@ -17,6 +17,7 @@ const MyActivity = () => {
     const axiosSecure = useAxiosSecure();
     const limit = 10;
      const { user } = useSelector((state) => state.auth);
+     console.log(user)
      const { isLoading: usersLoading, error: usersError } = useGetUsersQuery(user.referralCode,currentPage,limit );
     useEffect(() => {
         const fetchActivityLog = async () => {
@@ -29,7 +30,7 @@ const MyActivity = () => {
                 const response = await axiosSecure.get(
                     `/api/v1/system-setting/activity-log?page=${currentPage}&limit=${limit}&username=${user.username}`
                 );
-
+               
                 if (response.data.success) {
                     setActivityLog(response.data.data.results);
                     setTotalPages(response.data.data.pageCount);
@@ -47,11 +48,11 @@ const MyActivity = () => {
     const handlePageChange = (newPage) => {
         setCurrentPage(newPage);
     };
-
+    
     if (loading || usersLoading) {
         return <Loading />;
     }
-    if (usersError) {
+    if (usersError && !activityLog?.length) {
         
         return <div className="mt-16 text-center text-red-500">Error loading users data</div>;
     }

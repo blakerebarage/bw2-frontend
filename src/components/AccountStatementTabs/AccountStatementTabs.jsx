@@ -43,57 +43,59 @@ const AccountStatementTabs = () => {
           <AccountTabs
           id={id}
           ></AccountTabs>
-          <div className="flex-1 space-y-6  border border-gray-200 rounded-lg p-4 drop-shadow-lg">
+          <div className="flex-1 space-y-6 border border-gray-200 rounded-lg p-4 drop-shadow-lg">
             
               <h3 className="text-2xl font-bold text-gray-900 mb-2">User Account Statement</h3>
               
-              {/* Table Container with proper overflow handling */}
-              <div className="bg-white rounded-lg shadow">
+              {/* Table Container with improved overflow handling */}
+              <div className="bg-white rounded-lg shadow overflow-hidden">
                 <div className="overflow-x-auto">
-                  <div className="inline-block min-w-full align-middle">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50 sticky top-0">
+                  <table className="w-full table-auto">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider min-w-[120px]">
+                          Date/Time
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider min-w-[100px]">
+                          Type
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider min-w-[120px]">
+                          Transaction ID
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider min-w-[80px]">
+                          Amount
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider min-w-[100px]">
+                          Balance Before
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider min-w-[100px]">
+                          Balance After
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider min-w-[150px]">
+                          Description
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider min-w-[100px]">
+                          Counterparty
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {isLoading ? (
                         <tr>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider whitespace-nowrap">
-                            Date/Time
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider whitespace-nowrap">
-                            Transaction Type
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider whitespace-nowrap">
-                            Transaction ID
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider whitespace-nowrap">
-                            Amount
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider whitespace-nowrap">
-                            Balance Before
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider whitespace-nowrap">
-                            Balance After
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider whitespace-nowrap">
-                            Description
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider whitespace-nowrap">
-                            Counterparty
-                          </th>
+                          <td colSpan="8" className="px-3 py-8 text-center text-gray-500">
+                            Loading...
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {isLoading ? (
-                          <tr>
-                            <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
-                              Loading...
-                            </td>
-                          </tr>
-                        ) : transactionsData?.data?.results?.length > 0 ? (
-                          transactionsData.data.results.map((transaction) => (
-                            <tr key={transaction._id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      ) : transactionsData?.data?.results?.length > 0 ? (
+                        transactionsData.data.results.map((transaction) => (
+                          <tr key={transaction._id} className="hover:bg-gray-50">
+                            <td className="px-3 py-3 text-sm text-gray-700">
+                              <div className="min-w-[120px]">
                                 {moment(transaction.createdAt).format("Do MMM YYYY, h:mm a")}
-                              </td>
-                              <td className="px-4 py-3 text-sm whitespace-nowrap">
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-sm">
+                              <div className="min-w-[100px]">
                                 <span className={`${
                                   transaction.type === 'deposit' ? 'text-green-600' : 
                                   transaction.type === 'withdraw' ? 'text-red-600' : 
@@ -101,11 +103,15 @@ const AccountStatementTabs = () => {
                                 }`}>
                                   {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
                                 </span>
-                              </td>
-                              <td className="px-4 py-3 text-sm whitespace-nowrap">
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-sm">
+                              <div className="min-w-[120px] break-all">
                                 {transaction.txnRef}
-                               </td>
-                              <td className="px-4 py-3 text-sm whitespace-nowrap">
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-sm">
+                              <div className="min-w-[80px]">
                                 <span className={`${
                                   transaction.type === 'deposit' ? 'text-green-600' : 
                                   transaction.type === 'withdraw' ? 'text-red-600' : 
@@ -113,32 +119,39 @@ const AccountStatementTabs = () => {
                                 }`}>
                                   {transaction.amount.toFixed(2)}
                                 </span>
-                              </td>
-                               
-                              <td className="px-4 py-3 text-sm whitespace-nowrap">
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-sm">
+                              <div className="min-w-[100px]">
                                 {transaction.balanceBefore.toFixed(2)}
-                              </td>
-                              <td className="px-4 py-3 text-sm whitespace-nowrap">
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-sm">
+                              <div className="min-w-[100px]">
                                 {transaction.balanceAfter.toFixed(2)}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-sm text-gray-700">
+                              <div className="min-w-[150px] max-w-[200px] break-words">
                                 {transaction.description}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-blue-600 whitespace-nowrap">
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-sm text-blue-600">
+                              <div className="min-w-[100px] break-all">
                                 {transaction.counterparty}
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
-                              No transactions found
+                              </div>
                             </td>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="8" className="px-3 py-8 text-center text-gray-500">
+                            No transactions found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
