@@ -1,7 +1,7 @@
 import PageHeader from "@/components/shared/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import useAxiosSecure from "@/Hook/useAxiosSecure";
-import { Activity, Calendar, Eye, EyeOff, Key, Loader2, Lock, Mail, Phone, User, X } from "lucide-react";
+import { Activity, Calendar, Eye, EyeOff, Key, Loader2, Lock, Phone, User, X } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -104,11 +104,12 @@ const MyProfile = () => {
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
             <div className="flex-1 min-w-0">
+              
               <h1 className="text-xl font-semibold text-[#facc15] truncate">
                 {user?.fullName || user?.username || "User"}
               </h1>
               <p className="text-sm text-gray-300 truncate">
-                {user?.email || t('noEmailProvided')}
+                User Name
               </p>
               
             </div>
@@ -159,12 +160,7 @@ const MyProfile = () => {
               icon: User,
               sensitive: false
             },
-            { 
-              label: t('email'), 
-              value: user?.email, 
-              icon: Mail,
-              sensitive: true
-            },
+           
             { 
               label: t('phoneNumberField'), 
               value: user?.phone, 
