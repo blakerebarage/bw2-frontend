@@ -17,7 +17,7 @@ const MyActivity = () => {
     const axiosSecure = useAxiosSecure();
     const limit = 10;
      const { user } = useSelector((state) => state.auth);
-     console.log(user)
+     
      const { isLoading: usersLoading, error: usersError } = useGetUsersQuery(user.referralCode,currentPage,limit );
     useEffect(() => {
         const fetchActivityLog = async () => {
