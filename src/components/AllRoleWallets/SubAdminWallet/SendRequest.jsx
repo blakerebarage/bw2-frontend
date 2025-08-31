@@ -245,6 +245,7 @@ const DepositSection = () => {
   const [bankTypes, setBankTypes] = useState([]);
   const [selectedMethod, setSelectedMethod] = useState({ type: '', method: '' });
   const { user } = useSelector((state) => state.auth);
+  console.log(user)
   const { data: users } = useGetUsersQuery();
   const [selectedChannel, setSelectedChannel] = useState("");
   const [allChannels, setAllChannels] = useState([]);
@@ -253,7 +254,7 @@ const DepositSection = () => {
   const [selectedAmount, setSelectedAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
   const [trxId, setTrxId] = useState("");
-  const [senderPhone, setSenderPhone] = useState("");
+  const [senderPhone, setSenderPhone] = useState(user?.phone || "");
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedBankDetails, setSelectedBankDetails] = useState(null);
@@ -885,6 +886,7 @@ const DepositSection = () => {
                     )}
                     <p className="text-xs text-gray-400 mt-1">
                       💡 Enter 11-digit phone number (e.g., 0XXXXXXXXX)
+                      
                     </p>
                   </div>
                   <div>

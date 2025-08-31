@@ -33,6 +33,7 @@ const Register = () => {
   const { t } = useLanguage();
   const [addUser] = useAddUserMutation();
   const [getUser] = useLazyGetAuthenticatedUserQuery();
+ 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
@@ -68,6 +69,7 @@ const Register = () => {
   const { addToast } = useToasts();
   
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+  
   const deviceInfo = useDeviceInfo();
   
   const location = useLocation();
