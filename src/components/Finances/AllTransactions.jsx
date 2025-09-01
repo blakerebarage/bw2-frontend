@@ -99,9 +99,22 @@ const AllTransactions = () => {
           // Apply current filters
           let filteredTransactions = transactionData;
           
+          // Filter out affiliate transactions first
+          filteredTransactions = filteredTransactions.filter(t => {
+            // Skip if senderTxn isAffiliate is true
+            if (t.senderTxn?.isAffiliate === true) {
+              return false;
+            }
+            // Skip if receiverTxn isAffiliate is true
+            if (t.receiverTxn?.isAffiliate === true) {
+              return false;
+            }
+            return true;
+          });
+          
           // Apply type filter
           if (filter !== "all") {
-            filteredTransactions = transactionData.filter(t => 
+            filteredTransactions = filteredTransactions.filter(t => 
               t.senderTxn?.type?.toLowerCase() === filter.toLowerCase()
             );
           }
@@ -194,7 +207,20 @@ const AllTransactions = () => {
         throw new Error(response.data.message || "Failed to fetch transactions");
       }
 
-      setTransactions(response.data.data.results);
+      // Filter out affiliate transactions
+      const filteredTransactions = response.data.data.results.filter(transaction => {
+        // Skip if senderTxn isAffiliate is true
+        if (transaction.senderTxn?.isAffiliate === true) {
+          return false;
+        }
+        // Skip if receiverTxn isAffiliate is true
+        if (transaction.receiverTxn?.isAffiliate === true) {
+          return false;
+        }
+        return true;
+      });
+
+      setTransactions(filteredTransactions);
       setTotalPages(response.data.data.pageCount);
     } catch (error) {
       setError(error.message || "Failed to fetch transactions. Please try again later.");
