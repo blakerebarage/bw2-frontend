@@ -99,18 +99,7 @@ const AllTransactions = () => {
           // Apply current filters
           let filteredTransactions = transactionData;
           
-          // Filter out affiliate transactions first
-          filteredTransactions = filteredTransactions.filter(t => {
-            // Skip if senderTxn isAffiliate is true
-            if (t.senderTxn?.isAffiliate === true) {
-              return false;
-            }
-            // Skip if receiverTxn isAffiliate is true
-            if (t.receiverTxn?.isAffiliate === true) {
-              return false;
-            }
-            return true;
-          });
+
           
           // Apply type filter
           if (filter !== "all") {
@@ -182,7 +171,7 @@ const AllTransactions = () => {
         throw new Error("Start date cannot be after end date");
       }
 
-      let url = `/api/v1/finance/all-transactions?page=${currentPage}&limit=${limit}`;
+      let url = `/api/v1/finance/all-transactions?page=${currentPage}&limit=${limit}&isAffiliate=false`;
       
       // Add search filter if provided
       if (keyword.trim()) {
@@ -200,27 +189,12 @@ const AllTransactions = () => {
       if (endDate) {
         url += `&endDate=${endDate}`;
       }
-
       const response = await axiosSecure.get(url);
       
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to fetch transactions");
       }
-
-      // Filter out affiliate transactions
-      const filteredTransactions = response.data.data.results.filter(transaction => {
-        // Skip if senderTxn isAffiliate is true
-        if (transaction.senderTxn?.isAffiliate === true) {
-          return false;
-        }
-        // Skip if receiverTxn isAffiliate is true
-        if (transaction.receiverTxn?.isAffiliate === true) {
-          return false;
-        }
-        return true;
-      });
-
-      setTransactions(filteredTransactions);
+      setTransactions(response.data.data.results);
       setTotalPages(response.data.data.pageCount);
     } catch (error) {
       setError(error.message || "Failed to fetch transactions. Please try again later.");
@@ -241,17 +215,7 @@ const AllTransactions = () => {
     return new Date(startDate) <= new Date(endDate);
   }, [startDate, endDate]);
 
-  const handleDateFilter = () => {
-    if (!isDateRangeValid()) {
-      addToast("Start date cannot be after end date", {
-        appearance: "error",
-        autoDismiss: true,
-      });
-      return;
-    }
-    setCurrentPage(1);
-    fetchTransactions();
-  };
+
 
   const clearAllFilters = () => {
     setStartDate("");
