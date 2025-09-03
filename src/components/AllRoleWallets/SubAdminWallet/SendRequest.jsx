@@ -245,7 +245,6 @@ const DepositSection = () => {
   const [bankTypes, setBankTypes] = useState([]);
   const [selectedMethod, setSelectedMethod] = useState({ type: '', method: '' });
   const { user } = useSelector((state) => state.auth);
-  console.log(user)
   const { data: users } = useGetUsersQuery();
   const [selectedChannel, setSelectedChannel] = useState("");
   const [allChannels, setAllChannels] = useState([]);
