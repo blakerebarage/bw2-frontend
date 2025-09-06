@@ -27,7 +27,7 @@ const BannerSlider = () => {
   
   // GET the Notices from marque
   useEffect(() => {
-    axiosSecure.get("/api/v1/content/latest-notice/").then((res) => {
+    axiosSecure.get("/api/v1/content/all-notice").then((res) => {
       setNotices(res?.data?.data);
     });
   }, []);

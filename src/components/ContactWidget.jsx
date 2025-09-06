@@ -1,7 +1,7 @@
 import useAxiosSecure from "@/Hook/useAxiosSecure";
 import useMedia from "@/Hook/useMedia";
 import { useEffect, useRef, useState } from "react";
-import { FaFacebookMessenger, FaHeadset, FaLink, FaTelegram, FaTimes, FaWhatsapp } from "react-icons/fa";
+import { FaFacebookMessenger, FaLink, FaTelegram, FaTimes, FaWhatsapp } from "react-icons/fa";
 import { FaSignalMessenger } from "react-icons/fa6";
 import { SiViber } from "react-icons/si";
 import { useToasts } from "react-toast-notifications";
@@ -184,7 +184,15 @@ const ContactWidget = () => {
               onTouchStart={handlePointerDown}
               aria-label="Open support contacts"
             >
-              <FaHeadset className="text-white" size={28} />
+              <FaWhatsapp 
+                className="text-green-400 drop-shadow-2xl hover:drop-shadow-2xl transition-all duration-500 hover:scale-125 animate-pulse hover:animate-none" 
+                size={32} 
+                style={{ 
+                  filter: 'drop-shadow(0 0 12px rgba(34, 197, 94, 0.8)) drop-shadow(0 0 24px rgba(34, 197, 94, 0.4))',
+                  textShadow: '0 0 20px rgba(34, 197, 94, 0.6)',
+                  fontWeight: 'bold'
+                }} 
+              />
             </button>
           )}
           {drawerOpen && (
