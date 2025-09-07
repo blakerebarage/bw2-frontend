@@ -148,6 +148,7 @@ const AdminTurnOver = () => {
                   <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Current Turnover</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Turnover Limit</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Created At</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -184,6 +185,9 @@ const AdminTurnOver = () => {
                         >
                           {turnover.status.charAt(0).toUpperCase() + turnover.status.slice(1)}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {new Date(turnover.createdAt).toLocaleString()}
                       </td>
                       <td className="px-6 py-4">
                         <button
