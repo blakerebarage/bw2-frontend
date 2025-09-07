@@ -45,6 +45,7 @@ const AdminDashboard = () => {
   // const [selectedExposure, setSelectedExposure] = useState(null);
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("active");
+  const [selectedBalanceSort, setSelectedBalanceSort] = useState("");
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [selectedUserForAction, setSelectedUserForAction] = useState(null);
  
@@ -118,13 +119,14 @@ const AdminDashboard = () => {
           search: keyword,
         });
         
-        // Add role and status to params if they're not empty
+        // Add role, status, and balance sort to params if they're not empty
         if (selectedRole) {
           params.append('role', selectedRole);
         }
         if (selectedStatus) {
           params.append('status', selectedStatus);
         }
+        // Note: Balance sorting is handled on frontend, not sent to backend
         
         // Add referredBy filter only for non-super-admin AND non-admin roles
         if (user?.referralCode && user?.role !== 'super-admin' && user?.role !== 'admin') {
@@ -136,7 +138,11 @@ const AdminDashboard = () => {
         if (res.data.success) {
           const usersList = res.data.data.users || [];
           const total = res.data.data.totalItems ?? usersList.length;
-          setFilteredUsers(usersList);
+          
+          // Apply balance sorting if selected
+          const sortedUsers = sortUsersByBalance(usersList, selectedBalanceSort);
+          
+          setFilteredUsers(sortedUsers);
           setTotalPages(Math.ceil(total / limit));
           setTotalItems(total);
           setHasSearchError(false);
@@ -166,7 +172,7 @@ const AdminDashboard = () => {
 
     fetchInitialData();
     return () => abortController.abort();
-  }, [page, keyword, selectedRole, selectedStatus, axiosSecure, user?.role, user?._id, user?.referralCode]);
+  }, [page, keyword, selectedRole, selectedStatus, selectedBalanceSort, axiosSecure, user?.role, user?._id, user?.referralCode]);
   
 
   const generateReferralCode = () => {
@@ -260,13 +266,14 @@ const AdminDashboard = () => {
         search: keyword,
       });
       
-      // Add role and status to params if they're not empty
+      // Add role, status, and balance sort to params if they're not empty
       if (selectedRole) {
         params.append('role', selectedRole);
       }
       if (selectedStatus) {
         params.append('status', selectedStatus);
       }
+        // Note: Balance sorting is handled on frontend, not sent to backend
 
       // Add referredBy filter only for non-super-admin AND non-admin roles
       if (user?.referralCode && user?.role !== 'super-admin' && user?.role !== 'admin') {
@@ -277,7 +284,11 @@ const AdminDashboard = () => {
       
       if (res.data.success) {
         const users = res.data.data.users || [];
-        setFilteredUsers(users);
+        
+        // Apply balance sorting if selected
+        const sortedUsers = sortUsersByBalance(users, selectedBalanceSort);
+        
+        setFilteredUsers(sortedUsers);
         setTotalPages(Math.ceil((res.data.data.totalItems || users.length) / limit));
         setTotalItems(res.data.data.totalItems || users.length);
         setHasSearchError(false);
@@ -400,6 +411,28 @@ const AdminDashboard = () => {
   const handleStatusChange = (e) => {
     setSelectedStatus(e.target.value);
     setPage(1); // Reset to first page when changing status
+  };
+
+  const handleBalanceSortChange = (e) => {
+    setSelectedBalanceSort(e.target.value);
+    setPage(1); // Reset to first page when changing balance sort
+  };
+
+  // Function to sort users by balance
+  const sortUsersByBalance = (users, sortType) => {
+    if (!sortType || !users) return users;
+    
+    return [...users].sort((a, b) => {
+      const balanceA = parseFloat(a.balance) || 0;
+      const balanceB = parseFloat(b.balance) || 0;
+      
+      if (sortType === 'low-to-high') {
+        return balanceA - balanceB;
+      } else if (sortType === 'high-to-low') {
+        return balanceB - balanceA;
+      }
+      return 0;
+    });
   };
 
   // Update the role options in the select dropdown
@@ -702,6 +735,19 @@ const AdminDashboard = () => {
                       </select>
                     </div>
 
+                    {/* Balance Sort Filter */}
+                    <div className="flex-1 min-w-[140px]">
+                      <select
+                        value={selectedBalanceSort}
+                        onChange={handleBalanceSortChange}
+                        className="w-full h-11 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1f2937] focus:border-[#1f2937] outline-none transition-colors"
+                      >
+                        <option value="">Balance (All)</option>
+                        <option value="low-to-high">Low to High</option>
+                        <option value="high-to-low">High to Low</option>
+                      </select>
+                    </div>
+
                     {/* Search Bar */}
                     <div className="flex-1 min-w-[180px] relative">
                       <input
@@ -801,16 +847,17 @@ const AdminDashboard = () => {
                             <div className="text-center">
                               <h3 className="text-lg font-medium text-[#1f2937] mb-1">No users found</h3>
                               <p className="text-sm text-gray-500">
-                                {keyword || selectedRole || selectedStatus !== "active" 
+                                {keyword || selectedRole || selectedStatus !== "active" || selectedBalanceSort
                                   ? "Try adjusting your search filters to find what you're looking for" 
                                   : "No users have been created yet"}
                               </p>
-                              {(keyword || selectedRole || selectedStatus !== "active") && (
+                              {(keyword || selectedRole || selectedStatus !== "active" || selectedBalanceSort) && (
                                 <button
                                   onClick={() => {
                                     setKeyword("");
                                     setSelectedRole("");
                                     setSelectedStatus("active");
+                                    setSelectedBalanceSort("");
                                     // Clear the search input
                                     const searchInput = document.querySelector('input[placeholder="Search users..."]');
                                     if (searchInput) searchInput.value = "";
