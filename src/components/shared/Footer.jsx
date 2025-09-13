@@ -40,7 +40,7 @@ const Footer = () => {
           <Link
               target="_blank"
               rel="noreferrer noopenner"
-              to="https://www.facebook.com/play9.live/"
+              to="https://www.facebook.com/play9fb"
               className="text-gray-300 hover:text-blue-500 transition-colors duration-200"
             >
               <FaFacebook className="text-3xl sm:text-4xl" />

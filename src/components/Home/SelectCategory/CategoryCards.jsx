@@ -123,12 +123,13 @@ export const CategoryCards = ({ onCategorySelect, selectedCategory }) => {
             ref={el => cardRefs.current[index] = el}
             className={`relative w-20 h-20 flex flex-col items-center justify-center p-2 rounded-[8px] group z-10 transition-all active:scale-95`}
           >
+             <div className="relative w-14 h-14 flex items-center justify-center shadow-inner mb-[5px]">
+              {category.image}
+            </div>
             <span className={`relative text-sm font-semibold text-center tracking-wide group-hover:text-[#facc15] text-white`}>
               {category.title}
             </span>
-            <div className="relative w-14 h-14 flex items-center justify-center shadow-inner mt-[5px]">
-              {category.image}
-            </div>
+           
           </button>
         ))}
       </div>
