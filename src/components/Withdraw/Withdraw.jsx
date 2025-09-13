@@ -3,19 +3,20 @@ import useAxiosSecure from "@/Hook/useAxiosSecure";
 import { useCurrency } from "@/Hook/useCurrency";
 import useManualUserDataReload from "@/Hook/useUserDataReload";
 import { ArrowRight, Check, CreditCard, Send, Wallet } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
 // Internal Payment Method Selector Component
-const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMethod, onSelect }) => {
+const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMethod, onSelect, sortPaymentMethods }) => {
   const systemBankTypes = [...new Set(systemBanks.map(bank => bank.bankType))];
+  const sortedBankTypes = sortPaymentMethods(systemBankTypes);
   
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {systemBankTypes.map((bankType) => {
+        {sortedBankTypes.map((bankType) => {
           const methodInfo = paymentMethods.find(m => m.name === bankType);
           const isSelected = selectedMethod.method === bankType && selectedMethod.type === 'system';
           
@@ -58,14 +59,15 @@ const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMe
 };
 
 // Wallet Agent Payment Method Selector Component
-const WalletAgentPaymentMethodSelector = ({ walletAgentBanks, paymentMethods, selectedMethod, onSelect }) => {
+const WalletAgentPaymentMethodSelector = ({ walletAgentBanks, paymentMethods, selectedMethod, onSelect, sortPaymentMethods }) => {
   const walletAgentBankTypes = [...new Set(walletAgentBanks.map(bank => bank.bankType))];
+  const sortedBankTypes = sortPaymentMethods(walletAgentBankTypes);
   
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Wallet Agent Payment Methods</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {walletAgentBankTypes.map((bankType) => {
+        {sortedBankTypes.map((bankType) => {
           const methodInfo = paymentMethods.find(m => m.name === bankType);
           const isSelected = selectedMethod.method === bankType && selectedMethod.type === 'agent';
           
@@ -132,8 +134,17 @@ export default function Withdraw() {
   const [userBranchName, setUserBranchName] = useState("");
   const [userAccountHolderName, setUserAccountHolderName] = useState("");
   const [userRoutingNumber, setUserRoutingNumber] = useState("");
-
   
+  const paymentMethodOrder = ["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet", "Bank", "Crypto"];
+
+  // Memoized utility functions
+  const sortPaymentMethods = useCallback((methods) => {
+    return [...methods].sort((a, b) => {
+      const indexA = paymentMethodOrder.indexOf(a);
+      const indexB = paymentMethodOrder.indexOf(b);
+      return indexA - indexB;
+    });
+  }, []);
 
   // Fetch banks data
   useEffect(() => {
@@ -395,6 +406,7 @@ export default function Withdraw() {
               systemBanks={systemBanks}
               paymentMethods={paymentMethods}
               selectedMethod={selectedMethod}
+              sortPaymentMethods={sortPaymentMethods}
               onSelect={setSelectedMethod}
             />
           )}
@@ -405,6 +417,7 @@ export default function Withdraw() {
               walletAgentBanks={walletAgentBanks}
               paymentMethods={paymentMethods}
               selectedMethod={selectedMethod}
+              sortPaymentMethods={sortPaymentMethods}
               onSelect={setSelectedMethod}
             />
           )}

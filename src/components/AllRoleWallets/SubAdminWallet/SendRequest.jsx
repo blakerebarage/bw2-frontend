@@ -8,14 +8,15 @@ import { useToasts } from "react-toast-notifications";
 import Swal from "sweetalert2";
 import useAxiosSecure from "./../../../Hook/useAxiosSecure";
 // Internal Payment Method Selector Component
-const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMethod, onSelect }) => {
+const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMethod, onSelect, sortPaymentMethods }) => {
   const systemBankTypes = [...new Set(systemBanks.map(bank => bank.bankType))];
+  const sortedBankTypes = sortPaymentMethods(systemBankTypes);
   
   return (
     <div className="space-y-3">
       
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {systemBankTypes.map((bankType) => {
+        {sortedBankTypes.map((bankType) => {
           const methodInfo = paymentMethods.find(m => m.name === bankType);
           const isSelected = selectedMethod.method === bankType && selectedMethod.type === 'system';
           
@@ -58,14 +59,15 @@ const InternalPaymentMethodSelector = ({ systemBanks, paymentMethods, selectedMe
 };
 
 // Wallet Agent Payment Method Selector Component
-const WalletAgentPaymentMethodSelector = ({ walletAgentBanks, paymentMethods, selectedMethod, onSelect }) => {
+const WalletAgentPaymentMethodSelector = ({ walletAgentBanks, paymentMethods, selectedMethod, onSelect, sortPaymentMethods }) => {
   const walletAgentBankTypes = [...new Set(walletAgentBanks.map(bank => bank.bankType))];
+  const sortedBankTypes = sortPaymentMethods(walletAgentBankTypes);
   
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Wallet Agent Payment Methods</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {walletAgentBankTypes.map((bankType) => {
+        {sortedBankTypes.map((bankType) => {
           const methodInfo = paymentMethods.find(m => m.name === bankType);
           const isSelected = selectedMethod.method === bankType && selectedMethod.type === 'agent';
           
@@ -261,7 +263,7 @@ const DepositSection = () => {
   const [reference, setReference] = useState("");
   const amountOptions = ["100", "200", "500", "1000", "2000", "5000", "10000", "15000", "20000"];
   const bankamountOptions = ["30000", "50000", "100000", "150000", "200000"];
-  const paymentMethodOrder = ["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet", "Crypto", "Bank"];
+  const paymentMethodOrder = ["Bkash", "Nagad", "Rocket", "Upay", "Tap", "OkWallet", "Bank", "Crypto"];
   const [selectedBank, setSelectedBank] = useState(null);
   const [bankList, setBankList] = useState([]);
   const [walletAgentBanks, setWalletAgentBanks] = useState([]);
@@ -623,6 +625,7 @@ const DepositSection = () => {
               systemBanks={systemBanks}
               paymentMethods={paymentMethods}
               selectedMethod={selectedMethod}
+              sortPaymentMethods={sortPaymentMethods}
               onSelect={(methodObj) => {
                 setSelectedMethod(methodObj);
                 setSelectedChannel(methodObj.method === 'Bank' ? 'Bank-Transfer' : '');
@@ -636,6 +639,7 @@ const DepositSection = () => {
               walletAgentBanks={walletAgentBanks}
               paymentMethods={paymentMethods}
               selectedMethod={selectedMethod}
+              sortPaymentMethods={sortPaymentMethods}
               onSelect={(methodObj) => {
                 setSelectedMethod(methodObj);
                 setSelectedChannel(methodObj.method === 'Bank' ? 'Bank-Transfer' : '');
