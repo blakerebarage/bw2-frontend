@@ -36,7 +36,7 @@ export const GameCard = ({
           game.img || 'https://via.placeholder.com/300x200?text=No+Image'
         }
         alt={game.name}
-        className="w-full  h-36 md:h-40 object-cover group-hover:brightness-90 transition-all duration-300"
+        className="w-full  h-36  group-hover:brightness-90 transition-all duration-300"
         onError={() => setImageError(true)}
       />
       
