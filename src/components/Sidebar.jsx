@@ -11,6 +11,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import menuItems from "../components/MenuItems";
 import { useLanguage } from "../contexts/LanguageContext";
+import LanguageSwitcher from "./LanguageSwitcher/LanguageSwitcher";
+
 
 const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
   const dispatch = useDispatch(); 
@@ -188,13 +190,16 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
 
       {/* Footer */}
       <div className="mt-auto p-4 bg-white/50 backdrop-blur-sm border-t border-gray-200/50">
-        <div className="flex flex-col items-center gap-1 text-gray-600">
+        <div className="flex flex-col items-center gap-3 text-gray-600">
           <div className="flex items-center gap-2">
             <BsGlobe2 className="text-lg" />
             <span className="text-sm font-medium">{t('timeZone')}: {timezone}</span>
           </div>
           <div className="text-sm font-medium">
             {currentTime}
+          </div>
+          <div className="flex justify-center">
+            <LanguageSwitcher variant="sidebar" />
           </div>
         </div>
       </div>

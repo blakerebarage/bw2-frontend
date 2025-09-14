@@ -8,7 +8,6 @@ import { IoMenu, IoNotifications } from "react-icons/io5";
 import { PiHandDepositFill } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 import Sidebar from "../Sidebar";
 
 const Navbar = () => {
@@ -121,7 +120,6 @@ const Navbar = () => {
                 
                
               </div>
-              <LanguageSwitcher variant="navbar" className="mr-0" />
             </div>
           )}
 
@@ -143,7 +141,6 @@ const Navbar = () => {
                   {t('login')}
                 </button>
               </Link>
-              <LanguageSwitcher variant="navbar" className="mr-0" />
             </div>
           )}
           

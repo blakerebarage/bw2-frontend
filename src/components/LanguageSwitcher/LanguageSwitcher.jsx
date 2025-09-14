@@ -35,6 +35,12 @@ const LanguageSwitcher = ({ className = '', variant = 'default' }) => {
           dropdown: 'absolute right-0 top-full mt-2 bg-gray-800/95 backdrop-blur-md border border-gray-600 rounded-lg shadow-2xl z-[999995] min-w-[180px] overflow-hidden',
           item: 'flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-700/50 transition-colors duration-200 cursor-pointer border-b border-gray-700/50 last:border-b-0',
         };
+      case 'sidebar':
+        return {
+          button: 'flex items-center gap-2 px-3 py-2 bg-white/80 border border-gray-300 rounded-lg shadow-sm hover:bg-white transition-colors duration-200 w-full justify-center',
+          dropdown: 'absolute bottom-full mb-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 min-w-[200px] left-1/2 transform -translate-x-1/2',
+          item: 'flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors duration-200 cursor-pointer border-b border-gray-200 last:border-b-0',
+        };
       default:
         return {
           button: 'flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors duration-200',
@@ -71,6 +77,8 @@ const LanguageSwitcher = ({ className = '', variant = 'default' }) => {
                   currentLanguage === code 
                     ? variant === 'navbar' 
                       ? 'bg-yellow-500/20 text-yellow-400' 
+                      : variant === 'sidebar'
+                      ? 'bg-yellow-50 text-yellow-600'
                       : 'bg-yellow-50 text-yellow-600' 
                     : ''
                 }`}

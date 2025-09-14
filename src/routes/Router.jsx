@@ -65,12 +65,10 @@ import MyProfile from "@/pages/my-profile/MyProfile";
 
 import AdminTurnOver from "@/components/AdminTurnOver";
 import BankDetails from "@/components/Banking/BankDetails";
-import DepositByChat from "@/components/DepositByChat";
 import GameStatusChanges from "@/components/GameControl/GameStatusChanges";
 import MostPlayedGamesMonitor from "@/components/Home/MostPlayedGamesMonitor/MostPlayedGamesMonitor";
 import TurnOver from "@/components/TurnOver";
 import UserBetList from "@/components/UserBetList/UserBetList";
-import WithdrawByChat from "@/components/WithdrawByChat";
 import DepositRequests from "@/pages/deposit-requests/DepositRequests";
 import GameLunch from "@/pages/Game/GameLunch";
 import Settings from "@/pages/setting/Settings";
@@ -121,10 +119,10 @@ const router = createBrowserRouter([
               { path: "/current-bets", element: <CurrentBets /> },
               { path: "/account-statement", element: <MyAccountStatementtabs /> },
               { path: "/bets-history", element: <BetsHistory /> },
-              { path: "/deposit-chat", element: <DepositByChat /> },
+              
               { path: "/deposit-requests", element: <DepositRequests /> },
               { path: "/withdraw-requests", element: <WithdrawRequests /> },
-              { path: "/withdraw-chat", element: <WithdrawByChat /> },
+              
               { path: "/turn-over", element: <TurnOver /> },
               { path: "/activity-log", element: <ActivityLog /> },
               { path: "/my-profile", element: <MyProfile /> },

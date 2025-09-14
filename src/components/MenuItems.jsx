@@ -1,8 +1,7 @@
-import { BsChatDotsFill, BsWallet2 } from "react-icons/bs";
+import { BsWallet2 } from "react-icons/bs";
 import { FaHistory } from "react-icons/fa";
 import { GiTurnstile } from "react-icons/gi";
 import { GrTransaction } from "react-icons/gr";
-import { HiMiniChatBubbleLeftRight } from "react-icons/hi2";
 import { ImProfile } from "react-icons/im";
 import { MdRequestPage } from "react-icons/md";
 import { PiHandDepositFill, PiHandWithdrawFill } from "react-icons/pi";
@@ -31,27 +30,13 @@ const menuItems = [
   },
   {
     id: 4,
-    labelKey: "depositByChat",
-    Icon: BsChatDotsFill,
-    link: "/deposit-chat",
-    description: "Deposit through chat support"
-  },
-  {
-    id: 5,
-    labelKey: "withdrawByChat",
-    Icon: HiMiniChatBubbleLeftRight,
-    link: "/withdraw-chat",
-    description: "Withdraw through chat support"
-  },
-  {
-    id: 6,
     labelKey: "depositRequests",
     Icon: MdRequestPage,
     link: "/deposit-requests",
     description: "View your deposit requests"
   },
   {
-    id: 7,
+    id: 5,
     labelKey: "withdrawRequests",
     Icon: MdRequestPage,
     link: "/withdraw-requests",
@@ -59,28 +44,28 @@ const menuItems = [
   },
  
   {
-    id: 8,
+    id: 6,
     labelKey: "turnOver",
     Icon:  GiTurnstile,
     link: "/turn-over",
     description: "Turn Over"
   },
   { 
-      id: 9, 
+      id: 7, 
     labelKey: "betsHistory", 
     Icon: FaHistory, 
     link: "/bets-history",
     description: "View your past bets"
   },
   { 
-    id: 10, 
+    id: 8, 
     labelKey: "transactionHistory", 
     Icon: GrTransaction, 
     link: "/transaction-history",
     description: "View your past transactions"
   },
   { 
-    id: 11, 
+    id: 9, 
     labelKey: "myProfile", 
     Icon: ImProfile, 
     link: "/my-profile",

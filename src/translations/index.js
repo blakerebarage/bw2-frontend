@@ -102,7 +102,7 @@ export const translations = {
     
     // Sidebar Menu
     menu: 'মেনু',
-    balanceOverview: 'ব্যালেন্স ওভারভিউ',
+    balanceOverview: 'ব্যালেন্স',
     depositeBalance: 'ডিপোজিট ব্যালেন্স',
     withdrawBalance: 'উইথড্র ব্যালেন্স',
     depositByChat: 'চ্যাট এর মাধ্যমে ডিপোজিট',
@@ -205,7 +205,7 @@ export const translations = {
     gameName: 'গেমের নাম',
     
     // Transaction History
-    transactionHistory: 'লেনদেনের ইতিহাস',
+    transactionHistory: 'লেনদেন সমূহ',
     totalDeposit30Days: 'মোট জমা (৩০ দিন)',
     totalWithdraw30Days: 'মোট তোলা (৩০ দিন)',
     all: 'সব',
@@ -469,7 +469,7 @@ export const translations = {
     
     // Sidebar Menu
     menu: 'Menu',
-    balanceOverview: 'Balance Overview',
+    balanceOverview: 'Balance',
     depositeBalance: 'Deposite Balance',
     withdrawBalance: 'Withdraw Balance',
     depositByChat: 'Deposit by Chat',
