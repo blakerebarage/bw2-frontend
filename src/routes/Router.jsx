@@ -69,11 +69,9 @@ import GameStatusChanges from "@/components/GameControl/GameStatusChanges";
 import MostPlayedGamesMonitor from "@/components/Home/MostPlayedGamesMonitor/MostPlayedGamesMonitor";
 import TurnOver from "@/components/TurnOver";
 import UserBetList from "@/components/UserBetList/UserBetList";
-import DepositRequests from "@/pages/deposit-requests/DepositRequests";
 import GameLunch from "@/pages/Game/GameLunch";
 import Settings from "@/pages/setting/Settings";
 import UsersData from "@/pages/UsersData/UsersData";
-import WithdrawRequests from "@/pages/withdraw-requests/WithdrawRequests";
 import { createBrowserRouter } from "react-router-dom";
 import AdminRoute from "./AdminRoute";
 import CashAgentRoute from "./CashAgentRoute";
@@ -119,10 +117,6 @@ const router = createBrowserRouter([
               { path: "/current-bets", element: <CurrentBets /> },
               { path: "/account-statement", element: <MyAccountStatementtabs /> },
               { path: "/bets-history", element: <BetsHistory /> },
-              
-              { path: "/deposit-requests", element: <DepositRequests /> },
-              { path: "/withdraw-requests", element: <WithdrawRequests /> },
-              
               { path: "/turn-over", element: <TurnOver /> },
               { path: "/activity-log", element: <ActivityLog /> },
               { path: "/my-profile", element: <MyProfile /> },

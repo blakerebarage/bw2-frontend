@@ -14,6 +14,7 @@ const TurnOver = () => {
       try {
         setLoading(true);
         const turnoverResponse = await axiosSecure.get("/api/v1/finance/user-turnovers?page=1&limit=10");
+        
         if (turnoverResponse.data.success) {
           setTurnover(turnoverResponse.data.data.results[0]);
         }

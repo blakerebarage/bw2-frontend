@@ -1,7 +1,7 @@
-import { IoMdHome } from "react-icons/io";
 import { CgCardHearts } from "react-icons/cg";
-import { MdSportsCricket } from "react-icons/md";
 import { FaTrophy } from "react-icons/fa6";
+import { IoMdHome } from "react-icons/io";
+import { MdSportsCricket } from "react-icons/md";
 import { PiNotebookFill } from "react-icons/pi";
 import { Link, useLocation } from "react-router-dom";
 
