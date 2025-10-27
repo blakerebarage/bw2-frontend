@@ -2,8 +2,8 @@ import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import "./App.css";
-// import InstallPrompt from './components/InstallPrompt';
-// import RedirectHandler from './components/RedirectHandler';
+import InstallPrompt from './components/InstallPrompt';
+import RedirectHandler from './components/RedirectHandler';
 import WelcomeMessage from './components/WelcomeMessage/WelcomeMessage';
 import usePendingRequests from './Hook/usePendingRequests';
 import useManualUserDataReload from './Hook/useUserDataReload';
@@ -115,11 +115,11 @@ function App() {
   return (
     <WelcomeProvider>
       <div className="bg-gray-900">
-        {/* <RedirectHandler /> */}
+        <RedirectHandler />
         <RouteChangeHandler />
         <WelcomeMessage />
         <Outlet />
-        {/* <InstallPrompt /> */}
+        <InstallPrompt />
       </div>
     </WelcomeProvider>
   );
