@@ -16,11 +16,11 @@ import Banking from "@/components/Banking/Banking";
 // import BetListLive from "@/components/BetListLive/BetListLive";
 // import DeactiveGame from "@/components/DeactiveGame/DeactiveGame";
 import Downlist from "@/components/Downlist/Downlist";
-import AllCommissionCashagent from "@/components/Finances/AllCommissionCashagent";
-import AllCommissionWalletagent from "@/components/Finances/AllCommissionWalletagent";
+// import AllCommissionCashagent from "@/components/Finances/AllCommissionCashagent";
+// import AllCommissionWalletagent from "@/components/Finances/AllCommissionWalletagent";
 import AllTransactions from "@/components/Finances/AllTransactions";
-import GenerateCommission from "@/components/Finances/GenerateCommission";
-import PaymentMessages from "@/components/Finances/PaymentMessages";
+// import GenerateCommission from "@/components/Finances/GenerateCommission";
+// import PaymentMessages from "@/components/Finances/PaymentMessages";
 import TransactionSummary from "@/components/Finances/TransactionSummary";
 // import Game from "@/components/GameApi/Game";
 import GameControl from "@/components/GameControl/GameControl";
@@ -213,11 +213,11 @@ const router = createBrowserRouter([
           { path: "userprofile/:id", element: <UserProfile /> },
           { path: "allwithdrawrequest", element: <AllWithdraw /> },
           { path: "all-transactions", element: <AllTransactions /> },
-          { path: "payment-messages", element: <PaymentMessages /> },
+          // { path: "payment-messages", element: <PaymentMessages /> },
           { path: "transaction-summary", element: <TransactionSummary /> },
-          { path: "all-commission-cashagent", element: <AllCommissionCashagent /> },
-          { path: "all-commission-walletagent", element: <AllCommissionWalletagent /> },
-          { path: "generate-commission", element: <GenerateCommission /> },
+          // { path: "all-commission-cashagent", element: <AllCommissionCashagent /> },
+          // { path: "all-commission-walletagent", element: <AllCommissionWalletagent /> },
+          // { path: "generate-commission", element: <GenerateCommission /> },
           { path: "all-bets-history", element: <AllBetsHistory /> },
           { path: "turnover-management", element: <AdminTurnOver /> },
           { path: "bank-details/:accountNumber", element: <BankDetails /> },
