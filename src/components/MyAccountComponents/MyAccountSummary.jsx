@@ -3,7 +3,7 @@ import { useCurrency } from "@/Hook/useCurrency";
 import { useEffect, useState } from "react";
 import { FaArrowDown, FaArrowUp, FaWallet } from "react-icons/fa";
 import { useSelector } from "react-redux";
-import TransactionSummaryCards from '../TransactionSummaryCards/TransactionSummaryCards';
+// import TransactionSummaryCards from '../TransactionSummaryCards/TransactionSummaryCards';
 
 const MyAccountSummary = () => {
   const { user } = useSelector((state) => state.auth);
@@ -81,7 +81,7 @@ const MyAccountSummary = () => {
             </div>
 
             {/* Transaction Summary Cards */}
-            <TransactionSummaryCards />
+            {/* <TransactionSummaryCards /> */}
 
             {/* Recent Transactions */}
             {recentTransactions.length > 0 && (
