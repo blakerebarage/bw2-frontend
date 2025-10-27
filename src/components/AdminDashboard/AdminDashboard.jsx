@@ -1,5 +1,5 @@
 import {
-  useAddUserMutation,
+    useAddUserMutation,
 } from "@/redux/features/allApis/usersApi/usersApi";
 import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useState } from "react";
@@ -12,7 +12,7 @@ import { useCurrency } from "@/Hook/useCurrency";
 import moment from 'moment';
 import { FaHouseUser } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import TransactionSummaryCards from '../TransactionSummaryCards/TransactionSummaryCards';
+// import TransactionSummaryCards from '../TransactionSummaryCards/TransactionSummaryCards';
 
 const AdminDashboard = () => {
   const { user } = useSelector((state) => state.auth);
@@ -666,7 +666,7 @@ const AdminDashboard = () => {
               <h3 className="text-lg font-bold text-gray-800">Transaction Summary (Last 30 Days)</h3>
               <p className="text-sm text-gray-600">Overview of your deposits, withdrawals, and net balance</p>
             </div>
-            <TransactionSummaryCards />
+            {/* <TransactionSummaryCards /> */}
           </div>
 
           {/* Main Content Section */}
