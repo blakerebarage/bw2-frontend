@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
 import Swal from "sweetalert2";
-import logo from "../../../public/logoBlack.png";
+// import logo from "../../../public/logoBlack.png";
 
 const AddBank = () => {
   const { user } = useSelector((state) => state.auth);
@@ -364,7 +364,6 @@ const AddBank = () => {
                   <td colSpan="11" className="text-center py-8">
                     <div className="flex-col flex justify-center items-center space-y-4">
                       <div className="w-12 h-12 border-4 border-[#1f2937] border-t-transparent rounded-full animate-spin"></div>
-                      <img src={logo} alt="" className="h-12" />
                     </div>
                   </td>
                 </tr>
