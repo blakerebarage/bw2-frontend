@@ -24,7 +24,7 @@ import { IoIosUnlock } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToasts } from "react-toast-notifications";
-import logo from "../../../../public/logoBlack.png";
+// import logo from "../../../../public/logoBlack.png";
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { trackRegistration } from '../../../lib/facebookPixel';
 import { useWelcome } from '../../../UserContext/WelcomeContext';
@@ -260,13 +260,13 @@ const Register = () => {
         <div className="text-center mb-8">
           <div className="w-32 h-32 mx-auto mb-2 rounded-full bg-gradient-to-br from-[#facc15] via-[#e6b800] to-[#d4af00] flex items-center justify-center shadow-2xl border-4 border-[#facc15]/30 backdrop-blur-sm">
             <div className="w-28 h-28 rounded-full bg-white/90 flex items-center justify-center shadow-inner">
-              <img 
+              {/* <img 
                 src={logo}
                 alt="Our Bet" 
                 className="w-24 h-24 object-contain drop-shadow-md" 
                 
                 loading="lazy"
-              />
+              /> */}
             </div>
           </div>
           <div className="space-y-2">

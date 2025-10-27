@@ -5,7 +5,7 @@ import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { FaHouseUser } from "react-icons/fa";
 import { Link, useParams } from "react-router-dom";
-import logo from "../../../public/logoBlack.png";
+// import logo from "../../../public/logoBlack.png";
 import AccountTabs from "../AccountTabs/AccountTabs";
 import CommonNavMenu from "../CommonNavMenu/CommonNavMenu";
 
@@ -206,7 +206,7 @@ const Downlist = () => {
                       <td colSpan="9" className="px-4 py-8">
                         <div className="flex flex-col items-center justify-center space-y-3">
                           <div className="w-12 h-12 border-2 border-blue-500 border-dashed rounded-full animate-spin"></div>
-                          <img src={logo} alt="Loading..." className="h-8 w-auto" />
+                          {/* <img src={logo} alt="Loading..." className="h-8 w-auto" /> */}
                         </div>
                       </td>
                     </tr>

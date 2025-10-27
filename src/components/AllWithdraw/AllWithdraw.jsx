@@ -8,7 +8,7 @@ import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
-import logo from "../../../public/logoBlack.png";
+// import logo from "../../../public/logoBlack.png";
 
 const AllWithdraw = () => {
   const axiosSecure = useAxiosSecure();
@@ -538,7 +538,7 @@ const AllWithdraw = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center space-y-4 py-12">
             <div className="w-12 h-12 border-4 border-[#1f2937] border-t-transparent rounded-full animate-spin"></div>
-            <img src={logo} alt="" className="w-16 h-16 bg-blue-400 rounded-2xl shadow-lg" />
+            {/* <img src={logo} alt="" className="w-16 h-16 bg-blue-400 rounded-2xl shadow-lg" /> */}
           </div>
         ) : (
             <div className="overflow-x-auto bg-white rounded-xl shadow-lg">

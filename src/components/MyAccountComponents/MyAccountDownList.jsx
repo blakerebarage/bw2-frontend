@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FaExclamationTriangle, FaHouseUser, FaInfoCircle, FaRedo } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import logo from "../../../public/logoBlack.png";
+// import logo from "../../../public/logoBlack.png";
 
 const MyAccountDownList = () => {
   const { user } = useSelector((state) => state.auth);
@@ -154,7 +154,7 @@ const MyAccountDownList = () => {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="flex flex-col justify-center items-center space-y-3">
             <div className="w-12 h-12 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
-            <img src={logo} alt="Loading" className="w-20 rounded-2xl" />
+            {/* <img src={logo} alt="Loading" className="w-20 rounded-2xl" /> */}
             <p className="text-gray-500">Loading users...</p>
           </div>
         </div>
